@@ -272,6 +272,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>happy-server</strong> - Happy Coder backend - Minimal backend for open-source end-to-end encrypted Claude Code clients</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/slopus/happy-server
+- **Usage**: `nix run github:numtide/llm-agents.nix#happy-server -- --help`
+- **Nix**: [packages/happy-server/package.nix](packages/happy-server/package.nix)
+
+</details>
+<details>
 <summary><strong>kilocode-cli</strong> - The open-source AI coding agent. Now available in your terminal.</summary>
 
 - **Source**: bytecode
