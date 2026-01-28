@@ -12,16 +12,15 @@ This script:
 import re
 import sys
 from pathlib import Path
-from typing import cast
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
 
 from updater import (
     calculate_url_hash,
+    fetch_github_latest_release,
     fetch_text,
     should_update,
 )
-from updater.http import fetch_json
 
 PACKAGE_DIR = Path(__file__).parent
 SOURCE_NIX = PACKAGE_DIR / "source.nix"
@@ -29,18 +28,6 @@ PACKAGE_NIX = PACKAGE_DIR / "package.nix"
 
 OWNER = "numtide"
 REPO = "claudebox"
-
-
-def fetch_latest_tag(owner: str, repo: str) -> str:
-    """Fetch the latest tag from GitHub."""
-    url = f"https://api.github.com/repos/{owner}/{repo}/tags"
-    data = fetch_json(url)
-    if not data or not isinstance(data, list):
-        msg = f"No tags found for {owner}/{repo}"
-        raise ValueError(msg)
-    # Tags are returned in reverse chronological order
-    tag = cast("str", data[0]["name"])
-    return tag.lstrip("v")
 
 
 def get_current_version() -> str:
@@ -83,7 +70,7 @@ def fetch_upstream_package_nix(version: str) -> str:
 def main() -> None:
     """Update the claudebox package."""
     current = get_current_version()
-    latest = fetch_latest_tag(OWNER, REPO)
+    latest = fetch_github_latest_release(OWNER, REPO)
 
     print(f"Current: {current}, Latest: {latest}")
 

@@ -442,6 +442,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 - **Nix**: [packages/vibe-kanban/package.nix](packages/vibe-kanban/package.nix)
 
 </details>
+<details>
+<summary><strong>workmux</strong> - Git worktrees + tmux windows for zero-friction parallel dev</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/raine/workmux
+- **Usage**: `nix run github:numtide/llm-agents.nix#workmux -- --help`
+- **Nix**: [packages/workmux/package.nix](packages/workmux/package.nix)
+
+</details>
 
 ### Code Review
 
