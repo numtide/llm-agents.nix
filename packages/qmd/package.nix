@@ -120,16 +120,19 @@ buildNpmPackage {
   installPhase =
     let
       # Build LD_LIBRARY_PATH with all required libraries
-      ldLibraryPath = lib.makeLibraryPath (
-        [ sqlite.out ]
-        ++ lib.optionals effectiveCudaSupport [
-          cudaPackages.cuda_cudart
-          cudaPackages.libcublas
-        ]
-        ++ lib.optionals effectiveVulkanSupport [
-          vulkan-loader
-        ]
-      );
+      ldLibraryPath =
+        lib.makeLibraryPath (
+          [ sqlite.out ]
+          ++ lib.optionals effectiveCudaSupport [
+            cudaPackages.cuda_cudart
+            cudaPackages.libcublas
+          ]
+          ++ lib.optionals effectiveVulkanSupport [
+            vulkan-loader
+          ]
+        )
+        # Add NixOS driver path for libcuda.so.1 (loaded via dlopen at runtime)
+        + lib.optionalString effectiveCudaSupport ":/run/opengl-driver/lib";
     in
     ''
       runHook preInstall
