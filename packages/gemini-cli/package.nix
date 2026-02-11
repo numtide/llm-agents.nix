@@ -7,6 +7,7 @@
   pkg-config,
   libsecret,
   darwinOpenptyHook,
+  darwinSystemCmds ? null,
   clang_20,
   makeBinaryWrapper,
   versionCheckHook,
@@ -129,10 +130,16 @@ buildNpmPackage (finalAttrs: {
   '';
 
   doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ];
+  nativeInstallCheckInputs =
+    [
+      versionCheckHook
+      versionCheckHomeHook
+    ]
+    ++ lib.optionals (stdenv.hostPlatform.isDarwin && darwinSystemCmds != null) [
+      # Provide sysctl for clipboardy's system-architecture dependency
+      # which is called during version check on Darwin
+      darwinSystemCmds
+    ];
 
   passthru = {
     category = "AI Coding Agents";
