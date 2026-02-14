@@ -32,6 +32,11 @@ inputs.nixpkgs.lib.extend (
         githubId = 198010;
         name = "Charles Swanberg";
       };
+      xorilog = {
+        github = "xorilog";
+        githubId = 5818406;
+        name = "Christophe Boucharlat";
+      };
     };
   }
 )
