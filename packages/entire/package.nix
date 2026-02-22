@@ -2,6 +2,7 @@
   lib,
   buildGoModule,
   fetchFromGitHub,
+  flake,
   go_1_26,
   versionCheckHook,
   versionCheckHomeHook,
@@ -44,6 +45,7 @@
     homepage = "https://github.com/entireio/cli";
     license = licenses.mit;
     sourceProvenance = with sourceTypes; [ fromSource ];
+    maintainers = with flake.lib.maintainers; [ yutakobayashidev ];
     mainProgram = "entire";
     platforms = platforms.linux ++ platforms.darwin;
   };
