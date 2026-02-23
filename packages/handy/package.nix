@@ -10,7 +10,9 @@
   copyDesktopItems,
   # Runtime dependencies for Linux
   alsa-lib,
+  alsa-utils,
   cairo,
+  dotool,
   gdk-pixbuf,
   glib,
   gtk3,
@@ -18,8 +20,14 @@
   libayatana-appindicator,
   libsoup_3,
   openssl,
+  pulseaudio,
   vulkan-loader,
   webkitgtk_4_1,
+  wireplumber,
+  wl-clipboard,
+  wtype,
+  xdotool,
+  ydotool,
 }:
 
 let
@@ -60,6 +68,17 @@ let
     ];
     startupNotify = true;
   };
+
+  runtimeToolPath = lib.makeBinPath [
+    alsa-utils
+    dotool
+    pulseaudio
+    wireplumber
+    wl-clipboard
+    wtype
+    xdotool
+    ydotool
+  ];
 in
 stdenv.mkDerivation {
   inherit pname version src;
@@ -67,8 +86,9 @@ stdenv.mkDerivation {
   nativeBuildInputs =
     lib.optionals stdenv.isLinux [
       autoPatchelfHook
-      dpkg
       copyDesktopItems
+      dpkg
+      makeWrapper
     ]
     ++ lib.optionals stdenv.isDarwin [
       makeWrapper
@@ -143,10 +163,16 @@ stdenv.mkDerivation {
 
         # Create a wrapper script in bin
         mkdir -p $out/bin
-        makeWrapper $out/Applications/Handy.app/Contents/MacOS/Handy $out/bin/handy
+        makeWrapper $out/Applications/Handy.app/Contents/MacOS/Handy $out/bin/handy \
+          --prefix PATH : "${runtimeToolPath}"
 
         runHook postInstall
       '';
+
+  postInstall = lib.optionalString stdenv.isLinux ''
+    wrapProgram $out/bin/handy \
+      --prefix PATH : "${runtimeToolPath}"
+  '';
 
   # GUI-only Tauri app - no CLI version support, would block trying to start GUI
   doInstallCheck = false;
