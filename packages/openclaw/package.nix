@@ -43,6 +43,22 @@ stdenv.mkDerivation (finalAttrs: {
   # (it's only needed for npm postinstall scripts)
   dontUseCmakeConfigure = true;
 
+  preBuild = ''
+    # rolldown is a transitive dependency (via tsdown), not a direct root
+    # dependency. pnpm does not expose its binary in the root node_modules/.bin.
+    # bundle-a2ui.sh falls back to 'pnpm dlx rolldown' (requires network) when
+    # rolldown is not in PATH, which fails in the Nix sandbox. Create the
+    # missing bin link so the pre-fetched rolldown binary is used instead.
+    # realpath is needed here: find returns a path relative to the build root,
+    # but the symlink lives in node_modules/.bin/ so the target must be absolute.
+    rolldown_bin=$(find node_modules/.pnpm -name "cli.mjs" -path "*/rolldown/bin/cli.mjs" | head -1)
+    if [ -z "$rolldown_bin" ]; then
+      echo "WARNING: rolldown cli.mjs not found in node_modules/.pnpm; bundle-a2ui.sh will fail" >&2
+    else
+      ln -sf "$(realpath "$rolldown_bin")" node_modules/.bin/rolldown
+    fi
+  '';
+
   buildPhase = ''
     runHook preBuild
 
