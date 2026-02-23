@@ -7,15 +7,19 @@
   flake,
 }:
 
-buildGoModule.override { go = go_1_26; } rec {
+let
+  versionData = builtins.fromJSON (builtins.readFile ./hashes.json);
+  inherit (versionData) version hash vendorHash;
+in
+buildGoModule.override { go = go_1_26; } {
   pname = "cli-proxy-api";
-  version = "6.8.18";
+  inherit version vendorHash;
 
   src = fetchFromGitHub {
     owner = "router-for-me";
     repo = "CLIProxyAPI";
     rev = "v${version}";
-    hash = "sha256-2cnaO94jfMtxhEtTlv40QnZ9pH62Gpx5mOWTxJ+3r6k=";
+    inherit hash;
   };
 
   # go.mod may require a newer Go than nixpkgs provides;
@@ -23,8 +27,6 @@ buildGoModule.override { go = go_1_26; } rec {
   postPatch = ''
     sed -i 's/^go .*/go ${go_1_26.version}/' go.mod
   '';
-
-  vendorHash = "sha256-OKZtvLH/CvjKyVWfjMhUdxbhHFJTMz8MqpJm60j71iY=";
 
   subPackages = [ "cmd/server" ];
 
