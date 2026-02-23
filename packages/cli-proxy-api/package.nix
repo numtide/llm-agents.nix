@@ -1,39 +1,43 @@
 {
   lib,
-  stdenv,
-  fetchurl,
+  buildGoModule,
+  go_1_26,
+  fetchFromGitHub,
   versionCheckHook,
+  flake,
 }:
 
-let
-  versionData = builtins.fromJSON (builtins.readFile ./hashes.json);
-  inherit (versionData) version hashes;
-
-  platformMap = {
-    x86_64-linux = "linux_amd64";
-    aarch64-linux = "linux_arm64";
-    x86_64-darwin = "darwin_amd64";
-    aarch64-darwin = "darwin_arm64";
-  };
-
-  platform = stdenv.hostPlatform.system;
-  platformSuffix = platformMap.${platform} or (throw "Unsupported system: ${platform}");
-in
-stdenv.mkDerivation {
+buildGoModule.override { go = go_1_26; } rec {
   pname = "cli-proxy-api";
-  inherit version;
+  version = "6.8.18";
 
-  src = fetchurl {
-    url = "https://github.com/router-for-me/CLIProxyAPI/releases/download/v${version}/CLIProxyAPI_${version}_${platformSuffix}.tar.gz";
-    hash = hashes.${platform};
+  src = fetchFromGitHub {
+    owner = "router-for-me";
+    repo = "CLIProxyAPI";
+    rev = "v${version}";
+    hash = "sha256-2cnaO94jfMtxhEtTlv40QnZ9pH62Gpx5mOWTxJ+3r6k=";
   };
 
-  sourceRoot = ".";
+  # go.mod may require a newer Go than nixpkgs provides;
+  # align the directive with the actual toolchain version.
+  postPatch = ''
+    sed -i 's/^go .*/go ${go_1_26.version}/' go.mod
+  '';
 
-  installPhase = ''
-    runHook preInstall
-    install -Dm755 cli-proxy-api $out/bin/cli-proxy-api
-    runHook postInstall
+  vendorHash = "sha256-OKZtvLH/CvjKyVWfjMhUdxbhHFJTMz8MqpJm60j71iY=";
+
+  subPackages = [ "cmd/server" ];
+
+  ldflags = [
+    "-s"
+    "-w"
+    "-X main.Version=${version}"
+    "-X main.Commit=nixpkgs"
+    "-X main.BuildDate=1970-01-01T00:00:00Z"
+  ];
+
+  postInstall = ''
+    mv $out/bin/server $out/bin/cli-proxy-api
   '';
 
   doInstallCheck = true;
@@ -46,14 +50,9 @@ stdenv.mkDerivation {
     homepage = "https://github.com/router-for-me/CLIProxyAPI";
     changelog = "https://github.com/router-for-me/CLIProxyAPI/releases";
     license = licenses.mit;
-    sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
-    maintainers = [ ];
+    sourceProvenance = with lib.sourceTypes; [ fromSource ];
+    maintainers = with flake.lib.maintainers; [ odysseus0 ];
     mainProgram = "cli-proxy-api";
-    platforms = [
-      "x86_64-linux"
-      "aarch64-linux"
-      "x86_64-darwin"
-      "aarch64-darwin"
-    ];
+    platforms = platforms.all;
   };
 }

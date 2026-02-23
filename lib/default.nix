@@ -42,6 +42,11 @@ inputs.nixpkgs.lib.extend (
         githubId = 87764;
         name = "Ben Ford";
       };
+      odysseus0 = {
+        github = "odysseus0";
+        githubId = 8635094;
+        name = "George Zhang";
+      };
     };
   }
 )
