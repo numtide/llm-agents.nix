@@ -49,14 +49,16 @@ stdenv.mkDerivation (finalAttrs: {
     # bundle-a2ui.sh falls back to 'pnpm dlx rolldown' (requires network) when
     # rolldown is not in PATH, which fails in the Nix sandbox. Create the
     # missing bin link so the pre-fetched rolldown binary is used instead.
-    # realpath is needed here: find returns a path relative to the build root,
-    # but the symlink lives in node_modules/.bin/ so the target must be absolute.
+    # Use a relative symlink: find returns "node_modules/.pnpm/rolldown@.../bin/cli.mjs"
+    # (relative to the build root); strip "node_modules/" and prepend "../" to
+    # get the path relative to node_modules/.bin/. An absolute symlink would
+    # point into the ephemeral build directory and break after installation.
     rolldown_bin=$(find node_modules/.pnpm -name "cli.mjs" -path "*/rolldown/bin/cli.mjs" | head -1)
     if [ -z "$rolldown_bin" ]; then
-      echo "WARNING: rolldown cli.mjs not found in node_modules/.pnpm; bundle-a2ui.sh will fail" >&2
-    else
-      ln -sf "$(realpath "$rolldown_bin")" node_modules/.bin/rolldown
+      echo "error: rolldown cli.mjs not found in node_modules/.pnpm" >&2
+      exit 1
     fi
+    ln -sf "../$(echo "$rolldown_bin" | sed 's|^node_modules/||')" node_modules/.bin/rolldown
   '';
 
   buildPhase = ''
