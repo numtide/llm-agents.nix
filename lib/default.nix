@@ -47,6 +47,11 @@ inputs.nixpkgs.lib.extend (
         githubId = 8635094;
         name = "George Zhang";
       };
+      yutakobayashidev = {
+        github = "yutakobayashidev";
+        githubId = 91340399;
+        name = "Yuta Kobayashi";
+      };
     };
   }
 )
