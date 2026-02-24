@@ -15,18 +15,18 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "openclaw";
-  version = "2026.2.19";
+  version = "2026.2.22";
 
   src = fetchFromGitHub {
     owner = "openclaw";
     repo = "openclaw";
     rev = "v${finalAttrs.version}";
-    hash = "sha256-P1yhTuHLr7BdRADlLnrNGbzjb8cNlRzjKJtrU6pY3cY=";
+    hash = "sha256-xBBEpBRwZlghx2DPCGIpNgTPEMrrBFGkjPVEBrcBGKo=";
   };
 
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
-    hash = "sha256-LIS8Pg6+FZsApAaNW+Vo3+QUQvsYoa8It/6B+mM3gPE=";
+    hash = "sha256-IVdoMDuFAPabQMWi7eL2nQZ6hYEb2Tvvf8KRlriHFLo=";
     fetcherVersion = 2;
   };
 
@@ -42,6 +42,24 @@ stdenv.mkDerivation (finalAttrs: {
   # Prevent cmake from automatically running in configure phase
   # (it's only needed for npm postinstall scripts)
   dontUseCmakeConfigure = true;
+
+  preBuild = ''
+    # rolldown is a transitive dependency (via tsdown), not a direct root
+    # dependency. pnpm does not expose its binary in the root node_modules/.bin.
+    # bundle-a2ui.sh falls back to 'pnpm dlx rolldown' (requires network) when
+    # rolldown is not in PATH, which fails in the Nix sandbox. Create the
+    # missing bin link so the pre-fetched rolldown binary is used instead.
+    # Use a relative symlink: find returns "node_modules/.pnpm/rolldown@.../bin/cli.mjs"
+    # (relative to the build root); strip "node_modules/" and prepend "../" to
+    # get the path relative to node_modules/.bin/. An absolute symlink would
+    # point into the ephemeral build directory and break after installation.
+    rolldown_bin=$(find node_modules/.pnpm -name "cli.mjs" -path "*/rolldown/bin/cli.mjs" | head -1)
+    if [ -z "$rolldown_bin" ]; then
+      echo "error: rolldown cli.mjs not found in node_modules/.pnpm" >&2
+      exit 1
+    fi
+    ln -sf "../$(echo "$rolldown_bin" | sed 's|^node_modules/||')" node_modules/.bin/rolldown
+  '';
 
   buildPhase = ''
     runHook preBuild
