@@ -3,6 +3,7 @@
   buildGoModule,
   go_1_26,
   fetchFromGitHub,
+  unpinGoModVersionHook,
   versionCheckHook,
   flake,
 }:
@@ -22,11 +23,7 @@ buildGoModule.override { go = go_1_26; } {
     inherit hash;
   };
 
-  # go.mod may require a newer Go than nixpkgs provides;
-  # align the directive with the actual toolchain version.
-  postPatch = ''
-    sed -i 's/^go .*/go ${go_1_26.version}/' go.mod
-  '';
+  nativeBuildInputs = [ unpinGoModVersionHook ];
 
   subPackages = [ "cmd/server" ];
 

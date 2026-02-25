@@ -2,6 +2,7 @@
   lib,
   buildGoModule,
   fetchFromGitHub,
+  unpinGoModVersionHook,
   versionCheckHook,
 }:
 
@@ -18,10 +19,7 @@ buildGoModule rec {
 
   vendorHash = "sha256-YU+bRLVlWtHzJ1QPzcKJ70f+ynp8lMoIeFlm+29BNPE=";
 
-  # Remove go version constraint that requires newer Go than nixpkgs provides
-  postPatch = ''
-    sed -i '/^toolchain /d' go.mod
-  '';
+  nativeBuildInputs = [ unpinGoModVersionHook ];
 
   subPackages = [ "cmd/bd" ];
 

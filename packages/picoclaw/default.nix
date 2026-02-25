@@ -6,5 +6,5 @@
 }:
 pkgs.callPackage ./package.nix {
   inherit flake;
-  inherit (perSystem.self) versionCheckHomeHook;
+  inherit (perSystem.self) unpinGoModVersionHook versionCheckHomeHook;
 }
