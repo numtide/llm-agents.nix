@@ -4,6 +4,7 @@
   buildGoModule,
   fetchFromGitHub,
   go_1_25,
+  unpinGoModVersionHook,
   versionCheckHook,
   versionCheckHomeHook,
 }:
@@ -21,10 +22,9 @@ buildGoModule.override { go = go_1_25; } rec {
 
   vendorHash = "sha256-3kDU3pbcz+2cd36/bcbdU/IXTAeJosBZ+syUQqO2bls=";
 
-  postPatch = ''
-    # Relax Go version requirement to match nixpkgs go_1_25
-    sed -i "s/^go .*/go ${go_1_25.version}/" go.mod
+  nativeBuildInputs = [ unpinGoModVersionHook ];
 
+  postPatch = ''
     # go:embed in cmd_onboard.go expects a workspace directory copied by go:generate
     cp -r workspace cmd/picoclaw/workspace
   '';

@@ -1,1 +1,10 @@
-{ pkgs, flake }: pkgs.callPackage ./package.nix { inherit flake; }
+{
+  pkgs,
+  flake,
+  perSystem,
+  ...
+}:
+pkgs.callPackage ./package.nix {
+  inherit flake;
+  inherit (perSystem.self) unpinGoModVersionHook;
+}
