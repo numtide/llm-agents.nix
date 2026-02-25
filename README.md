@@ -612,6 +612,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>entire</strong> - CLI tool that captures AI agent sessions and links them to code changes</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/entireio/cli
+- **Usage**: `nix run github:numtide/llm-agents.nix#entire -- --help`
+- **Nix**: [packages/entire/package.nix](packages/entire/package.nix)
+
+</details>
+<details>
 <summary><strong>handy</strong> - Fast and accurate local transcription app using AI models</summary>
 
 - **Source**: binary
