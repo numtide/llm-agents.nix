@@ -9,11 +9,11 @@
 
 stdenv.mkDerivation rec {
   pname = "ccusage";
-  version = "18.0.7";
+  version = "18.0.8";
 
   src = fetchzip {
     url = "https://registry.npmjs.org/ccusage/-/ccusage-${version}.tgz";
-    hash = "sha256-w0hlJuHyUdaKmQiAaiR+MOezRyciaks/1k7AhgRj25Y=";
+    hash = "sha256-vcXpZ/ZdyS/v9oeCh79h7pS6pWMDGBqiV3DI8L5lBaA=";
   };
 
   nativeBuildInputs = [ bun ];
