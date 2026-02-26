@@ -89,11 +89,13 @@ buildNpmPackage (finalAttrs: {
     rm -f $out/share/gemini-cli/node_modules/@google/gemini-cli
     rm -f $out/share/gemini-cli/node_modules/@google/gemini-cli-core
     rm -f $out/share/gemini-cli/node_modules/@google/gemini-cli-a2a-server
+    rm -f $out/share/gemini-cli/node_modules/@google/gemini-cli-sdk
     rm -f $out/share/gemini-cli/node_modules/@google/gemini-cli-test-utils
     rm -f $out/share/gemini-cli/node_modules/gemini-cli-vscode-ide-companion
     cp -r packages/cli $out/share/gemini-cli/node_modules/@google/gemini-cli
     cp -r packages/core $out/share/gemini-cli/node_modules/@google/gemini-cli-core
     cp -r packages/a2a-server $out/share/gemini-cli/node_modules/@google/gemini-cli-a2a-server
+    cp -r packages/sdk $out/share/gemini-cli/node_modules/@google/gemini-cli-sdk
 
     # Remove dangling symlinks to source directory
     rm -f $out/share/gemini-cli/node_modules/@google/gemini-cli-core/dist/docs/CONTRIBUTING.md
