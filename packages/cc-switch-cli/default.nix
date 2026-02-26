@@ -1,2 +1,1 @@
-{ pkgs, flake }:
-pkgs.callPackage ./package.nix { inherit flake; }
+{ pkgs, flake }: pkgs.callPackage ./package.nix { inherit flake; }
