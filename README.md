@@ -306,6 +306,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>cc-switch-cli</strong> - CLI version of CC Switch - All-in-One Assistant for Claude Code, Codex & Gemini CLI</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/SaladDay/cc-switch-cli
+- **Usage**: `nix run github:numtide/llm-agents.nix#cc-switch-cli -- --help`
+- **Nix**: [packages/cc-switch-cli/package.nix](packages/cc-switch-cli/package.nix)
+
+</details>
+<details>
 <summary><strong>ccstatusline</strong> - A highly customizable status line formatter for Claude Code CLI</summary>
 
 - **Source**: bytecode
