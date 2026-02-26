@@ -52,6 +52,11 @@ inputs.nixpkgs.lib.extend (
         githubId = 91340399;
         name = "Yuta Kobayashi";
       };
+      zrubing = {
+        github = "zrubing";
+        githubId = 21324081;
+        name = "Rubing";
+      };
     };
   }
 )

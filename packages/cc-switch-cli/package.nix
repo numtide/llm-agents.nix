@@ -3,6 +3,7 @@
   stdenv,
   fetchurl,
   versionCheckHook,
+  flake,
 }:
 
 let
@@ -46,7 +47,7 @@ stdenv.mkDerivation {
     changelog = "https://github.com/SaladDay/cc-switch-cli/releases/tag/v${version}";
     downloadPage = "https://github.com/SaladDay/cc-switch-cli/releases";
     license = licenses.mit;
-    maintainers = with maintainers; [ ];
+    maintainers = with flake.lib.maintainers; [ zrubing ];
     platforms = [ "x86_64-linux" ];
     sourceProvenance = with sourceTypes; [ binaryNativeCode ];
     mainProgram = "cc-switch";
