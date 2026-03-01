@@ -8,7 +8,7 @@
 
 rustPlatform.buildRustPackage {
   pname = "beads-rust";
-  version = "0.1.13";
+  version = "0.1.20";
 
   src = fetchFromGitHub {
     owner = "Dicklesworthstone";
