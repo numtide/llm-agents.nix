@@ -26,7 +26,7 @@
   ldflags = [
     "-s"
     "-w"
-    "-X=github.com/entireio/cli/cmd/entire/cli/buildinfo.Version=${version}"
+    "-X=github.com/entireio/cli/cmd/entire/cli/versioninfo.Version=${version}"
   ];
 
   doCheck = false;
