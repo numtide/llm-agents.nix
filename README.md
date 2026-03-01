@@ -306,6 +306,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>cc-switch-cli</strong> - CLI version of CC Switch - All-in-One Assistant for Claude Code, Codex & Gemini CLI</summary>
+
+- **Source**: binary
+- **License**: MIT
+- **Homepage**: https://github.com/SaladDay/cc-switch-cli
+- **Usage**: `nix run github:numtide/llm-agents.nix#cc-switch-cli -- --help`
+- **Nix**: [packages/cc-switch-cli/package.nix](packages/cc-switch-cli/package.nix)
+
+</details>
+<details>
 <summary><strong>ccstatusline</strong> - A highly customizable status line formatter for Claude Code CLI</summary>
 
 - **Source**: bytecode
@@ -609,6 +619,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 - **Homepage**: https://github.com/github/copilot-language-server-release
 - **Usage**: `nix run github:numtide/llm-agents.nix#copilot-language-server -- --help`
 - **Nix**: [packages/copilot-language-server/package.nix](packages/copilot-language-server/package.nix)
+
+</details>
+<details>
+<summary><strong>entire</strong> - CLI tool that captures AI agent sessions and links them to code changes</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/entireio/cli
+- **Usage**: `nix run github:numtide/llm-agents.nix#entire -- --help`
+- **Nix**: [packages/entire/package.nix](packages/entire/package.nix)
 
 </details>
 <details>
