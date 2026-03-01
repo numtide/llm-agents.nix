@@ -109,12 +109,14 @@ python.pkgs.buildPythonApplication rec {
   dependencies = with python.pkgs; [
     agent-client-protocol
     anyio
+    cachetools
     cryptography
     gitpython
     giturlparse
     google-auth
     httpx
     keyring
+    markdownify
     mcp
     mistralai
     packaging
