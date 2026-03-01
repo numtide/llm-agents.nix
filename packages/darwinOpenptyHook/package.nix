@@ -28,7 +28,7 @@ let
     #endif
 
     int openpty(int *, int *, char *, struct termios *, struct winsize *);
-    pid_t forkpty(int *, char *, const struct termios *, const struct winsize *);
+    pid_t forkpty(int *, char *, struct termios *, struct winsize *);
 
     #ifdef __cplusplus
     }
