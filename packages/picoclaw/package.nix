@@ -25,8 +25,9 @@ buildGoModule.override { go = go_1_25; } rec {
   nativeBuildInputs = [ unpinGoModVersionHook ];
 
   postPatch = ''
-    # go:embed in cmd_onboard.go expects a workspace directory copied by go:generate
-    cp -r workspace cmd/picoclaw/workspace
+    # go:embed in cmd/picoclaw/internal/onboard/command.go expects a workspace
+    # directory copied there by go:generate which doesn't run during nix builds
+    cp -r workspace cmd/picoclaw/internal/onboard/workspace
   '';
 
   subPackages = [ "cmd/picoclaw" ];
@@ -34,7 +35,7 @@ buildGoModule.override { go = go_1_25; } rec {
   ldflags = [
     "-s"
     "-w"
-    "-X main.version=${version}"
+    "-X github.com/sipeed/picoclaw/cmd/picoclaw/internal.version=${version}"
   ];
 
   # Tests require runtime configuration and network access
