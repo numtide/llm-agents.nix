@@ -12,6 +12,11 @@ on:
         required: false
         type: string
         default: ''
+      include-inputs:
+        description: 'Include flake inputs in the update matrix'
+        required: false
+        type: boolean
+        default: true
       pr-labels:
         description: 'Comma-separated list of labels to add to PRs'
         required: false
@@ -48,6 +53,7 @@ jobs:
         env:
           PACKAGES: "${{ inputs.packages }}"
           INPUTS: "${{ inputs.inputs }}"
+          INCLUDE_INPUTS: "${{ inputs['include-inputs'] }}"
         run: .github/ci/discovery.py
   update:
     needs: discover

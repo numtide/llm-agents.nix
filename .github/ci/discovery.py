@@ -149,16 +149,17 @@ def main() -> None:
 
     packages_env = os.environ.get("PACKAGES", "")
     inputs_env = os.environ.get("INPUTS", "")
+    include_inputs = os.environ.get("INCLUDE_INPUTS", "true").lower() == "true"
     system = os.environ.get("SYSTEM", "x86_64-linux")
 
     log.info("=== Discovery Configuration ===")
     log.info("PACKAGES: %s", packages_env or "<all>")
-    log.info("INPUTS: %s", inputs_env or "<all>")
+    log.info("INPUTS: %s", inputs_env or ("<all>" if include_inputs else "<disabled>"))
     log.info("")
 
     matrix_items = [
         *discover_packages(packages_env.split() or None, system),
-        *discover_flake_inputs(inputs_env.split() or None),
+        *(discover_flake_inputs(inputs_env.split() or None) if include_inputs else []),
     ]
 
     log.info("")

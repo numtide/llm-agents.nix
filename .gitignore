@@ -17,3 +17,4 @@ packages/wrapBuddy/.cache/clangd
 
 # Rust build artifacts
 target/
+.omx/

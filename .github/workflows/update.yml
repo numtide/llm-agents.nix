@@ -8,19 +8,26 @@ on:
   workflow_dispatch:
     inputs:
       packages:
-        description: 'Specific packages to update (space-separated, empty for all)'
+        description: 'Specific packages to update (space-separated, empty for fork packages)'
         required: false
-        default: ''
-      inputs:
-        description: 'Specific flake inputs to update (space-separated, empty for all)'
+        default: 'aionui mardi-gras memvid-cli officecli'
+      update_inputs:
+        description: 'Also update flake inputs'
         required: false
-        default: ''
+        type: boolean
+        default: false
+
+concurrency:
+  group: fork-main-maintenance
+  cancel-in-progress: false
+
 jobs:
   update:
     uses: ./.github/workflows/update-flake.yml
     with:
-      packages: ${{ github.event.inputs.packages }}
-      inputs: ${{ github.event.inputs.inputs }}
+      packages: ${{ github.event.inputs.packages || vars.FORK_UPDATE_PACKAGES || 'aionui mardi-gras memvid-cli officecli' }}
+      inputs: ''
+      include-inputs: ${{ github.event.inputs.update_inputs == 'true' }}
       pr-labels: 'dependencies,automated'
       auto-merge: true
     secrets:

@@ -1,0 +1,176 @@
+name: Sync Upstream
+on:
+  schedule:
+    # Upstream runs dependency updates at 02:00 and 14:00 UTC. Sync two hours
+    # later so merged upstream updates are likely to be present before fork
+    # package updates run.
+    - cron: '0 4,16 * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+
+concurrency:
+  group: fork-main-maintenance
+  cancel-in-progress: false
+
+jobs:
+  sync-upstream:
+    runs-on: ubuntu-slim
+    steps:
+      - name: Detect upstream repository
+        id: upstream
+        uses: actions/github-script@v7
+        env:
+          UPSTREAM_REPOSITORY: ${{ vars.UPSTREAM_REPOSITORY }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const configuredUpstream = process.env.UPSTREAM_REPOSITORY?.trim();
+
+            if (configuredUpstream) {
+              core.setOutput('has-upstream', 'true');
+              core.setOutput('repository', configuredUpstream);
+              return;
+            }
+
+            const { data } = await github.rest.repos.get(context.repo);
+
+            if (!data.parent) {
+              core.setOutput('has-upstream', 'false');
+              core.notice('Repository is not a fork; skipping upstream sync.');
+              return;
+            }
+
+            core.setOutput('has-upstream', 'true');
+            core.setOutput('repository', data.parent.full_name);
+
+      - name: Check upstream update workflow
+        id: upstream-update
+        if: steps.upstream.outputs.has-upstream == 'true'
+        uses: actions/github-script@v7
+        env:
+          UPSTREAM_REPOSITORY: ${{ steps.upstream.outputs.repository }}
+          UPSTREAM_UPDATE_WORKFLOW: ${{ vars.UPSTREAM_UPDATE_WORKFLOW || 'update.yml' }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const [owner, repo] = process.env.UPSTREAM_REPOSITORY.split('/');
+            const workflowId = process.env.UPSTREAM_UPDATE_WORKFLOW;
+
+            try {
+              const { data } = await github.rest.actions.listWorkflowRuns({
+                owner,
+                repo,
+                workflow_id: workflowId,
+                branch: 'main',
+                per_page: 1,
+              });
+
+              const latest = data.workflow_runs[0];
+              if (!latest) {
+                core.notice(`No upstream ${workflowId} runs found; continuing.`);
+                core.setOutput('ready', 'true');
+                return;
+              }
+
+              core.notice(
+                `Latest upstream ${workflowId} run is ${latest.status}` +
+                  (latest.conclusion ? `/${latest.conclusion}` : '') +
+                  ` from ${latest.created_at}.`
+              );
+
+              if (latest.status === 'completed') {
+                core.setOutput('ready', 'true');
+                return;
+              }
+
+              core.warning(`Upstream ${workflowId} is still ${latest.status}; skipping this sync.`);
+              core.setOutput('ready', 'false');
+            } catch (error) {
+              core.warning(`Could not inspect upstream ${workflowId}: ${error.message}`);
+              core.setOutput('ready', 'true');
+            }
+
+      - name: Checkout repository
+        if: steps.upstream.outputs.has-upstream == 'true' && steps.upstream-update.outputs.ready == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up git
+        if: steps.upstream.outputs.has-upstream == 'true' && steps.upstream-update.outputs.ready == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Rebase main onto upstream/main
+        id: sync
+        if: steps.upstream.outputs.has-upstream == 'true' && steps.upstream-update.outputs.ready == 'true'
+        env:
+          UPSTREAM_REPOSITORY: ${{ steps.upstream.outputs.repository }}
+        run: |
+          git remote add upstream "https://github.com/${UPSTREAM_REPOSITORY}.git"
+          git fetch upstream main
+
+          if git merge-base --is-ancestor upstream/main HEAD; then
+            echo "main already contains upstream/main"
+            echo "result=up-to-date" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git rebase upstream/main
+          git push --force-with-lease origin HEAD:main
+          echo "result=rebased" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger fork package updates
+        id: trigger-updates
+        if: steps.upstream.outputs.has-upstream == 'true' && steps.upstream-update.outputs.ready == 'true' && steps.sync.outcome == 'success'
+        uses: actions/github-script@v7
+        env:
+          FORK_UPDATE_PACKAGES: ${{ vars.FORK_UPDATE_PACKAGES || 'aionui mardi-gras memvid-cli officecli' }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'update.yml',
+              ref: 'main',
+              inputs: {
+                packages: process.env.FORK_UPDATE_PACKAGES,
+                update_inputs: 'false',
+              },
+            });
+
+      - name: Write summary
+        if: always()
+        run: |
+          if [ "${{ steps.upstream.outputs.has-upstream }}" != 'true' ]; then
+            echo "Repository is not a fork; upstream sync skipped." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if [ "${{ steps.upstream-update.outputs.ready }}" != 'true' ]; then
+            echo "Upstream update workflow is still running; sync skipped." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if [ "${{ steps.sync.outcome }}" = 'failure' ]; then
+            echo "Failed to rebase main onto upstream/main from ${{ steps.upstream.outputs.repository }}." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if [ "${{ steps.trigger-updates.outcome }}" = 'failure' ]; then
+            echo "Synced main with ${{ steps.upstream.outputs.repository }}, but failed to trigger fork package updates." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if [ "${{ steps.sync.outputs.result }}" = 'up-to-date' ]; then
+            echo "main already contains upstream/main from ${{ steps.upstream.outputs.repository }}. Fork package updates were triggered." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          echo "Rebased main onto upstream/main from ${{ steps.upstream.outputs.repository }}. Fork package updates were triggered." >> "$GITHUB_STEP_SUMMARY"
