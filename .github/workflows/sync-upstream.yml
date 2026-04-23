@@ -1,10 +1,10 @@
 name: Sync Upstream
 on:
   schedule:
-    # Upstream runs dependency updates at 02:00 and 14:00 UTC. Sync two hours
-    # later so merged upstream updates are likely to be present before fork
-    # package updates run.
-    - cron: '0 4,16 * * *'
+    # Upstream currently runs dependency updates at 00:00, 04:00, 18:00, and
+    # 21:00 UTC. Sync two hours later so merged upstream updates are likely to
+    # be present before fork package updates run.
+    - cron: '0 2,6,20,23 * * *'
   workflow_dispatch:
 
 permissions:
@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Detect upstream repository
         id: upstream
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           UPSTREAM_REPOSITORY: ${{ vars.UPSTREAM_REPOSITORY }}
         with:
@@ -49,7 +49,7 @@ jobs:
       - name: Check upstream update workflow
         id: upstream-update
         if: steps.upstream.outputs.has-upstream == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           UPSTREAM_REPOSITORY: ${{ steps.upstream.outputs.repository }}
           UPSTREAM_UPDATE_WORKFLOW: ${{ vars.UPSTREAM_UPDATE_WORKFLOW || 'update.yml' }}
@@ -95,7 +95,7 @@ jobs:
 
       - name: Checkout repository
         if: steps.upstream.outputs.has-upstream == 'true' && steps.upstream-update.outputs.ready == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: main
           fetch-depth: 0
@@ -128,7 +128,7 @@ jobs:
       - name: Trigger fork package updates
         id: trigger-updates
         if: steps.upstream.outputs.has-upstream == 'true' && steps.upstream-update.outputs.ready == 'true' && steps.sync.outcome == 'success'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           FORK_UPDATE_PACKAGES: ${{ vars.FORK_UPDATE_PACKAGES || 'aionui mardi-gras memvid-cli officecli' }}
         with:
