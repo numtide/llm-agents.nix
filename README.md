@@ -334,6 +334,36 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>hermes-agent-full</strong> - Self-improving AI agent by Nous Research with full packaged integrations and dashboard assets</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://hermes-agent.nousresearch.com/
+- **Usage**: `nix run github:numtide/llm-agents.nix#hermes-agent-full -- --help`
+- **Nix**: [packages/hermes-agent-full/package.nix](packages/hermes-agent-full/package.nix)
+
+</details>
+<details>
+<summary><strong>hermes-desktop</strong> - Desktop companion for Hermes Agent</summary>
+
+- **Source**: binary
+- **License**: MIT
+- **Homepage**: https://github.com/fathah/hermes-desktop
+- **Usage**: `nix run github:numtide/llm-agents.nix#hermes-desktop -- --help`
+- **Nix**: [packages/hermes-desktop/package.nix](packages/hermes-desktop/package.nix)
+
+</details>
+<details>
+<summary><strong>hermes-hud</strong> - TUI consciousness monitor for Hermes Agent</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/joeynyc/hermes-hud
+- **Usage**: `nix run github:numtide/llm-agents.nix#hermes-hud -- --help`
+- **Nix**: [packages/hermes-hud/package.nix](packages/hermes-hud/package.nix)
+
+</details>
+<details>
 <summary><strong>localgpt</strong> - Local AI assistant with persistent markdown memory, autonomous tasks, and semantic search</summary>
 
 - **Source**: source
@@ -361,6 +391,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 - **Homepage**: https://picoclaw.io
 - **Usage**: `nix run github:numtide/llm-agents.nix#picoclaw -- --help`
 - **Nix**: [packages/picoclaw/package.nix](packages/picoclaw/package.nix)
+
+</details>
+<details>
+<summary><strong>vessel-browser</strong> - Agent-oriented browser with durable state and MCP control</summary>
+
+- **Source**: binary
+- **License**: MIT
+- **Homepage**: https://github.com/unmodeled-tyler/vessel-browser
+- **Usage**: `nix run github:numtide/llm-agents.nix#vessel-browser -- --help`
+- **Nix**: [packages/vessel-browser/package.nix](packages/vessel-browser/package.nix)
 
 </details>
 <details>

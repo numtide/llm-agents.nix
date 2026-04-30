@@ -10,22 +10,20 @@ on:
       packages:
         description: 'Specific packages to update (space-separated, empty for fork packages)'
         required: false
-        default: 'aionui mardi-gras memvid-cli officecli'
+        default: 'aionui hermes-desktop hermes-hud mardi-gras memvid-cli officecli vessel-browser'
       update_inputs:
         description: 'Also update flake inputs'
         required: false
         type: boolean
         default: false
-
 concurrency:
   group: fork-main-maintenance
   cancel-in-progress: false
-
 jobs:
   update:
     uses: ./.github/workflows/update-flake.yml
     with:
-      packages: ${{ github.event.inputs.packages || vars.FORK_UPDATE_PACKAGES || 'aionui mardi-gras memvid-cli officecli' }}
+      packages: ${{ github.event.inputs.packages || vars.FORK_UPDATE_PACKAGES || 'aionui hermes-desktop hermes-hud mardi-gras memvid-cli officecli vessel-browser' }}
       inputs: ''
       include-inputs: ${{ github.event.inputs.update_inputs == 'true' }}
       pr-labels: 'dependencies,automated'
