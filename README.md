@@ -727,6 +727,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>paseo-desktop</strong> - Voice-controlled desktop development environment for AI coding agents</summary>
+
+- **Source**: binary
+- **License**: AGPL-3.0-or-later
+- **Homepage**: https://paseo.sh
+- **Usage**: `nix run github:numtide/llm-agents.nix#paseo-desktop -- --help`
+- **Nix**: [packages/paseo-desktop/package.nix](packages/paseo-desktop/package.nix)
+
+</details>
+<details>
 <summary><strong>ralph-tui</strong> - AI Agent Loop Orchestrator TUI</summary>
 
 - **Source**: source
