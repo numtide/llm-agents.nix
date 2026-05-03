@@ -75,7 +75,10 @@ let
           | cut -d'"' -f2
       )
 
-      cd frontend
+      # v0.1.44+ moved the desktop UI into a pnpm workspace package at
+      # packages/local-web. crates/server/src/routes/frontend.rs embeds
+      # `../../packages/local-web/dist` via rust-embed.
+      cd packages/local-web
       pnpm build
       runHook postBuild
     '';
@@ -99,6 +102,8 @@ rustPlatform.buildRustPackage {
     "server"
     "--package"
     "review"
+    "--package"
+    "mcp"
   ];
 
   nativeBuildInputs = [
@@ -111,22 +116,30 @@ rustPlatform.buildRustPackage {
     sqlite
   ];
 
-  # Copy frontend assets before Rust build
+  # Copy frontend assets before Rust build. crates/server embeds
+  # ../../packages/local-web/dist via rust-embed, so the path the binary
+  # expects must be populated before cargo runs.
   preBuild = ''
-    mkdir -p frontend/dist
-    cp -r ${frontend}/* frontend/dist/
+    mkdir -p packages/local-web/dist
+    cp -r ${frontend}/* packages/local-web/dist/
   '';
 
   env = {
     SQLX_OFFLINE = "true";
     LIBCLANG_PATH = "${llvmPackages.libclang.lib}/lib";
+    # v0.1.44+ pulls in transitive deps that activate openssl-sys'
+    # `vendored` feature, which would compile OpenSSL from source via
+    # the openssl-src crate (needs perl in buildInputs). Force dynamic
+    # linking against the openssl already in buildInputs.
+    OPENSSL_NO_VENDOR = "1";
   };
 
   doCheck = false;
 
   postInstall = ''
     mv $out/bin/server $out/bin/vibe-kanban
-    mv $out/bin/mcp_task_server $out/bin/vibe-kanban-mcp
+    # crates/mcp produces a binary already named `vibe-kanban-mcp`
+    # (was `mcp_task_server` in older releases — no rename needed now).
     mv $out/bin/review $out/bin/vibe-kanban-review
     rm -f $out/bin/generate_types
     rm -rf $out/bin/*.dSYM
