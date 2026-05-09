@@ -14,12 +14,12 @@ rustPlatform.buildRustPackage rec {
     owner = "yvgude";
     repo = "lean-ctx";
     rev = "v${version}";
-    hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+    hash = "sha256-eYpQjeGnDdvQPShtwrxqbVQHNsizb3xkaUJLkujcEF8=";
   };
 
   sourceRoot = "${src.name}/rust";
 
-  cargoHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+  cargoHash = "sha256-B4AeYHBYneBJc0AKnfTPdKvBUnU+fnkPrv48L+j9XmE=";
 
   # Build with default features: tree-sitter, embeddings, http-server, secure-update
   # Excluding cloud-server feature as it requires additional database dependencies
@@ -31,6 +31,13 @@ rustPlatform.buildRustPackage rec {
   ];
 
   doCheck = false;
+
+  postInstall = ''
+    # Copy skills directory to share
+    mkdir -p $out/share/skills/lean-ctx
+    cp -r $src/skills/lean-ctx/* $out/share/skills/lean-ctx/
+    chmod -R +w $out/share/skills/lean-ctx
+  '';
 
   doInstallCheck = true;
   nativeInstallCheckInputs = [
