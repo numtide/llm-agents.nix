@@ -117,7 +117,6 @@ inputs.nixpkgs.lib.extend (
         githubId = 5122800;
         name = "pikdum";
       };
-      
     };
   }
 )
