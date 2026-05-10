@@ -4,6 +4,7 @@
   rustPlatform,
   versionCheckHook,
   versionCheckHomeHook,
+  flake,
 }:
 
 rustPlatform.buildRustPackage rec {
@@ -53,7 +54,10 @@ rustPlatform.buildRustPackage rec {
     changelog = "https://github.com/yvgude/lean-ctx/releases/tag/v${version}";
     license = licenses.asl20;
     sourceProvenance = with sourceTypes; [ fromSource ];
-    maintainers = with maintainers; [ ];
+    # Use the shared maintainers set from nixpkgs/flake to reference existing
+    # maintainers (do not add a local definition). antono is a maintainer in
+    # the upstream nixpkgs maintainers list, reference it here.
+    maintainers = with flake.lib.maintainers; [ antono ];
     mainProgram = "lean-ctx";
     platforms = platforms.unix;
   };
