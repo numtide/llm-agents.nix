@@ -13,7 +13,13 @@
 let
   pname = "ctxo";
   version = "0.8.1";
-  pnpmWorkspaces = [ "cli" "plugin-api" "lang-csharp" "lang-go" "lang-typescript" ];
+  pnpmWorkspaces = [
+    "cli"
+    "plugin-api"
+    "lang-csharp"
+    "lang-go"
+    "lang-typescript"
+  ];
 in
 stdenv.mkDerivation (finalAttrs: {
   inherit pname version;
@@ -80,7 +86,9 @@ stdenv.mkDerivation (finalAttrs: {
   doInstallCheck = true;
   nativeInstallCheckInputs = [ versionCheckHook ];
 
-  passthru = { category = "AI Coding Agents"; };
+  passthru = {
+    category = "AI Coding Agents";
+  };
 
   meta = {
     description = "MCP server delivering dependency-aware, history-enriched context for codebases";
