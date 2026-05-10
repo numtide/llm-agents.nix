@@ -100,6 +100,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>ctxo</strong> - MCP server delivering dependency-aware, history-enriched context for codebases</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/alperhankendi/Ctxo
+- **Usage**: `nix run github:numtide/llm-agents.nix#ctxo -- --help`
+- **Nix**: [packages/ctxo/package.nix](packages/ctxo/package.nix)
+
+</details>
+<details>
 <summary><strong>cursor-agent</strong> - Cursor Agent - CLI tool for Cursor AI code editor</summary>
 
 - **Source**: binary
