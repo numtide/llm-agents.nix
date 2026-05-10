@@ -923,6 +923,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>lean-ctx</strong> - Context Runtime for AI Agents with CCP + TDD. Shell Hook + MCP Server. 57 MCP tools, 10 read modes, 95+ shell patterns, cross-session memory</summary>
+
+- **Source**: source
+- **License**: Apache-2.0
+- **Homepage**: https://leanctx.com
+- **Usage**: `nix run github:numtide/llm-agents.nix#lean-ctx -- --help`
+- **Nix**: [packages/lean-ctx/package.nix](packages/lean-ctx/package.nix)
+
+</details>
+<details>
 <summary><strong>mcporter</strong> - TypeScript runtime and CLI for the Model Context Protocol</summary>
 
 - **Source**: source
