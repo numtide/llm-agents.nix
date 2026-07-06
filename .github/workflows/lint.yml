@@ -1,12 +1,7 @@
 name: Lint package definitions
 on:
   pull_request:
-    paths:
-      - 'packages/**'
-      - 'rules/**'
-      - 'sgconfig.yml'
-      - 'checks/ast-grep.nix'
-      - '.github/workflows/lint.yml'
+  merge_group:
 permissions:
   contents: read
 jobs:
