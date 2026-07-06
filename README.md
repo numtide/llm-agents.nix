@@ -860,6 +860,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>sem</strong> - Semantic version control CLI built on Git</summary>
+
+- **Source**: source
+- **License**: MIT / Apache-2.0
+- **Homepage**: https://github.com/Ataraxy-Labs/sem
+- **Usage**: `nix run github:numtide/llm-agents.nix#sem -- --help`
+- **Nix**: [packages/sem/package.nix](packages/sem/package.nix)
+
+</details>
+<details>
 <summary><strong>tuicr</strong> - Review AI-generated diffs like a GitHub pull request, right from your terminal</summary>
 
 - **Source**: source
