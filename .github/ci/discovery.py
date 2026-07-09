@@ -23,10 +23,11 @@ let
   pkgs = flake.packages.${config.system};
   isHidden = pkg: pkg.passthru.hideFromDocs or false;
   updateEvenIfHidden = pkg: pkg.passthru.updateEvenIfHidden or false;
-  shouldDiscover = pkg: !(isHidden pkg) || updateEvenIfHidden pkg;
+  skipUpdate = pkg: pkg.passthru.skipUpdate or false;
+  shouldDiscover = pkg: (!(isHidden pkg) || updateEvenIfHidden pkg) && !(skipUpdate pkg);
   getVersion = name:
-    if pkgs ? ${name} && pkgs.${name} ? version && shouldDiscover pkgs.${name}
-    then { inherit name; value = pkgs.${name}.version; }
+    if pkgs ? ${name} && pkgs.${name} ? version
+    then { inherit name; value = if shouldDiscover pkgs.${name} then pkgs.${name}.version else null; }
     else null;
 in
   if config.filter == null then

@@ -321,6 +321,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>pi-bun</strong> - Pi coding agent with Bun runtime support</summary>
+
+- **Source**: bytecode
+- **License**: MIT
+- **Homepage**: https://github.com/earendil-works/pi
+- **Usage**: `nix run github:numtide/llm-agents.nix#pi-bun -- --help`
+- **Nix**: [packages/pi-bun/package.nix](packages/pi-bun/package.nix)
+
+</details>
+<details>
 <summary><strong>qoder-cli</strong> - Qoder AI CLI tool - Terminal-based AI assistant for code development</summary>
 
 - **Source**: binary
