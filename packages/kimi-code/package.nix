@@ -41,20 +41,20 @@ let
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "kimi-code";
-  version = "0.23.6";
+  version = "0.24.1";
 
   src = fetchFromGitHub {
     owner = "MoonshotAI";
     repo = "kimi-code";
     tag = "@moonshot-ai/kimi-code@${finalAttrs.version}";
-    hash = "sha256-bPVXVJ3+dNzSqSYvSEWDwFOtlZ8zN41AjqI41ulLBmc=";
+    hash = "sha256-Z+lSklmYrdf+6oaUXXKZn6tdPNhxTNizUreDwOumWgo=";
   };
 
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
     inherit pnpm pnpmWorkspaces;
     fetcherVersion = 3;
-    hash = "sha256-8Dq5rC1/nJpm4VGUKbxBb5fEBTSG9N0IyTOUBNXBxLU=";
+    hash = "sha256-1mZo6wZydwYTVsNlxkI4fbu4KLvZQzBSj3hTmvkFNT4=";
   };
 
   inherit pnpmWorkspaces;
