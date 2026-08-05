@@ -3,7 +3,7 @@
   stdenv,
   fetchFromGitHub,
   bun2nixLib,
-  bun,
+  bun-bin,
   rustc,
   cargo,
   rustPlatform,
@@ -19,6 +19,23 @@
 }:
 
 let
+  # omp requires bun >= 1.3.14: its whole image pipeline (provider-side
+  # many-image downscaling, attachment/paste resizing, terminal rendering)
+  # goes through `Bun.Image`, which nixpkgs' 1.3.13 does not have. Compiling
+  # against 1.3.13 yields a binary that starts fine and then throws
+  # "undefined is not a constructor" on every image, which the Anthropic
+  # provider turns into an unrecoverable HTTP 400.
+  bun = bun-bin;
+
+  # bun2nix's hook propagates nixpkgs' bun, which lands earlier on PATH than
+  # anything in nativeBuildInputs; `bun build --compile` would then embed that
+  # runtime no matter what we pass here. Substitute the pinned bun so the
+  # compiler, the embedded runtime and engines.bun all agree.
+  bunHook = bun2nixLib.hook.overrideAttrs (old: {
+    propagatedBuildInputs = map (p: if (p.pname or null) == "bun" then bun else p) (
+      old.propagatedBuildInputs or [ ]
+    );
+  });
   versionData = builtins.fromJSON (builtins.readFile ./hashes.json);
   inherit (versionData) version hash cargoHash;
   platformsBySystem = {
@@ -61,7 +78,7 @@ stdenv.mkDerivation {
   };
 
   nativeBuildInputs = [
-    bun2nixLib.hook
+    bunHook
     bun
     rustc
     cargo
@@ -151,12 +168,6 @@ stdenv.mkDerivation {
       fi
     done
     sed -i 's/: "\^/: "/g; s/: "~/: "/g' bun.lock
-
-    # Relax engines.bun to the bun doing the compile, otherwise omp refuses
-    # to start when the embedded runtime is older than upstream's minimum
-    # (issue #4996).
-    sed -i 's/"bun": ">=[0-9.]*"/"bun": ">='"$(bun --version)"'"/' \
-      packages/utils/package.json
 
     # swarm-extension pins @oh-my-pi/pi-coding-agent to a stale major, which
     # bun can't satisfy locally and would fetch from npm. Use the workspace
