@@ -1,0 +1,10 @@
+{
+  "version": "1.4.0-canary.1",
+  "tag": "canary",
+  "hashes": {
+    "aarch64-darwin": "sha256-upcAnx7TF7mc259T1Pxzzj4qSbKW0SaN2P88xkvUuF0=",
+    "aarch64-linux": "sha256-UOtT/yQErqa24OngNRjZntsBuE+j7ZLJtRwi6mHaLVw=",
+    "x86_64-darwin": "sha256-LSphq+gJwM37LNeUwosi0070r3O4wLFCO0+oDUK4hno=",
+    "x86_64-linux": "sha256-FQN47aaKp4qrfVNMA4wpwIoNIXHxfzWgbne5Jo3fMmc="
+  }
+}

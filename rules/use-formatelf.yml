@@ -7,6 +7,11 @@ files:
   - 'packages/**'
 ignores:
   - 'packages/formatelf/**'
+  # bun is the one binary that must keep patchelf's segment layout: `bun build
+  # --compile` reuses the running bun as its output template, and formatelf's
+  # appended PT_LOAD makes every compiled binary fault at execve. See the
+  # measurement table in packages/bun-bin/package.nix.
+  - 'packages/bun-bin/**'
 rule:
   pattern: autoPatchelfHook
   kind: identifier
