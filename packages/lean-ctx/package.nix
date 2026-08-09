@@ -11,18 +11,18 @@
 
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "lean-ctx";
-  version = "3.9.17";
+  version = "3.9.18";
 
   src = fetchFromGitHub {
     owner = "yvgude";
     repo = "lean-ctx";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-ZL3TwTtUj13H3b0ymZYxByeJLPwKmdu6ommjKJxAVPM=";
+    hash = "sha256-Jjbh/vZ2JZPj3ndFSReGYl5G2wwhAE2OjyknKILWmUo=";
   };
 
   cargoRoot = "rust";
   buildAndTestSubdir = "rust";
-  cargoHash = "sha256-XYHhor0SXS7v2j/379nb9XB9wD/YYFPm3AD97FvoqEY=";
+  cargoHash = "sha256-eqbCyiMnD8XGmuWrS8lemf0jy0x2W2Q0m02kfYE5SRg=";
 
   nativeBuildInputs = [
     cmake
