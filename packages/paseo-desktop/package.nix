@@ -37,18 +37,18 @@
 
 buildNpmPackage (finalAttrs: {
   pname = "paseo-desktop";
-  version = "0.3.0";
+  version = "0.3.1";
 
   src = fetchFromGitHub {
     owner = "getpaseo";
     repo = "paseo";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-6LPCDohpd7tPz3e6iAyhL+MUljIfiBucUw93c0R/mjY=";
+    hash = "sha256-m97Pf857LNv871b95cJ2y34OFxoES8JsWsp0wD3Em4I=";
   };
 
   nodejs = nodejs_22;
 
-  npmDepsHash = "sha256-CbdP7eAcN/dRhwIv3sqxjCRirRNAjeOOJchNfpSS6U0=";
+  npmDepsHash = "sha256-8W/OAcEqysf4CQlCFFOyh9Qgvs0EModfBWrMU6MQX9k=";
   npmDepsFetcherVersion = 2;
 
   # Prevent onnxruntime-node's install script from running during automatic
