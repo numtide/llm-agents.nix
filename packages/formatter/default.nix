@@ -6,7 +6,7 @@
 }:
 # treefmt with config
 let
-  formatter = inputs.treefmt-nix.lib.mkWrapper pkgs {
+  formatter = inputs."treefmt-nix".lib.mkWrapper pkgs {
     _file = __curPos.file;
     imports = [ ./treefmt.nix ];
   };

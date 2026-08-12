@@ -7,7 +7,7 @@
 # cache and update jobs don't have to build it from source (crates.io
 # rejects nix's crate downloads with 403).
 let
-  bun2nix = flake.inputs.bun2nix.packages.${pkgs.stdenv.hostPlatform.system}.bun2nix;
+  bun2nix = flake.inputs."bun2nix".packages.${pkgs.stdenv.hostPlatform.system}.bun2nix;
 in
 bun2nix
 // {

@@ -1,5 +1,5 @@
 { inputs, ... }:
-inputs.nixpkgs.lib.extend (
+inputs."nixpkgs".lib.extend (
   _final: prev: {
     maintainers = prev.maintainers // {
       ak2k = {

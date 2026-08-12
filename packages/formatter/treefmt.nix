@@ -9,6 +9,14 @@ let
     ];
     text = builtins.readFile ./../../scripts/check.sh;
   };
+
+  quote-flake-inputs = pkgs.writeShellApplication {
+    name = "quote-flake-inputs";
+    runtimeInputs = [ pkgs.python3 ];
+    text = ''
+      python3 ${./../../scripts/quote-flake-inputs.py} "$@"
+    '';
+  };
 in
 {
   package = pkgs.treefmt;
@@ -29,6 +37,14 @@ in
   # Python formatting and linting
   programs.ruff-format.enable = true;
   programs.ruff-check.enable = true;
+
+  # zimbatm's law: the attribute after `inputs.` must be quoted.
+  settings.formatter.quote-flake-inputs = {
+    command = "${quote-flake-inputs}/bin/quote-flake-inputs";
+    includes = [ "*.nix" ];
+    pipeline = "nix";
+    priority = 0;
+  };
 
   settings.formatter.deadnix.pipeline = "nix";
   settings.formatter.deadnix.priority = 1;

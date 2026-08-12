@@ -11,30 +11,30 @@
     systems.url = "github:nix-systems/default";
     blueprint = {
       url = "github:numtide/blueprint";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.systems.follows = "systems";
+      inputs."nixpkgs".follows = "nixpkgs";
+      inputs."systems".follows = "systems";
     };
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs."nixpkgs".follows = "nixpkgs";
     };
     flake-parts = {
       url = "github:hercules-ci/flake-parts";
-      inputs.nixpkgs-lib.follows = "nixpkgs";
+      inputs."nixpkgs-lib".follows = "nixpkgs";
     };
     bun2nix = {
       url = "github:nix-community/bun2nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.systems.follows = "systems";
-      inputs.treefmt-nix.follows = "treefmt-nix";
-      inputs.flake-parts.follows = "flake-parts";
+      inputs."nixpkgs".follows = "nixpkgs";
+      inputs."systems".follows = "systems";
+      inputs."treefmt-nix".follows = "treefmt-nix";
+      inputs."flake-parts".follows = "flake-parts";
     };
   };
 
   outputs =
     inputs:
     let
-      blueprintOutputs = inputs.blueprint {
+      blueprintOutputs = inputs."blueprint" {
         inherit inputs;
         nixpkgs.config.allowUnfree = true;
       };
