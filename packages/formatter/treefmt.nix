@@ -52,6 +52,12 @@ in
 
   projectRootFile = "flake.lock";
 
+  # Inlined pin sources (nixpkgs patches/hooks) for the rehydrated pins backend.
+  # They are re-added by content via builtins.path, so their bytes are hashed
+  # into the store path - any reformat (many are *.sh) would break rehydration.
+  # Keep them verbatim; never let a formatter touch them.
+  settings.global.excludes = [ "corepkgs/pins/rehydrated/srcs/**" ];
+
   programs.deadnix.enable = true;
   programs.nixfmt.enable = true;
 

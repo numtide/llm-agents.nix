@@ -14,8 +14,12 @@
   pkgs ? null,
   # Pins from `pkgs` when given (root flake reuses its nixpkgs); otherwise the
   # nixpkgs-free provider that makes corepkgs a standalone no-input flake.
-  # (pins/store.nix is the explicit impure fast-eval path.)
-  pins ? if pkgs != null then import ./pins/pkgs.nix pkgs else import ./pins/closure.nix system,
+  # Default nixpkgs-free backend is rehydrated.nix: a serialized .drv closure
+  # replayed in pure Nix, so pins stay buildable from source on a cache-GC miss
+  # (it falls through to closure.nix for formatelf and non-x86_64-linux systems).
+  # closure.nix (appendContext store paths) and store.nix (impure fast-eval) are
+  # the other two backends behind this seam.
+  pins ? if pkgs != null then import ./pins/pkgs.nix pkgs else import ./pins/rehydrated.nix system,
   # null => the registry's toolchain provider (derived from the -bin packages);
   # pass one to override (bootstrap seam).
   toolchains ? null,

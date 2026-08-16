@@ -1,0 +1,82 @@
+{
+  "bubblewrap": {
+    "drv": "gmn3wi9fhwn8j67p8rigwd8snl8358qx-bubblewrap-0.11.2.drv",
+    "output": "out"
+  },
+  "bzip2": {
+    "drv": "wiymv970zawx0yfrbfdnycg8xrr29pdb-bzip2-1.0.8.drv",
+    "output": "out"
+  },
+  "coreutils": {
+    "drv": "fknhv943140n2074n97va7hcavzif90c-coreutils-9.11.drv",
+    "output": "out"
+  },
+  "expat": {
+    "drv": "j01v24c7lpbbnp6gb3c19jcn2zmszjv8-expat-2.8.2.drv",
+    "output": "out"
+  },
+  "gccLib": {
+    "drv": "aya70fxip5xs5dqxsxb3ir4vy9ppfy86-gcc-15.3.0.drv",
+    "output": "lib"
+  },
+  "glibc": {
+    "drv": "wwv89f29sz12k93zq0xd9jbxdkv414lx-glibc-2.42-67.drv",
+    "output": "out"
+  },
+  "icu": {
+    "drv": "s67wfc186ysfp450h8zphkn7kh93g127-icu4c-78.3.drv",
+    "output": "out"
+  },
+  "icuDev": {
+    "drv": "s67wfc186ysfp450h8zphkn7kh93g127-icu4c-78.3.drv",
+    "output": "dev"
+  },
+  "libffi": {
+    "drv": "lasj55nzw0vbf4k2vlqxhk46xz6mg9l6-libffi-3.7.1.drv",
+    "output": "out"
+  },
+  "ncurses": {
+    "drv": "bi27b52wd79gmhy37ndag5j5j59dnim3-ncurses-6.6.drv",
+    "output": "out"
+  },
+  "openssl": {
+    "drv": "c6cvqrkyk4njm8a715krab2nzj9dqw53-openssl-3.6.3.drv",
+    "output": "out"
+  },
+  "opensslDev": {
+    "drv": "c6cvqrkyk4njm8a715krab2nzj9dqw53-openssl-3.6.3.drv",
+    "output": "dev"
+  },
+  "pkgConfig": {
+    "drv": "j82g2bjkzlmb4yl95mcydvr8vagyxlfz-pkg-config-wrapper-0.29.2.drv",
+    "output": "out"
+  },
+  "ripgrep": {
+    "drv": "har68bdn10m05zxkvn680q37bdq0bpdx-ripgrep-15.2.0.drv",
+    "output": "out"
+  },
+  "socat": {
+    "drv": "lw0yxz9bsxlljmnxn1xa92r5p2i2h31h-socat-1.8.1.3.drv",
+    "output": "out"
+  },
+  "sqlite": {
+    "drv": "98m6g32c5iplvqz4kzr5ldcb42lxgfda-sqlite-3.53.3.drv",
+    "output": "out"
+  },
+  "sqliteDev": {
+    "drv": "98m6g32c5iplvqz4kzr5ldcb42lxgfda-sqlite-3.53.3.drv",
+    "output": "dev"
+  },
+  "xz": {
+    "drv": "wb5ag5ql9vgx017dz64xxr2vp2wnyfpd-xz-5.8.3.drv",
+    "output": "out"
+  },
+  "zlib": {
+    "drv": "9ajxamlix3fhv713l3h1jp67p7cz555b-zlib-1.3.2.drv",
+    "output": "out"
+  },
+  "zstd": {
+    "drv": "fkha9f43krnav1cw98iy3dmcwcdm3ij4-zstd-1.5.7.drv",
+    "output": "bin"
+  }
+}

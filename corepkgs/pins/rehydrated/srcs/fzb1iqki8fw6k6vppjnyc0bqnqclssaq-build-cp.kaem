@@ -1,0 +1,35 @@
+${M2} --architecture amd64 \
+  -f ${m2libc}/sys/types.h \
+  -f ${m2libc}/stddef.h \
+  -f ${m2libc}/sys/utsname.h \
+  -f ${m2libc}/amd64/linux/fcntl.c \
+  -f ${m2libc}/fcntl.c \
+  -f ${m2libc}/amd64/linux/unistd.c \
+  -f ${m2libc}/amd64/linux/sys/stat.c \
+  -f ${m2libc}/ctype.c \
+  -f ${m2libc}/stdlib.c \
+  -f ${m2libc}/stdarg.h \
+  -f ${m2libc}/stdio.h \
+  -f ${m2libc}/stdio.c \
+  -f ${m2libc}/string.c \
+  -f ${m2libc}/bootstrappable.c \
+  -f ${src}/mescc-tools-extra/cp.c \
+  --debug \
+  -o cp.M1
+
+${blood-elf-0} --little-endian --64 -f cp.M1 -o cp-footer.M1
+
+${M1} --architecture amd64 \
+  --little-endian \
+  -f ${m2libc}/amd64/amd64_defs.M1 \
+  -f ${m2libc}/amd64/libc-full.M1 \
+  -f cp.M1 \
+  -f cp-footer.M1 \
+  -o cp.hex2
+
+${hex2} --architecture amd64 \
+  --little-endian \
+  -f ${m2libc}/amd64/ELF-amd64-debug.hex2 \
+  -f cp.hex2 \
+  --base-address 0x00600000 \
+  -o ${out}

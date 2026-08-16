@@ -50,13 +50,24 @@ corepkgs' only external dependency is two threaded "seed" attrsets, each a
 default arg you can override without touching a constructor:
 
 - **`pins`** — prebuilt C libs/tools (glibc, gccLib, openssl, zlib, formatelf,
-  ...). Default: `pins/closure.nix`, which references the exact store paths via
-  `builtins.appendContext` (the nixpkgs-multiverse "fast mode" trick) — pure,
-  nixpkgs-free, and cache-free at eval (no narinfo fetch; paths are substituted
-  from cache.nixos.org / cache.numtide.com at build time). When the root passes
-  `pkgs`, `pins/pkgs.nix` reuses it (so CI can rebuild pins from source on a cache
-  miss). Regenerate the paths in `pins/closure.nix` **and** `pins/store.nix` on a
-  nixpkgs/formatelf bump.
+  ...). Three nixpkgs-free backends behind this seam:
+
+  - `pins/rehydrated.nix` (**default** when no `pkgs`) — a serialized `.drv`
+    closure replayed in pure Nix (see `pins/rehydrate.nix` +
+    `pins/REHYDRATE-NOTES.md`), so every pin carries its full from-source build
+    graph and stays buildable on a cache-GC miss. Data lives in
+    `pins/rehydrated/` (`closure.json` + `manifest.json` + inlined `srcs/`);
+    rerun `pins/rehydrated/generate.sh` on a nixpkgs/pin bump. x86_64-linux only;
+    `formatelf` + other systems fall through to `closure.nix`.
+  - `pins/closure.nix` — the exact store paths via `builtins.appendContext` (the
+    nixpkgs-multiverse "fast mode" trick): pure and cache-free at eval, but a
+    dead end once cache.nixos.org GCs them. Regenerate its paths **and**
+    `pins/store.nix` on a nixpkgs/formatelf bump.
+  - `pins/store.nix` — the explicit impure fast-eval path.
+
+  When the root passes `pkgs`, `pins/pkgs.nix` reuses it instead (so CI can
+  rebuild pins from source on a cache miss).
+
 - **`toolchains`** — rust, go, node, zig, bun, pnpm, python (+ seed). Default:
   `toolchains/default.nix` (the provider), which imports the prebuilt toolchain
   packages from `packages/<name>-bin/` (bun-bin, rust-bin, …). Each `-bin`
