@@ -1,4 +1,9 @@
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  shuck,
+  ...
+}:
 let
   mypy-check = pkgs.writeShellApplication {
     name = "mypy-check";
@@ -52,9 +57,10 @@ in
 
   programs.mdformat.enable = true;
 
-  programs.shellcheck.enable = true;
-  programs.shfmt.enable = true;
-
+  # Shell: trialling shuck (Rust) instead of shellcheck (Haskell) + shfmt (Go).
+  # shuck format is behind SHUCK_EXPERIMENTAL, so wrap it to set that env.
+  # shuck check is the linter (exits non-zero on violations); it honors
+  # ShellCheck-compatible `# shellcheck disable=SCxxxx` directives.
   programs.taplo.enable = true;
   programs.yamlfmt.enable = true;
 
@@ -67,10 +73,29 @@ in
   settings.formatter.nixfmt.pipeline = "nix";
   settings.formatter.nixfmt.priority = 2;
 
-  settings.formatter.shellcheck.pipeline = "shell";
-  settings.formatter.shellcheck.priority = 1;
-  settings.formatter.shfmt.pipeline = "shell";
-  settings.formatter.shfmt.priority = 2;
+  # shuck format (whitespace/layout) then shuck check (lint) on the same files.
+  settings.formatter.shuck-format = {
+    command = lib.getExe (
+      pkgs.writeShellScriptBin "shuck-format" ''
+        export SHUCK_EXPERIMENTAL=1
+        # --dialect bash: our sourced setup-hooks use `[[ ]]` + `# shellcheck
+        # shell=bash` (no shebang); shuck ignores that directive and would parse
+        # them as POSIX and fail. bash is a superset, so formatting the POSIX
+        # builders as bash is byte-identical. --indent-width 2 matches shfmt.
+        exec ${lib.getExe shuck} format --dialect bash --indent-style space --indent-width 2 "$@"
+      ''
+    );
+    includes = [ "*.sh" ];
+    pipeline = "shell";
+    priority = 1;
+  };
+  settings.formatter.shuck-check = {
+    command = lib.getExe shuck;
+    options = [ "check" ];
+    includes = [ "*.sh" ];
+    pipeline = "shell";
+    priority = 2;
+  };
 
   settings.formatter.ruff-check.pipeline = "python";
   settings.formatter.ruff-check.priority = 1;

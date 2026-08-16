@@ -1,83 +1,55 @@
+# claude-code (Anthropic's agentic coding CLI) - built on corepkgs, the repo's
+# nixpkgs-free packaging system. `mkPackage` fetches the prebuilt release artifact
+# and wraps it; version + per-platform hashes come from the shared ./hashes.json
+# (the same file nix-update bumps), so nothing drifts.
+#
+# claude ships a bun --compile single-file binary: on Linux its appended JS
+# payload segfaults on any ELF rewrite, so kind = "loader" leaves it byte-intact
+# and invokes the pinned glibc loader through the wrapper; on darwin it links the
+# system libSystem and just runs. bubblewrap + socat back the sandbox.
 {
-  lib,
-  flake,
-  stdenv,
-  platformSource,
-  makeWrapper,
-  wrapBuddy,
-  versionCheckHook,
-  bubblewrap,
-  socat,
+  mkPackage,
   mkUpdater,
-  disableTelemetry ? false,
+  flake,
+  corePins,
+  lib,
+  system,
 }:
-
 let
-  source = platformSource {
-    hashesFile = ./hashes.json;
-    platforms = {
-      x86_64-linux = "linux-x64";
-      aarch64-linux = "linux-arm64";
-      aarch64-darwin = "darwin-arm64";
-    };
-    urlTemplate = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/{version}/{platform}/claude";
+  # system -> {platform} URL token, shared by the build and the updater.
+  platforms = {
+    x86_64-linux = "linux-x64";
+    aarch64-linux = "linux-arm64";
+    aarch64-darwin = "darwin-arm64";
   };
+  urlTemplate = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/{version}/{platform}/claude";
 in
-stdenv.mkDerivation {
+mkPackage {
   pname = "claude-code";
-  inherit (source) version src;
+  mainProgram = "claude";
+  hashesFile = ./hashes.json;
+  inherit platforms urlTemplate;
+  kind = "loader";
 
-  dontUnpack = true;
-
-  nativeBuildInputs = [ makeWrapper ] ++ lib.optionals stdenv.hostPlatform.isLinux [ wrapBuddy ];
-
-  dontStrip = true; # do not mess with the bun runtime
-
-  installPhase = ''
-    runHook preInstall
-
-    install -Dm755 $src $out/bin/claude
-
-    runHook postInstall
-  '';
-
-  # Disable auto-updates and installation method warnings.
-  # See: https://github.com/anthropics/claude-code/issues/15592
+  # bubblewrap + socat provide the sandbox; env disables auto-update, the
+  # installation-method warnings, and non-essential model calls. DISABLE_TELEMETRY
+  # / CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC are intentionally left unset - both
+  # break remote-control (see numtide/llm-agents.nix#2811).
   #
-  # DISABLE_TELEMETRY and CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC are NOT set
-  # by default: both break remote-control and potentially other features.
-  # Use disableTelemetry = true to opt in to disabling them.
-  # See: https://github.com/numtide/llm-agents.nix/issues/2811
-  # See: https://github.com/anthropics/claude-code/issues/28098#issuecomment-3957698158
-  #
-  # Uses a single wrapProgram call to avoid double-wrapping which causes the
-  # process to show as ".claude-wrapped_" instead of "claude" in ps/htop.
-  # --argv0 ensures the process name is preserved through the wrapper.
-  postFixup = ''
-    wrapProgram $out/bin/claude \
-      --argv0 claude \
-      --set DISABLE_AUTOUPDATER 1 \
-      --set-default DISABLE_NON_ESSENTIAL_MODEL_CALLS 1 \
-      ${lib.optionalString disableTelemetry "--set DISABLE_TELEMETRY 1 --set CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC 1"} \
-      --set DISABLE_INSTALLATION_CHECKS 1 ${lib.optionalString stdenv.hostPlatform.isLinux "--prefix PATH : ${
-        lib.makeBinPath [
-          bubblewrap
-          socat
-        ]
-      }"}
-  '';
+  # bubblewrap + socat are Linux-only (namespaces); on darwin claude-code runs
+  # without the bwrap sandbox, so drop them there rather than fail to build.
+  runtimePkgs = lib.optionals (lib.hasSuffix "-linux" system) [
+    corePins.bubblewrap
+    corePins.socat
+  ];
+  setEnv = {
+    DISABLE_AUTOUPDATER = "1";
+    DISABLE_INSTALLATION_CHECKS = "1";
+    DISABLE_NON_ESSENTIAL_MODEL_CALLS = "1";
+  };
 
-  # Bun links against /usr/lib/libicucore.A.dylib which needs ICU data from
-  # /usr/share/icu/ at runtime for Intl.Segmenter. The Nix macOS sandbox
-  # blocks access to /usr/share/icu/, causing "failed to initialize Segmenter".
-  # Disable the sandbox for this derivation on macOS (requires sandbox=relaxed).
-  __noChroot = stdenv.hostPlatform.isDarwin;
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [ versionCheckHook ];
-
-  passthru.category = "AI Coding Agents";
-  passthru.updater = mkUpdater {
+  category = "AI Coding Agents";
+  updater = mkUpdater {
     kind = "manifest-checksums";
     versionSource = {
       type = "text";
@@ -85,25 +57,22 @@ stdenv.mkDerivation {
     };
     manifestUrl = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/{version}/manifest.json";
     checksumPath = "platforms.{platform}.checksum";
-    # Reuse the build's nix-system -> manifest-token map (the same tokens key
-    # both the download URL and the manifest checksums).
-    platforms = source.updater.platforms;
+    # The same tokens key both the download URL and the manifest checksums.
+    inherit platforms;
     # Anthropic yanks bad releases by repointing `latest`, so follow it down.
     versionPolicy = "follow_pointer";
   };
 
-  meta = with lib; {
+  meta = {
     description = "Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster";
     homepage = "https://claude.ai/code";
     changelog = "https://github.com/anthropics/claude-code/releases";
     license = flake.lib.licenses.unfree;
-    sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
-    maintainers = with maintainers; [
-      malo
-      omarjatoi
-      ryoppippi
+    sourceProvenance = [ flake.lib.sourceTypes.binaryNativeCode ];
+    maintainers = [
+      flake.lib.maintainers.malo
+      flake.lib.maintainers.omarjatoi
+      flake.lib.maintainers.ryoppippi
     ];
-    mainProgram = "claude";
-    platforms = source.platforms;
   };
 }

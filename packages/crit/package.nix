@@ -1,69 +1,38 @@
+# crit - built from source on corepkgs (nixpkgs-free) via mkGo. CGO_ENABLED=0,
+# so the output is a fully static binary (no glibc, no patchelf). Modules are
+# vendored by a single vendorHash FOD. Requires a go >= 1.26 toolchain (mkGo
+# ships 1.26.x).
 {
-  lib,
+  mkGo,
+  coreFetchurl,
   flake,
-  bash,
-  buildGoModule,
-  go_1_26,
-  fetchFromGitHub,
-  git,
-  versionCheckHook,
-  versionCheckHomeHook,
 }:
-
-# crit requires a go >= 1.26 toolchain.
-(buildGoModule.override { go = go_1_26; }) rec {
+let
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
+in
+mkGo {
   pname = "crit";
-  version = "0.18.4";
-
-  src = fetchFromGitHub {
-    owner = "tomasz-tomczyk";
-    repo = "crit";
-    tag = "v${version}";
-    hash = "sha256-PQkDwk8ukZFSRM0ra6ptTVA6wLH6+kkZsHJQJeiBaKc=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/tomasz-tomczyk/crit/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
-
-  vendorHash = "sha256-xgNFYuYw6if40UmxoAGNve9FWy6Gt5MCEIz+7CIqjRo=";
-
+  vendorHash = data.vendorHash;
   subPackages = [ "cmd/crit" ];
-
-  # Story-generation tests exec fake agent scripts via /usr/bin/env, which is
-  # absent from the sandbox.
-  postPatch = ''
-    substituteInPlace cmd/crit/cli_handlers_story_llm_test.go \
-      --replace-fail '#!/usr/bin/env bash' '#!${lib.getExe bash}'
-  '';
-
-  # Preflight tests shell out to `git init`.
-  nativeCheckInputs = [ git ];
-  preCheck = ''
-    export HOME=$(mktemp -d)
-    git config --global user.email crit@example.com
-    git config --global user.name crit
-    git config --global init.defaultBranch main
-  '';
-
+  binaries = [ "crit" ];
   ldflags = [
     "-s"
     "-w"
-    "-X=main.version=${version}"
+    "-X=main.version=${data.version}"
   ];
 
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ];
-
-  passthru.category = "Code Review";
-
-  meta = with lib; {
+  category = "Code Review";
+  meta = {
     description = "Local-first review tool for coding-agent plans, diffs, and web pages";
     homepage = "https://github.com/tomasz-tomczyk/crit";
-    changelog = "https://github.com/tomasz-tomczyk/crit/releases/tag/v${version}";
-    license = licenses.mit;
-    sourceProvenance = with sourceTypes; [ fromSource ];
-    maintainers = with flake.lib.maintainers; [ ahacop ];
-    mainProgram = "crit";
-    platforms = platforms.linux ++ platforms.darwin;
+    changelog = "https://github.com/tomasz-tomczyk/crit/releases/tag/v${data.version}";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.ahacop ];
   };
 }

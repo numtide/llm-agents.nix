@@ -1,65 +1,49 @@
+# open-code-review (`ocr`, Alibaba's AI code-review CLI) - built on corepkgs, the
+# repo's nixpkgs-free packaging system. `mkPackage` fetches the prebuilt release
+# artifact and wraps it; version + per-platform hashes come from the shared
+# ./hashes.json (the same file nix-update bumps), so nothing drifts.
+#
+# Upstream ships a single dynamic Go binary per platform, so patchelf its
+# interpreter/rpath to the pinned glibc and expose it as `ocr`.
 {
-  lib,
-  stdenv,
-  platformSource,
-  versionCheckHook,
-  versionCheckHomeHook,
+  mkPackage,
   mkUpdater,
+  flake,
 }:
-
 let
-  source = platformSource {
-    hashesFile = ./hashes.json;
-    platforms = {
-      x86_64-linux = "linux-amd64";
-      aarch64-linux = "linux-arm64";
-      aarch64-darwin = "darwin-arm64";
-    };
-    urlTemplate = "https://github.com/alibaba/open-code-review/releases/download/v{version}/opencodereview-{platform}";
+  # system -> {platform} URL token, shared by the build and the updater.
+  platforms = {
+    x86_64-linux = "linux-amd64";
+    aarch64-linux = "linux-arm64";
+    aarch64-darwin = "darwin-arm64";
   };
-  inherit (source) version;
+  urlTemplate = "https://github.com/alibaba/open-code-review/releases/download/v{version}/opencodereview-{platform}";
 in
-stdenv.mkDerivation {
+mkPackage {
   pname = "open-code-review";
-  inherit (source) version src;
+  mainProgram = "ocr";
+  hashesFile = ./hashes.json;
+  inherit platforms urlTemplate;
+  unpack = "none";
+  kind = "patchelf";
 
-  # Upstream releases are single statically linked Go binaries.
-  dontUnpack = true;
+  category = "Code Review";
+  updater = mkUpdater {
+    kind = "platform";
+    inherit urlTemplate platforms;
+    versionSource = {
+      type = "github";
+      owner = "alibaba";
+      repo = "open-code-review";
+    };
+  };
 
-  installPhase = ''
-    runHook preInstall
-    mkdir -p $out/bin
-    install -m755 $src $out/bin/ocr
-    runHook postInstall
-  '';
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ];
-  versionCheckProgramArg = [ "version" ];
-
-  passthru.category = "Code Review";
-  passthru.updater = mkUpdater (
-    source.updater
-    // {
-      versionSource = {
-        type = "github";
-        owner = "alibaba";
-        repo = "open-code-review";
-      };
-    }
-  );
-
-  meta = with lib; {
+  meta = {
     description = "AI-powered code review CLI";
     homepage = "https://github.com/alibaba/open-code-review";
-    changelog = "https://github.com/alibaba/open-code-review/releases/tag/v${version}";
-    license = licenses.asl20;
-    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
-    mainProgram = "ocr";
-    maintainers = with maintainers; [ fridh ];
-    platforms = source.platforms;
+    changelog = "https://github.com/alibaba/open-code-review/releases";
+    license = flake.lib.licenses.asl20;
+    sourceProvenance = [ flake.lib.sourceTypes.binaryNativeCode ];
+    maintainers = [ flake.lib.maintainers.fridh ];
   };
 }

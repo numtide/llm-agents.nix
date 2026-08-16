@@ -1,47 +1,32 @@
+# git-surgeon - built from source on corepkgs (nixpkgs-free): mkCargo drives the
+# naked rust toolchain + zig cc + cargo-vendor'd crates. Pure crates.io deps, no
+# C libraries. version + src hash live in ./hashes.json (the file nix-update
+# bumps); the Cargo.lock is vendored alongside (the nixpkgs-free cargoHash).
 {
-  lib,
-  fetchFromGitHub,
-  rustPlatform,
-  versionCheckHook,
+  mkCargo,
+  coreFetchurl,
+  flake,
 }:
-
-rustPlatform.buildRustPackage (finalAttrs: {
+let
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
+in
+mkCargo {
   pname = "git-surgeon";
-  version = "0.1.17";
-
-  src = fetchFromGitHub {
-    owner = "raine";
-    repo = "git-surgeon";
-    tag = "v${finalAttrs.version}";
-    hash = "sha256-SeXHYZwhwvkYxFHW694Cp1VKKeehxgOdfKqShuPI7M4=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/raine/git-surgeon/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
+  cargoLock = ./Cargo.lock;
+  binaries = [ "git-surgeon" ];
 
-  cargoHash = "sha256-PbhASsdDxmVcIzV+oHIbpX70zjSeNvkwGcbhQRi88rE=";
-
-  postInstall = ''
-    install -d $out/share/git-surgeon
-    cp -r skills $out/share/git-surgeon/skills
-  '';
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [ versionCheckHook ];
-
-  passthru.category = "Utilities";
-
+  category = "Utilities";
   meta = {
     description = "Git primitives for autonomous coding agents";
-    longDescription = ''
-      git-surgeon gives AI agents surgical control over git changes without
-      interactive prompts. Stage, unstage, or discard individual hunks. Commit
-      hunks directly with line-range precision. Restructure history by
-      splitting commits or folding fixes into earlier ones.
-    '';
     homepage = "https://github.com/raine/git-surgeon";
-    changelog = "https://github.com/raine/git-surgeon/blob/v${finalAttrs.version}/CHANGELOG.md";
-    license = lib.licenses.mit;
-    mainProgram = "git-surgeon";
-    maintainers = with lib.maintainers; [ sei40kr ];
-    sourceProvenance = with lib.sourceTypes; [ fromSource ];
-    platforms = lib.platforms.unix;
+    changelog = "https://github.com/raine/git-surgeon/blob/v${data.version}/CHANGELOG.md";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.sei40kr ];
   };
-})
+}

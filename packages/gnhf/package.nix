@@ -1,56 +1,31 @@
+# gnhf - built from source on corepkgs (nixpkgs-free) via mkPnpm. pnpm deps
+# vendored as a flat hoisted node_modules FOD; `pnpm run build` (tsdown) produces
+# dist, and mkPnpm wraps `node dist/cli.mjs` on the naked node toolchain.
 {
-  lib,
+  mkPnpm,
+  coreFetchurl,
   flake,
-  buildNpmPackage,
-  fetchFromGitHub,
-  fetchPnpmDeps,
-  pnpm,
-  pnpmConfigHook,
-  versionCheckHook,
-  versionCheckHomeHook,
 }:
-
-buildNpmPackage rec {
+let
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
+in
+mkPnpm {
   pname = "gnhf";
-  version = "0.1.44";
-
-  src = fetchFromGitHub {
-    owner = "kunchenguid";
-    repo = "gnhf";
-    tag = "gnhf-v${version}";
-    hash = "sha256-2HhkveIiIB7UsPxNwJINxr7c7onem3Pbq8mFYf6aDtc=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/kunchenguid/gnhf/archive/refs/tags/gnhf-v${data.version}.tar.gz";
+    inherit (data) hash;
   };
+  pnpmDepsHash = data.pnpmDepsHash;
+  entry = "dist/cli.mjs";
 
-  npmDeps = null;
-  pnpmDeps = fetchPnpmDeps {
-    inherit pname version src;
-    inherit pnpm;
-    fetcherVersion = 4;
-    hash = "sha256-kQHYvZ8LNHGw1pPuTnOTUn26yUY8TmgA0+BO2+cSvLY=";
-  };
-
-  nativeBuildInputs = [ pnpm ];
-  npmConfigHook = pnpmConfigHook;
-
-  # npm prune hangs forever in pnpm-managed node_modules
-  dontNpmPrune = true;
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ];
-
-  passthru.category = "Workflow & Project Management";
-
-  meta = with lib; {
+  category = "Workflow & Project Management";
+  meta = {
     description = "Ralph/autoresearch-style orchestrator that keeps coding agents running while you sleep";
     homepage = "https://github.com/kunchenguid/gnhf";
-    changelog = "https://github.com/kunchenguid/gnhf/releases/tag/gnhf-v${version}";
-    license = licenses.mit;
-    sourceProvenance = with sourceTypes; [ fromSource ];
+    changelog = "https://github.com/kunchenguid/gnhf/releases/tag/gnhf-v${data.version}";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
     maintainers = with flake.lib.maintainers; [ pikdum ];
-    mainProgram = "gnhf";
-    platforms = platforms.all;
   };
 }

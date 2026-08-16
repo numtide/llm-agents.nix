@@ -1,52 +1,31 @@
+# hermes-hud - built from source on corepkgs (nixpkgs-free) via mkPython. pip
+# builds the setuptools project into a site tree and resolves the runtime closure
+# (pyyaml/textual/pyfiglet, all pure-python) from PyPI.
 {
-  lib,
+  mkPython,
+  coreFetchurl,
   flake,
-  python3,
-  fetchFromGitHub,
-  git,
 }:
-
-python3.pkgs.buildPythonApplication rec {
+let
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
+in
+mkPython {
   pname = "hermes-hud";
-  version = "0.5.0";
-  pyproject = true;
-
-  src = fetchFromGitHub {
-    owner = "joeynyc";
-    repo = "hermes-hud";
-    tag = "v${version}";
-    hash = "sha256-Osn/+7qnRQORBJLWgngLT2BU0EVu2xyRN7De619IDNI=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/joeynyc/hermes-hud/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
+  pythonDepsHash = data.pythonDepsHash;
+  entrypoints.hermes-hud = "hermes_hud.hud:main";
 
-  build-system = with python3.pkgs; [
-    setuptools
-  ];
-
-  dependencies = with python3.pkgs; [
-    pyyaml
-    textual
-    # upstream "neofetch" extra: needed for --neofetch/--br/--fsociety modes
-    pyfiglet
-  ];
-
-  pythonImportsCheck = [ "hermes_hud" ];
-
-  nativeCheckInputs = [
-    python3.pkgs.pytestCheckHook
-    # tests create git repos to exercise the projects collector
-    git
-  ];
-
-  passthru.category = "AI Assistants";
-
-  meta = with lib; {
+  category = "AI Assistants";
+  meta = {
     description = "TUI consciousness monitor for Hermes Agent";
     homepage = "https://github.com/joeynyc/hermes-hud";
-    changelog = "https://github.com/joeynyc/hermes-hud/releases/tag/v${version}";
-    license = licenses.mit;
-    sourceProvenance = with sourceTypes; [ fromSource ];
-    maintainers = with flake.lib.maintainers; [ smdex ];
-    platforms = platforms.unix;
-    mainProgram = "hermes-hud";
+    changelog = "https://github.com/joeynyc/hermes-hud/releases/tag/v${data.version}";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.smdex ];
   };
 }

@@ -1,136 +1,31 @@
+# apm - built from source on corepkgs (nixpkgs-free) via mkPython. pip builds the
+# setuptools project into a site tree and resolves the runtime closure (llm +
+# llm-github-models + azure-ai-inference and their pure-python/manylinux deps)
+# from PyPI; mkPython wraps the console script.
 {
-  lib,
-  python3,
-  fetchFromGitHub,
-  fetchPypi,
-  versionCheckHook,
-  versionCheckHomeHook,
+  mkPython,
+  coreFetchurl,
+  flake,
 }:
-
 let
-  azure-ai-inference = python3.pkgs.buildPythonPackage rec {
-    pname = "azure-ai-inference";
-    version = "1.0.0b9";
-    pyproject = true;
-
-    src = fetchPypi {
-      pname = "azure_ai_inference";
-      inherit version;
-      hash = "sha256-H+tJa9hLAe4mkb78BDWPol18NE2CiOmTZEOIWa181aQ=";
-    };
-
-    build-system = with python3.pkgs; [
-      setuptools
-    ];
-
-    dependencies = with python3.pkgs; [
-      azure-core
-      isodate
-      typing-extensions
-    ];
-
-    pythonImportsCheck = [ "azure.ai.inference" ];
-
-    # Tests require network access and Azure credentials
-    doCheck = false;
-
-    meta = with lib; {
-      description = "Microsoft Azure AI Inference Client Library for Python";
-      homepage = "https://github.com/Azure/azure-sdk-for-python";
-      license = licenses.mit;
-      sourceProvenance = with sourceTypes; [ fromSource ];
-      platforms = platforms.all;
-    };
-  };
-
-  llm-github-models = python3.pkgs.buildPythonPackage rec {
-    pname = "llm-github-models";
-    version = "0.18.0";
-    pyproject = true;
-
-    src = fetchPypi {
-      pname = "llm_github_models";
-      inherit version;
-      hash = "sha256-t3iqb6Q+U+yzuGj8+YdbwOdgp3Sh+tduqQeiaVgqIEM=";
-    };
-
-    build-system = with python3.pkgs; [
-      setuptools
-    ];
-
-    dependencies = with python3.pkgs; [
-      llm
-      aiohttp
-      azure-ai-inference
-    ];
-
-    pythonImportsCheck = [ "llm_github_models" ];
-
-    # Tests require GitHub API token
-    doCheck = false;
-
-    meta = with lib; {
-      description = "LLM plugin for GitHub Models";
-      homepage = "https://github.com/tonybaloney/llm-github-models";
-      license = licenses.asl20;
-      sourceProvenance = with sourceTypes; [ fromSource ];
-      platforms = platforms.all;
-    };
-  };
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
 in
-python3.pkgs.buildPythonApplication (finalAttrs: {
+mkPython {
   pname = "apm";
-  version = "0.28.0";
-  pyproject = true;
-
-  src = fetchFromGitHub {
-    owner = "microsoft";
-    repo = "apm";
-    tag = "v${finalAttrs.version}";
-    hash = "sha256-dQrbDvewO7rL1oFR2bWaxA1DjcLJqdn483tHPv4Lod4=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/microsoft/apm/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
+  pythonDepsHash = data.pythonDepsHash;
+  entrypoints.apm = "apm_cli.cli:main";
 
-  build-system = with python3.pkgs; [
-    setuptools
-  ];
-
-  dependencies = with python3.pkgs; [
-    click
-    colorama
-    filelock
-    gitpython
-    llm
-    llm-github-models
-    python-frontmatter
-    pyyaml
-    requests
-    rich
-    rich-click
-    ruamel-yaml
-    toml
-    tomlkit
-    truststore
-    watchdog
-  ];
-
-  pythonImportsCheck = [ "apm_cli" ];
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ];
-  versionCheckProgramArg = [ "--version" ];
-
-  passthru.category = "Utilities";
-
-  meta = with lib; {
+  category = "Utilities";
+  meta = {
     description = "Agent Package Manager — dependency manager for AI agents";
     homepage = "https://github.com/microsoft/apm";
-    changelog = "https://github.com/microsoft/apm/releases/tag/v${finalAttrs.version}";
-    license = licenses.mit;
-    sourceProvenance = with sourceTypes; [ fromSource ];
-    platforms = platforms.all;
-    mainProgram = "apm";
+    changelog = "https://github.com/microsoft/apm/releases/tag/v${data.version}";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
   };
-})
+}

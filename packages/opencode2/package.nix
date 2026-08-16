@@ -1,91 +1,56 @@
+# opencode2 - built on corepkgs, the repo's nixpkgs-free packaging system.
+# `mkPackage` (from the flake scope) fetches the prebuilt npm tarball (next
+# channel) and wraps it; version + per-platform hashes come from the shared
+# ./hashes.json (the same file nix-update bumps), so nothing drifts.
+#
+# opencode2 ships a bun --compile single-file binary (package/bin/opencode2):
+# on Linux its appended JS payload segfaults on any ELF rewrite, so kind =
+# "loader" leaves it byte-intact and invokes the pinned glibc loader.
 {
-  lib,
+  mkPackage,
   mkUpdater,
-  stdenv,
-  makeWrapper,
-  wrapBuddy,
-  ripgrep,
-  platformSource,
-  versionCheckHook,
-  versionCheckHomeHook,
+  corePins,
   flake,
 }:
-
 let
-  # OpenCode 2 ships as platform-specific Bun executables on npm's next channel
-  # (@opencode-ai/cli-<platform>).
-  source = platformSource {
-    hashesFile = ./hashes.json;
-    platforms = {
-      x86_64-linux = "linux-x64";
-      aarch64-linux = "linux-arm64";
-      aarch64-darwin = "darwin-arm64";
-    };
-    urlTemplate = "https://registry.npmjs.org/@opencode-ai/cli-{platform}/-/cli-{platform}-{version}.tgz";
+  # system -> {platform} URL token, shared by the build and the updater.
+  platforms = {
+    x86_64-linux = "linux-x64";
+    aarch64-linux = "linux-arm64";
+    aarch64-darwin = "darwin-arm64";
   };
+  urlTemplate = "https://registry.npmjs.org/@opencode-ai/cli-{platform}/-/cli-{platform}-{version}.tgz";
 in
-stdenv.mkDerivation {
+mkPackage {
   pname = "opencode2";
-  inherit (source) version src;
+  hashesFile = ./hashes.json;
+  inherit platforms urlTemplate;
+  unpack = "tar";
+  binary = "package/bin/opencode2";
+  kind = "loader";
+  runtimePkgs = [ corePins.ripgrep ];
+  # Nix manages this binary; stop the CLI from trying to self-update.
+  setEnv = {
+    OPENCODE_DISABLE_AUTOUPDATE = "1";
+  };
 
-  sourceRoot = "package";
-
-  nativeBuildInputs = [ makeWrapper ] ++ lib.optionals stdenv.hostPlatform.isLinux [ wrapBuddy ];
-
-  buildInputs = lib.optionals stdenv.hostPlatform.isLinux [ stdenv.cc.cc.lib ];
-
-  wrapBuddyExtraNeeded = lib.optionals stdenv.hostPlatform.isLinux [ "libstdc++.so.6" ];
-
-  dontBuild = true;
-  # Bun-compiled executable; stripping corrupts the embedded payload.
-  dontStrip = true;
-
-  # Install only the executable; the tarball also contains ~49 MiB of source
-  # maps that are not needed at runtime.
-  installPhase = ''
-    runHook preInstall
-
-    install -Dm755 bin/opencode2 $out/bin/opencode2
-    wrapProgram $out/bin/opencode2 \
-      --prefix PATH : ${lib.makeBinPath [ ripgrep ]}
-
-    runHook postInstall
-  '';
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ];
-  versionCheckProgramArg = "--version";
-
-  passthru.category = "AI Coding Agents";
-  passthru.updater = mkUpdater (
-    source.updater
-    // {
-      versionSource = {
-        type = "npm";
-        package = "@opencode-ai/cli";
-        tag = "next";
-      };
-    }
-  );
+  category = "AI Coding Agents";
+  updater = mkUpdater {
+    kind = "platform";
+    inherit urlTemplate platforms;
+    versionSource = {
+      type = "npm";
+      package = "@opencode-ai/cli";
+      tag = "next";
+    };
+  };
 
   meta = {
     description = "OpenCode 2 preview CLI";
-    longDescription = ''
-      OpenCode 2 is the preview of OpenCode's next-generation CLI. The single
-      executable includes the terminal interface and server, and can run with
-      a private server, reuse a background service, or connect to a remote
-      server.
-    '';
     homepage = "https://opencode.ai";
     changelog = "https://github.com/anomalyco/opencode/commits/v2";
-    downloadPage = "https://www.npmjs.com/package/@opencode-ai/cli?activeTab=versions";
-    license = lib.licenses.mit;
-    sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
-    maintainers = with flake.lib.maintainers; [ iainlane ];
-    mainProgram = "opencode2";
-    platforms = source.platforms;
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.binaryNativeCode ];
+    maintainers = [ flake.lib.maintainers.iainlane ];
   };
 }

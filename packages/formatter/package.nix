@@ -2,12 +2,19 @@
   flake,
   inputs,
   pkgs,
+  nixfmt-rs,
+  shuck,
 }:
 # treefmt with config
 let
   formatter = inputs."treefmt-nix".lib.mkWrapper pkgs {
     _file = __curPos.file;
     imports = [ ./treefmt.nix ];
+    # dogfood: format Nix with corepkgs' own from-source build of nixfmt-rs (the
+    # Rust port of nixfmt), byte-identical to nixpkgs' nixfmt.
+    programs.nixfmt.package = nixfmt-rs;
+    # trial: shuck (Rust) as the shell linter+formatter, replacing shellcheck+shfmt.
+    _module.args.shuck = shuck;
   };
 
   check =

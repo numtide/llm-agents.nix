@@ -1,116 +1,54 @@
+# amp (Sourcegraph's agentic coding CLI) - built on corepkgs, the repo's
+# nixpkgs-free packaging system. `mkPackage` (from the flake scope) fetches the
+# prebuilt release artifact and wraps it; version + per-platform hashes come
+# from the shared ./hashes.json (the same file nix-update bumps), so nothing
+# drifts.
+#
+# amp ships a bun --compile single-file binary: on Linux its appended JS payload
+# segfaults on any ELF rewrite, so kind = "loader" leaves it byte-intact and
+# invokes the pinned glibc loader through the wrapper. It shells out to ripgrep,
+# so the pinned rg joins the wrapper PATH.
 {
-  lib,
-  flake,
-  stdenv,
-  fetchurl,
-  makeWrapper,
-  wrapBuddy,
-  ripgrep,
-  cctools,
-  darwin,
-  rcodesign,
-  versionCheckHook,
-  versionCheckHomeHook,
+  mkPackage,
   mkUpdater,
+  flake,
+  corePins,
 }:
-
 let
-  versionData = builtins.fromJSON (builtins.readFile ./hashes.json);
-  inherit (versionData) version;
-  hashes = versionData.hashes;
-
-  platformMap = {
+  # system -> {platform} URL token, shared by the build and the updater.
+  platforms = {
     x86_64-linux = "linux-x64";
     aarch64-linux = "linux-arm64";
     aarch64-darwin = "darwin-arm64";
   };
-
-  platform = stdenv.hostPlatform.system;
-  platformSuffix = platformMap.${platform} or (throw "Unsupported system: ${platform}");
+  urlTemplate = "https://static.ampcode.com/cli/{version}/amp-{platform}";
 in
-stdenv.mkDerivation {
+mkPackage {
   pname = "amp";
-  inherit version;
+  hashesFile = ./hashes.json;
+  inherit platforms urlTemplate;
+  kind = "loader";
 
-  src = fetchurl {
-    url = "https://static.ampcode.com/cli/${version}/amp-${platformSuffix}";
-    hash = hashes.${platform};
-  };
+  runtimePkgs = [ corePins.ripgrep ];
+  # keep the immutable Nix store binary from trying to replace itself.
+  setEnv.AMP_SKIP_UPDATE_CHECK = "1";
 
-  dontUnpack = true;
-
-  nativeBuildInputs = [
-    makeWrapper
-  ]
-  ++ lib.optionals stdenv.hostPlatform.isLinux [ wrapBuddy ]
-  ++ lib.optionals stdenv.hostPlatform.isDarwin [
-    cctools
-    rcodesign
-  ];
-
-  dontStrip = true; # do not mess with the bun runtime
-
-  installPhase = ''
-    runHook preInstall
-
-    install -Dm755 $src $out/bin/amp
-
-    runHook postInstall
-  '';
-
-  # Rewrite the Bun ICU dependency to use Nix-provided darwin.ICU instead of
-  # /usr/lib/libicucore.A.dylib, which needs /usr/share/icu/ at runtime.
-  # This avoids __noChroot and lets the build run in the sandbox on macOS.
-  # Re-signing is required because modifying the binary invalidates its signature.
-  #
-  # Uses a single wrapProgram call to avoid double-wrapping which causes the
-  # process to show as ".amp-wrapped_" instead of "amp" in ps/htop.
-  # --argv0 ensures the process name is preserved through the wrapper.
-  postFixup = ''
-    ${lib.optionalString stdenv.hostPlatform.isDarwin ''
-      ${lib.getExe' cctools "${cctools.targetPrefix}install_name_tool"} $out/bin/amp \
-        -change /usr/lib/libicucore.A.dylib '${lib.getLib darwin.ICU}/lib/libicucore.A.dylib'
-      ${lib.getExe rcodesign} sign --code-signature-flags linker-signed $out/bin/amp
-    ''}
-    wrapProgram $out/bin/amp \
-      --argv0 amp \
-      --prefix PATH : ${lib.makeBinPath [ ripgrep ]} \
-      --set AMP_SKIP_UPDATE_CHECK 1
-  '';
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ];
-
-  passthru.category = "AI Coding Agents";
-  passthru.updater = mkUpdater {
+  category = "AI Coding Agents";
+  updater = mkUpdater {
     kind = "platform";
+    inherit urlTemplate platforms;
     versionSource = {
       type = "text";
       url = "https://static.ampcode.com/cli/cli-version.txt";
     };
-    urlTemplate = "https://static.ampcode.com/cli/{version}/amp-{platform}";
-    platforms = {
-      x86_64-linux = "linux-x64";
-      aarch64-linux = "linux-arm64";
-      aarch64-darwin = "darwin-arm64";
-    };
   };
 
-  meta = with lib; {
+  meta = {
     description = "CLI for Amp, an agentic coding tool in research preview from Sourcegraph";
     homepage = "https://ampcode.com/";
     changelog = "https://ampcode.com/chronicle";
     license = flake.lib.licenses.unfree;
-    sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
-    maintainers = with maintainers; [ ];
-    platforms = [
-      "x86_64-linux"
-      "aarch64-linux"
-      "aarch64-darwin"
-    ];
-    mainProgram = "amp";
+    sourceProvenance = [ flake.lib.sourceTypes.binaryNativeCode ];
+    maintainers = [ ];
   };
 }

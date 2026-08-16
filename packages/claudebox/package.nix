@@ -78,8 +78,11 @@ pkgs.runCommand "claudebox"
       } \
       ${if isDarwin then "--set CLAUDEBOX_SEATBELT_PROFILE $out/share/claudebox/seatbelt.sbpl" else ""}
 
-    # Create claude wrapper
-    makeWrapper ${claude-code}/bin/.claude-wrapped $out/libexec/claudebox/claude \
+    # Create claude wrapper. claude-code is now a corepkgs build: its public
+    # entrypoint is bin/claude (a wrapper that invokes the pinned loader and
+    # sets DISABLE_AUTOUPDATER itself), not the nixpkgs makeWrapper
+    # .claude-wrapped. Wrap that.
+    makeWrapper ${claude-code}/bin/claude $out/libexec/claudebox/claude \
       --set DISABLE_AUTOUPDATER 1 \
       --inherit-argv0
   ''

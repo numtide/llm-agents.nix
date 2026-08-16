@@ -1,104 +1,82 @@
+# copilot-cli (GitHub Copilot CLI) - built on corepkgs, the repo's nixpkgs-free
+# packaging system. Since 1.0.64 the @github/copilot npm package is just a
+# loader that resolves and spawns a per-platform package
+# (@github/copilot-<platform>-<arch>), which ships the actual Node SEA binary
+# plus bundled ripgrep/tgrep and native .node modules. version + per-platform
+# hashes come from the shared ./hashes.json (the same file nix-update bumps).
+#
+# The `copilot` binary is a Node single-executable application (SEA) with an
+# appended payload: formatelf cannot rewrite its truncated headers and any ELF
+# edit corrupts it, so kind = "loader" leaves it byte-intact and invokes the
+# pinned glibc loader through the wrapper. dir-install the whole tree so the SEA
+# finds its bundled rg/tgrep and native modules. The bundled webview module
+# needs GTK/webkit/wayland libs the CLI never loads; allow them to stay
+# unresolved (like nixpkgs autoPatchelfIgnoreMissingDeps).
 {
-  lib,
-  flake,
+  mkPackage,
   mkUpdater,
-  stdenv,
-  platformSource,
-  makeWrapper,
-  patchelf,
-  cacert,
-  versionCheckHook,
-  versionCheckHomeHook,
+  corePins,
+  flake,
 }:
-
 let
-  # Since 1.0.64 the @github/copilot npm package is just a loader that resolves
-  # and spawns a per-platform package (@github/copilot-<platform>-<arch>), which
-  # ships the actual Node SEA binary plus bundled ripgrep/tgrep.
-  source = platformSource {
-    hashesFile = ./hashes.json;
-    platforms = {
-      x86_64-linux = "linux-x64";
-      aarch64-linux = "linux-arm64";
-      aarch64-darwin = "darwin-arm64";
-    };
-    urlTemplate = "https://registry.npmjs.org/@github/copilot-{platform}/-/copilot-{platform}-{version}.tgz";
+  # system -> {platform} URL token, shared by the build and the updater.
+  platforms = {
+    x86_64-linux = "linux-x64";
+    aarch64-linux = "linux-arm64";
+    aarch64-darwin = "darwin-arm64";
   };
+  urlTemplate = "https://registry.npmjs.org/@github/copilot-{platform}/-/copilot-{platform}-{version}.tgz";
 in
-stdenv.mkDerivation (finalAttrs: {
+mkPackage {
   pname = "copilot-cli";
-  inherit (source) version src;
+  hashesFile = ./hashes.json;
+  inherit platforms urlTemplate;
+  unpack = "tar";
+  installDir = "package";
+  entrypoint = "copilot";
+  mainProgram = "copilot";
+  kind = "loader";
+  libs = [ corePins.zlib ];
 
-  nativeBuildInputs = [
-    makeWrapper
-  ]
-  ++ lib.optionals stdenv.hostPlatform.isLinux [ patchelf ];
+  # --set-default COPILOT_AUTO_UPDATE false keeps the immutable Nix store binary
+  # from trying to replace itself.
+  setEnv = {
+    COPILOT_AUTO_UPDATE = "false";
+  };
 
-  dontBuild = true;
-
-  # `copilot` is a Node single-executable application with an embedded blob;
-  # stripping or rewriting its program headers corrupts it.
-  dontStrip = true;
-  dontPatchELF = true;
-
-  installPhase =
-    let
-      libPath = lib.makeLibraryPath [ stdenv.cc.cc.lib ];
-    in
-    ''
-      runHook preInstall
-
-      mkdir -p $out/lib/${finalAttrs.pname}
-      cp -r . $out/lib/${finalAttrs.pname}
-      bin=$out/lib/${finalAttrs.pname}/copilot
-    ''
-    + lib.optionalString stdenv.hostPlatform.isLinux ''
-      # `copilot` is a Node single-executable application; autoPatchelfHook
-      # grows the program headers and corrupts the embedded SEA blob, so patch
-      # the interpreter and rpath minimally instead. The bundled .node libraries
-      # are dlopen'd, so make their dependencies available via LD_LIBRARY_PATH;
-      # the bundled rg/tgrep are static-pie and need nothing.
-      patchelf \
-        --set-interpreter "$(cat ${stdenv.cc}/nix-support/dynamic-linker)" \
-        --set-rpath "${libPath}" \
-        "$bin"
-    ''
-    + ''
-      makeWrapper "$bin" $out/bin/copilot \
-        --set SSL_CERT_DIR "${cacert}/etc/ssl/certs" \
-        --set-default COPILOT_AUTO_UPDATE false \
-        ${lib.optionalString stdenv.hostPlatform.isLinux ''--prefix LD_LIBRARY_PATH : "${libPath}"''}
-
-      runHook postInstall
-    '';
-
-  doInstallCheck = true;
-  # The Node SEA self-extracts its bundled package into $HOME on first run, so
-  # the version check needs a writable HOME.
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
+  # The bundled webview .node module is dlopen'd only in GUI mode; the CLI never
+  # loads it, so allow its GTK/webkit/wayland deps to stay unresolved.
+  ignoreMissing = [
+    "libwebkit2gtk-4.1.so.0"
+    "libgtk-3.so.0"
+    "libgdk-3.so.0"
+    "libcairo.so.2"
+    "libgdk_pixbuf-2.0.so.0"
+    "libsoup-3.0.so.0"
+    "libgio-2.0.so.0"
+    "libjavascriptcoregtk-4.1.so.0"
+    "libgobject-2.0.so.0"
+    "libglib-2.0.so.0"
+    "libwayland-client.so.0"
+    "libdbus-1.so.3"
+    "libxdo.so.3"
   ];
-  versionCheckProgramArg = [ "--version" ];
 
-  passthru.category = "AI Coding Agents";
-  passthru.updater = mkUpdater (
-    source.updater
-    // {
-      versionSource = {
-        type = "npm";
-        package = "@github/copilot";
-      };
-    }
-  );
+  category = "AI Coding Agents";
+  updater = mkUpdater {
+    kind = "platform";
+    inherit urlTemplate platforms;
+    versionSource = {
+      type = "npm";
+      package = "@github/copilot";
+    };
+  };
 
   meta = {
     description = "GitHub Copilot CLI brings the power of Copilot coding agent directly to your terminal.";
     homepage = "https://github.com/github/copilot-cli";
-    changelog = "https://github.com/github/copilot-cli/releases/tag/v${finalAttrs.version}";
+    changelog = "https://github.com/github/copilot-cli/releases";
     license = flake.lib.licenses.unfree;
-    sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
-    platforms = source.platforms;
-    mainProgram = "copilot";
+    sourceProvenance = [ flake.lib.sourceTypes.binaryNativeCode ];
   };
-})
+}

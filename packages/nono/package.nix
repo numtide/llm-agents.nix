@@ -1,60 +1,39 @@
+# nono - built from source on corepkgs (nixpkgs-free) via mkCargo. The workspace
+# is at the tarball root; we build the nono-cli crate (-p nono-cli) which emits
+# the `nono` binary. On Linux the keyring backend is async-secret-service with
+# crypto-rust, i.e. pure-Rust zbus - no system libdbus. `ring` bundles its own C
+# and compiles it through the `cc` crate (our `zig cc` wrapper). Pure crates.io,
+# no git deps. The nixpkgs if-let-guard patch and the MSRV-unpin hook are dropped:
+# rust 1.97.1 supports if-let guards and clears the rust-version = "1.95" floor.
 {
-  lib,
-  stdenv,
-  rustPlatform,
-  fetchFromGitHub,
-  dbus,
-  pkg-config,
-  versionCheckHook,
-  unpinCargoMsrvHook,
-  ...
+  mkCargo,
+  coreFetchurl,
+  flake,
 }:
-
-rustPlatform.buildRustPackage rec {
+let
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
+in
+mkCargo {
   pname = "nono";
-  version = "0.73.0";
-
-  src = fetchFromGitHub {
-    owner = "always-further";
-    repo = "nono";
-    tag = "v${version}";
-    hash = "sha256-7k0K57A7RakezXgfEhdEJP+GIWusNj8IAKtCCNU4I6Q=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/always-further/nono/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
-
-  cargoHash = "sha256-JXV9G0CNptDSWtAY1k1RQC07FEVy530hhqqtojzzpEg=";
-
-  # `if let` guards in match arms require Rust >= 1.95; rewrite the single
-  # use until nixpkgs ships a new enough rustc.
-  patches = [ ./no-if-let-guard.patch ];
-
-  # keyring uses sync-secret-service (dbus) on Linux, apple-native on Darwin
-  buildInputs = lib.optionals stdenv.hostPlatform.isLinux [ dbus ];
-  # unpinCargoMsrvHook: upstream pins rust-version = "1.95" (unreleased MSRV
-  # bump) but builds fine on the rustc in nixpkgs.
-  nativeBuildInputs = [
-    unpinCargoMsrvHook
-  ]
-  ++ lib.optionals stdenv.hostPlatform.isLinux [
-    pkg-config
+  cargoLock = ./Cargo.lock;
+  cargoBuildFlags = [
+    "-p"
+    "nono-cli"
   ];
+  binaries = [ "nono" ];
 
-  doCheck = false;
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    versionCheckHook
-  ];
-
-  passthru.category = "Sandboxing & Isolation";
-
-  meta = with lib; {
+  category = "Sandboxing & Isolation";
+  meta = {
     description = "Kernel-enforced agent sandbox. Capability-based isolation with secure key management, atomic rollback, cryptographic immutable audit chain of provenance. Run your agents in a zero-trust environment.";
     homepage = "https://nono.sh/";
-    changelog = "https://github.com/always-further/nono/releases/tag/v${version}";
-    license = licenses.asl20;
-    sourceProvenance = with sourceTypes; [ fromSource ];
-    maintainers = with maintainers; [ pogobanane ];
-    mainProgram = "nono";
-    platforms = platforms.unix;
+    changelog = "https://github.com/always-further/nono/releases/tag/v${data.version}";
+    license = flake.lib.licenses.asl20;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.pogobanane ];
   };
 }

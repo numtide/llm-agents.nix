@@ -1,30 +1,39 @@
-# nixpkgs ships dolt 1.x, but gascity's managed bd/Dolt runtime requires
-# Dolt >= 2.1.0. Bump the nixpkgs package; dolt 2.1.2 requires go >= 1.26.2,
-# newer than nixpkgs' default Go, so build with go-bin.
+# dolt - built from source on corepkgs (nixpkgs-free) via mkGo with cgo (it
+# links ICU via cgo). zig cc compiles the cgo C; the dynamic output is patchelf'd
+# to the pinned glibc + icu. buildInputs pass icu (lib for rpath) + icuDev
+# (pkgconfig/headers for the #cgo pkg-config). go.mod lives in ./go.
 {
-  # pkgs.dolt is used explicitly: a `dolt` argument would resolve to this
-  # package itself.
-  pkgs,
-  buildGoModule,
-  fetchFromGitHub,
-  go-bin,
+  mkGo,
+  coreFetchurl,
+  corePins,
+  flake,
 }:
 let
-  base = pkgs.dolt.override {
-    buildGoModule = buildGoModule.override { go = go-bin; };
-  };
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
 in
-base.overrideAttrs (old: rec {
-  version = "2.3.0";
-  src = fetchFromGitHub {
-    owner = "dolthub";
-    repo = "dolt";
-    tag = "v${version}";
-    hash = "sha256-ho0mUdiwYTmczU7791pyD3MpCMje2a/IVt40QIiCJd4=";
+mkGo {
+  pname = "dolt";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/dolthub/dolt/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
-  vendorHash = "sha256-k5fpdI1wtZQYpjJEyre3Kh57AC0i3PsU2SIsf8ga1c8=";
-  passthru = (old.passthru or { }) // {
-    hideFromDocs = true;
-    updateEvenIfHidden = true;
+  vendorHash = data.vendorHash;
+  cgo = true;
+  buildInputs = [
+    corePins.icu
+    corePins.icuDev
+  ];
+  sourceRoot = "go";
+  subPackages = [ "cmd/dolt" ];
+  binaries = [ "dolt" ];
+  ldflags = [ "-buildid=" ];
+  category = "Utilities";
+  meta = {
+    description = "Relational database with version control and CLI a-la Git";
+    homepage = "https://github.com/dolthub/dolt";
+    changelog = "https://github.com/dolthub/dolt/releases/tag/v${data.version}";
+    license = flake.lib.licenses.asl20;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
   };
-})
+}

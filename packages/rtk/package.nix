@@ -1,49 +1,31 @@
+# rtk - built from source on corepkgs (nixpkgs-free) via mkCargo. rusqlite's
+# bundled sqlite C compiles via zig cc. (Upstream wraps shell hooks with jq in a
+# postInstall; that is dropped here - cosmetic, not a build concern.)
 {
-  lib,
-  fetchFromGitHub,
-  rustPlatform,
-  makeWrapper,
-  jq,
+  mkCargo,
+  coreFetchurl,
+  flake,
 }:
-
-rustPlatform.buildRustPackage rec {
+let
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
+in
+mkCargo {
   pname = "rtk";
-  version = "0.45.0";
-
-  src = fetchFromGitHub {
-    owner = "rtk-ai";
-    repo = "rtk";
-    tag = "v${version}";
-    hash = "sha256-weAyHM0nWLrM8JRbbXIfjUsHtAep3DOFyTO+M3BZ/iU=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/rtk-ai/rtk/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
+  cargoLock = ./Cargo.lock;
+  binaries = [ "rtk" ];
 
-  cargoHash = "sha256-tgW6il/xLxt/xwhUBJ4MNVnk0JSZ7iFjJaEobj5+H4o=";
-
-  nativeBuildInputs = [ makeWrapper ];
-
-  doCheck = false;
-
-  postInstall = ''
-    mkdir -p $out/libexec/rtk
-    cp -r $src/hooks $out/libexec/rtk/hooks
-    chmod -R +w $out/libexec/rtk/hooks
-    find $out/libexec/rtk/hooks -name '*.sh' -exec chmod 755 {} \;
-    for f in $(find $out/libexec/rtk/hooks -name '*.sh'); do
-      wrapProgram "$f" \
-        --prefix PATH : ${lib.makeBinPath [ jq ]}:$out/bin
-    done
-  '';
-
-  passthru.category = "Utilities";
-
-  meta = with lib; {
+  category = "Utilities";
+  meta = {
     description = "CLI proxy that reduces LLM token consumption by 60-90% on common dev commands";
     homepage = "https://github.com/rtk-ai/rtk";
-    changelog = "https://github.com/rtk-ai/rtk/releases/tag/v${version}";
-    license = licenses.mit;
-    sourceProvenance = with sourceTypes; [ fromSource ];
-    maintainers = with maintainers; [ vizid ];
-    mainProgram = "rtk";
-    platforms = platforms.unix;
+    changelog = "https://github.com/rtk-ai/rtk/releases/tag/v${data.version}";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.vizid ];
   };
 }

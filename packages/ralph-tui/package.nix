@@ -1,74 +1,34 @@
+# ralph-tui - built from source on corepkgs (nixpkgs-free) via mkBun. The upstream
+# `bun run build` bundles src/cli.tsx -> dist/cli.js (externalizing @opentui/* and
+# react, which stay in the vendored node_modules) and copies assets/skills/templates.
+# mkBun then wraps `bun run dist/cli.js` on the naked bun toolchain (no --compile,
+# which @opentui/core's top-level-await FFI could not use anyway).
 {
-  lib,
+  mkBun,
+  coreFetchurl,
   flake,
-  stdenv,
-  bun2nixLib,
-  bun,
-  fetchFromGitHub,
-  makeWrapper,
-  mkUpdater,
 }:
-
 let
-  versionData = builtins.fromJSON (builtins.readFile ./hashes.json);
-  inherit (versionData) version hash;
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
 in
-stdenv.mkDerivation {
+mkBun {
   pname = "ralph-tui";
-  inherit version;
-
-  src = fetchFromGitHub {
-    owner = "subsy";
-    repo = "ralph-tui";
-    tag = "v${version}";
-    inherit hash;
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/subsy/ralph-tui/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
+  bunDepsHash = data.bunDepsHash;
+  buildScript = "run build";
+  entry = "dist/cli.js";
 
-  nativeBuildInputs = [
-    bun2nixLib.hook
-    makeWrapper
-  ];
-
-  bunDeps = bun2nixLib.fetchBunDeps {
-    bunNix = ./bun.nix;
-  };
-
-  # @opentui/core uses top-level await and dynamic import() for native FFI,
-  # which prevents bun build --compile. Build from source with externals
-  # and wrap with bun runtime instead.
-  dontUseBunBuild = true;
-  dontUseBunInstall = true;
-
-  buildPhase = ''
-    runHook preBuild
-    bun run build
-    runHook postBuild
-  '';
-
-  installPhase = ''
-    runHook preInstall
-    mkdir -p $out/lib/ralph-tui
-    cp -r dist node_modules package.json $out/lib/ralph-tui/
-    mkdir -p $out/bin
-    makeWrapper ${bun}/bin/bun $out/bin/ralph-tui \
-      --add-flags "run $out/lib/ralph-tui/dist/cli.js"
-    runHook postInstall
-  '';
-
-  passthru.category = "Workflow & Project Management";
-  passthru.updater = mkUpdater {
-    kind = "bun-github";
-    purl = "pkg:github/subsy/ralph-tui";
-  };
-
-  meta = with lib; {
+  category = "Workflow & Project Management";
+  meta = {
     description = "AI Agent Loop Orchestrator TUI";
     homepage = "https://github.com/subsy/ralph-tui";
-    changelog = "https://github.com/subsy/ralph-tui/releases/tag/v${version}";
-    license = licenses.mit;
-    sourceProvenance = with sourceTypes; [ fromSource ];
-    maintainers = with flake.lib.maintainers; [ afterthought ];
-    mainProgram = "ralph-tui";
-    platforms = platforms.unix;
+    changelog = "https://github.com/subsy/ralph-tui/releases/tag/v${data.version}";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.afterthought ];
   };
 }

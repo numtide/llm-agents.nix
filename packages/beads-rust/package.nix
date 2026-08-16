@@ -1,71 +1,36 @@
+# beads-rust (br) - built from source on corepkgs (nixpkgs-free) via mkCargo.
+# Pure crates.io deps (the published fsqlite-* crates resolve from crates.io with
+# checksums). fsqlite uses #![feature(...)] gated to nightly, so RUSTC_BOOTSTRAP=1
+# enables those on the stable toolchain (same as the nixpkgs recipe).
 {
-  lib,
+  mkCargo,
+  coreFetchurl,
   flake,
-  rustPlatform,
-  fetchFromGitHub,
-  versionCheckHook,
 }:
-
 let
   data = builtins.fromJSON (builtins.readFile ./hashes.json);
-
-  # Upstream's tagged Cargo.lock is generated with the dev-local
-  # `[patch.crates-io]` config active, so the fsqlite-* entries have no
-  # `source =` field and are not vendored.  Reproduce that environment by
-  # placing a sibling frankensqlite checkout and installing the upstream
-  # patch table (scripts/dev-local-frankensqlite.toml) as .cargo/config.toml.
-  # https://github.com/Dicklesworthstone/beads_rust/issues/183
-  frankensqlite = fetchFromGitHub {
-    owner = "Dicklesworthstone";
-    repo = "frankensqlite";
-    inherit (data.frankensqlite) rev hash;
-  };
 in
-rustPlatform.buildRustPackage {
+mkCargo {
   pname = "beads-rust";
-  inherit (data) version cargoHash;
-
-  src = fetchFromGitHub {
-    owner = "Dicklesworthstone";
-    repo = "beads_rust";
-    tag = "v${data.version}";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/Dicklesworthstone/beads_rust/archive/refs/tags/v${data.version}.tar.gz";
     inherit (data) hash;
   };
+  cargoLock = ./Cargo.lock;
+  binaries = [ "br" ];
+  mainProgram = "br";
+  # self_update feature makes no sense under Nix; drop it (nixpkgs does the same).
+  cargoBuildFlags = [ "--no-default-features" ];
+  extraEnv.RUSTC_BOOTSTRAP = "1";
 
-  postUnpack = ''
-    cp -r ${frankensqlite} frankensqlite
-    chmod -R u+w frankensqlite
-  '';
-
-  postPatch = ''
-    mkdir -p .cargo
-    cp scripts/dev-local-frankensqlite.toml .cargo/config.toml
-  '';
-
-  # fsqlite uses #![feature(peer_credentials_unix_socket)] which requires nightly.
-  # RUSTC_BOOTSTRAP=1 enables nightly features on stable rustc.
-  env.RUSTC_BOOTSTRAP = 1;
-
-  # Disable self_update feature — doesn't make sense in Nix
-  buildNoDefaultFeatures = true;
-
-  # Tests require a git repository context
-  doCheck = false;
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [ versionCheckHook ];
-
-  passthru.category = "Workflow & Project Management";
-
-  meta = with lib; {
+  category = "Workflow & Project Management";
+  meta = {
     description = "Fast Rust port of beads - a local-first issue tracker for git repositories";
     homepage = "https://github.com/Dicklesworthstone/beads_rust";
     changelog = "https://github.com/Dicklesworthstone/beads_rust/releases/tag/v${data.version}";
-    downloadPage = "https://github.com/Dicklesworthstone/beads_rust/releases";
-    license = licenses.mit;
-    sourceProvenance = with sourceTypes; [ fromSource ];
-    maintainers = with flake.lib.maintainers; [ afterthought ];
-    mainProgram = "br";
-    platforms = platforms.unix;
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.afterthought ];
   };
 }

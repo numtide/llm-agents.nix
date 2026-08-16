@@ -1,65 +1,37 @@
+# openfang - built from source on corepkgs (nixpkgs-free) via mkCargo. Uses
+# native-tls -> openssl-sys; openssl = true wires the pinned openssl (headers +
+# libs, OPENSSL_NO_VENDOR) so it links our openssl instead of building one from
+# source with perl.
 {
-  lib,
+  mkCargo,
+  coreFetchurl,
   flake,
-  fetchFromGitHub,
-  rustPlatform,
-  pkg-config,
-  openssl,
-  stdenv,
-  versionCheckHook,
 }:
-
-rustPlatform.buildRustPackage rec {
+let
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
+in
+mkCargo {
   pname = "openfang";
-  version = "0.6.9";
-
-  src = fetchFromGitHub {
-    owner = "RightNow-AI";
-    repo = "openfang";
-    tag = "v${version}";
-    hash = "sha256-Zz+lFS2bLdb7F4/Ogdc2xrr9rACEzCijdfeAEXIUmnw=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/RightNow-AI/openfang/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
-
-  cargoHash = "sha256-MGqLTo/0kUcVOL/MZo3sRgLH9ceSLASvJyl0Ou4giY8=";
-
+  cargoLock = ./Cargo.lock;
+  binaries = [ "openfang" ];
   cargoBuildFlags = [
     "--package"
     "openfang-cli"
   ];
-  cargoTestFlags = cargoBuildFlags;
+  openssl = true;
 
-  env = {
-    # native-tls needs openssl on Linux only; link nixpkgs openssl instead of
-    # upstream's vendored build (avoids perl/clang, inherits security updates).
-    OPENSSL_NO_VENDOR = "1";
-    # Upstream sets lto=true + codegen-units=1, making the final link a
-    # single-threaded fat-LTO over ~450 crates (wasmtime/cranelift). Override
-    # to keep CI build times reasonable.
-    CARGO_PROFILE_RELEASE_LTO = "off";
-    CARGO_PROFILE_RELEASE_CODEGEN_UNITS = "16";
-  };
-
-  nativeBuildInputs = lib.optionals stdenv.hostPlatform.isLinux [ pkg-config ];
-  buildInputs = lib.optionals stdenv.hostPlatform.isLinux [ openssl ];
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [ versionCheckHook ];
-  versionCheckProgramArg = "--version";
-
-  passthru.category = "AI Coding Agents";
-
+  category = "AI Coding Agents";
   meta = {
     description = "Open-source Agent OS built in Rust — CLI for the OpenFang platform";
     homepage = "https://github.com/RightNow-AI/openfang";
-    changelog = "https://github.com/RightNow-AI/openfang/releases/tag/v${version}";
-    license = lib.licenses.mit;
-    sourceProvenance = with lib.sourceTypes; [ fromSource ];
-    maintainers = with flake.lib.maintainers; [ viniciuspalma ];
-    mainProgram = "openfang";
-    platforms = [
-      "x86_64-linux"
-      "aarch64-linux"
-      "aarch64-darwin"
-    ];
+    changelog = "https://github.com/RightNow-AI/openfang/releases/tag/v${data.version}";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.viniciuspalma ];
   };
 }

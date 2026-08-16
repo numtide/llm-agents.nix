@@ -1,78 +1,37 @@
+# reasonix - built from source on corepkgs (nixpkgs-free) via mkGo. CGO_ENABLED=0,
+# so the output is a fully static binary (no glibc, no patchelf). Modules are
+# vendored by a single vendorHash FOD (go.sum hashes are not fetchurl-compatible).
 {
-  lib,
-  stdenv,
-  bash,
-  buildGoModule,
-  codegraph,
-  fetchFromGitHub,
+  mkGo,
+  coreFetchurl,
   flake,
-  makeWrapper,
-  ripgrep,
-  bubblewrap,
-  versionCheckHook,
-  versionCheckHomeHook,
 }:
-
-# Upstream rewrote reasonix from TypeScript to Go in 1.0.0.
-buildGoModule rec {
+let
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
+in
+mkGo {
   pname = "reasonix";
-  version = "1.25.3";
-
-  src = fetchFromGitHub {
-    owner = "esengine";
-    repo = "DeepSeek-Reasonix";
-    tag = "v${version}";
-    hash = "sha256-IodXvXJ9HO8WGMC1WcX73NxdUtLy/s99Z87VX62VqhY=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/esengine/DeepSeek-Reasonix/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
-
-  vendorHash = "sha256-dCPVp5E+d2HcnSlCsQSebK8THdai1XjyKCKQlfpj80I=";
-
+  vendorHash = data.vendorHash;
   subPackages = [ "cmd/reasonix" ];
-
-  nativeBuildInputs = [ makeWrapper ];
-
-  env.CGO_ENABLED = "0";
-
+  binaries = [ "reasonix" ];
   ldflags = [
     "-s"
     "-w"
-    "-X main.version=v${version}"
+    "-X=main.version=v${data.version}"
   ];
 
-  doCheck = true;
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ];
-
-  postFixup = ''
-    wrapProgram $out/bin/reasonix \
-      --prefix PATH : ${
-        lib.makeBinPath (
-          [
-            bash
-            codegraph
-            ripgrep
-          ]
-          ++ lib.optionals stdenv.hostPlatform.isLinux [
-            bubblewrap
-          ]
-        )
-      }
-  '';
-
+  category = "AI Coding Agents";
   meta = {
     description = "DeepSeek-native AI coding agent for your terminal";
     homepage = "https://github.com/esengine/DeepSeek-Reasonix";
-    license = lib.licenses.mit;
-    changelog = "https://github.com/esengine/DeepSeek-Reasonix/releases/tag/v${version}";
-    sourceProvenance = with lib.sourceTypes; [ fromSource ];
-    maintainers = with flake.lib.maintainers; [ arch-fan ];
-    mainProgram = "reasonix";
-    platforms = lib.platforms.unix;
+    changelog = "https://github.com/esengine/DeepSeek-Reasonix/releases/tag/v${data.version}";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.arch-fan ];
   };
-
-  passthru.category = "AI Coding Agents";
 }

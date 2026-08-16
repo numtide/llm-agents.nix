@@ -1,52 +1,29 @@
+# terminal-use - built from source on corepkgs (nixpkgs-free) via mkCargo. Pure
+# crates.io deps; installs the `tu` binary. Upstream ships a placeholder 0.0.0
+# manifest version that its release workflow rewrites at tag time, so `tu
+# --version` reports 0.0.0 here (we do not run the substituteInPlace tweak).
 {
-  lib,
-  rustPlatform,
-  fetchFromGitHub,
-  stdenv,
-  darwinMinVersionHook,
-  nix-update-script,
-  versionCheckHook,
+  mkCargo,
+  coreFetchurl,
+  flake,
 }:
-rustPlatform.buildRustPackage (finalAttrs: {
+let
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
+in
+mkCargo {
   pname = "terminal-use";
-  version = "1.2.0";
-
-  src = fetchFromGitHub {
-    owner = "flipbit03";
-    repo = "terminal-use";
-    tag = "v${finalAttrs.version}";
-    hash = "sha256-wHu+L//x1NiXTxD2mas0niV/TbTezg4MC7wUWAfgxpY=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/flipbit03/terminal-use/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
-
-  cargoHash = "sha256-KapRznQ67o8H0aIMGvCMojwF/qSZ3rSlx6SEKbi12ig=";
-
-  # `tu self update` rewrites its own binary (or shells out to `cargo install`),
-  # which is wrong for a Nix-managed install. Make it refuse and defer to Nix.
+  cargoLock = ./Cargo.lock;
+  # `tu self update` rewrites its own binary / shells out to cargo install, which
+  # is wrong for a read-only Nix store; the patch makes it refuse.
   patches = [ ./disable-self-update.patch ];
+  binaries = [ "tu" ];
 
-  # The Cargo manifest ships a placeholder 0.0.0 version that the release
-  # workflow rewrites at tag time. Stamp the real version so `tu --version`
-  # (built from CARGO_PKG_VERSION) reports the packaged release.
-  postPatch = ''
-    substituteInPlace Cargo.toml \
-      --replace-fail 'version = "0.0.0"' 'version = "${finalAttrs.version}"'
-  '';
-
-  buildInputs = lib.optionals stdenv.hostPlatform.isDarwin [
-    (darwinMinVersionHook "11.0")
-  ];
-
-  # The Cargo manifest carries a placeholder 0.0.0 version that the release
-  # workflow rewrites at tag time, so `tu --version` reports the git tag.
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [ versionCheckHook ];
-  versionCheckProgramArg = "--version";
-
-  passthru = {
-    updateScript = nix-update-script { };
-    category = "Utilities";
-  };
-
+  category = "Utilities";
   meta = {
     description = "Headless virtual terminal for AI agents";
     longDescription = ''
@@ -57,11 +34,10 @@ rustPlatform.buildRustPackage (finalAttrs: {
       agent.
     '';
     homepage = "https://github.com/flipbit03/terminal-use";
-    changelog = "https://github.com/flipbit03/terminal-use/releases/tag/v${finalAttrs.version}";
-    license = lib.licenses.mit;
-    sourceProvenance = with lib.sourceTypes; [ fromSource ];
+    changelog = "https://github.com/flipbit03/terminal-use/releases/tag/v${data.version}";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
     mainProgram = "tu";
-    maintainers = with lib.maintainers; [ mic92 ];
-    platforms = lib.platforms.linux ++ lib.platforms.darwin;
+    maintainers = [ flake.lib.maintainers.mic92 ];
   };
-})
+}

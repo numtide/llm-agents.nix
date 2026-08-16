@@ -1,76 +1,36 @@
+# crush - built from source on corepkgs (nixpkgs-free) via mkGo. CGO_ENABLED=0,
+# so the output is a fully static binary (no glibc, no patchelf). Modules are
+# vendored by a single vendorHash FOD (go.sum hashes are not fetchurl-compatible).
 {
-  lib,
-  buildGoModule,
-  fetchFromGitHub,
-  installShellFiles,
-  go-bin,
-  versionCheckHook,
-  versionCheckHomeHook,
-  mkUpdater,
+  mkGo,
+  coreFetchurl,
+  flake,
 }:
-
 let
-  versionData = builtins.fromJSON (builtins.readFile ./hashes.json);
-  inherit (versionData) version hash vendorHash;
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
 in
-(buildGoModule.override { go = go-bin; }) {
+mkGo {
   pname = "crush";
-  inherit version vendorHash;
-
-  src = fetchFromGitHub {
-    owner = "charmbracelet";
-    repo = "crush";
-    tag = "v${version}";
-    inherit hash;
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/charmbracelet/crush/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
-
-  nativeBuildInputs = [ installShellFiles ];
-
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ];
-
-  subPackages = [ "." ];
-
-  # Tests require config files that aren't available in the build environment
-  doCheck = false;
-
-  doInstallCheck = true;
-
+  vendorHash = data.vendorHash;
+  binaries = [ "crush" ];
   ldflags = [
     "-s"
     "-w"
-    "-X=github.com/charmbracelet/crush/internal/version.Version=${version}"
+    "-X=github.com/charmbracelet/crush/internal/version.Version=${data.version}"
   ];
 
-  postInstall = ''
-    installShellCompletion --cmd crush \
-      --bash <($out/bin/crush completion bash) \
-      --fish <($out/bin/crush completion fish) \
-      --zsh <($out/bin/crush completion zsh)
-
-    # Install JSON schema
-    install -Dm644 schema.json $out/share/crush/schema.json
-  '';
-
-  passthru = {
-    category = "AI Coding Agents";
-    jsonschema = "${placeholder "out"}/share/crush/schema.json";
-    updater = mkUpdater {
-      kind = "github-source";
-      purl = "pkg:github/charmbracelet/crush";
-      depHashKey = "vendorHash";
-    };
-  };
-
-  meta = with lib; {
-    description = "The glamourous AI coding agent for your favourite terminal";
+  category = "AI Coding Agents";
+  meta = {
+    description = "Glamourous AI coding agent for your favourite terminal";
     homepage = "https://github.com/charmbracelet/crush";
-    changelog = "https://github.com/charmbracelet/crush/releases/tag/v${version}";
-    license = lib.licenses.mit;
-    sourceProvenance = with lib.sourceTypes; [ fromSource ];
-    maintainers = with lib.maintainers; [ zimbatm ];
-    mainProgram = "crush";
+    changelog = "https://github.com/charmbracelet/crush/releases/tag/v${data.version}";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.zimbatm ];
   };
 }

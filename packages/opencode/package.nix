@@ -1,129 +1,39 @@
+# opencode - built on corepkgs, the repo's nixpkgs-free packaging system.
+# `mkPackage` (from the flake scope) fetches the prebuilt release tarball and
+# wraps it; version + per-platform hashes come from the shared ./hashes.json
+# (the same file nix-update bumps), so nothing drifts.
+#
+# opencode ships a bun --compile single-file binary: on Linux its appended JS
+# payload segfaults on any ELF rewrite, so kind = "loader" leaves it byte-intact
+# and invokes the pinned glibc loader through the wrapper; on darwin it links
+# libSystem and just runs. The linux assets are tar.gz and the darwin asset is a
+# .zip, so unpack = "auto" infers the archive kind per platform from the URL.
 {
-  lib,
-  stdenv,
-  fetchurl,
-  makeWrapper,
-  unzip,
-  wrapBuddy,
-  fzf,
-  ripgrep,
-  versionCheckHook,
-  versionCheckHomeHook,
-  writeShellScriptBin,
+  mkPackage,
   mkUpdater,
+  corePins,
+  flake,
 }:
-
-let
+mkPackage {
   pname = "opencode";
-  versionData = builtins.fromJSON (builtins.readFile ./hashes.json);
-  inherit (versionData) version hashes;
-
-  # Map nix system to release asset name
-  platformMap = {
-    x86_64-linux = {
-      asset = "opencode-linux-x64.tar.gz";
-      isZip = false;
-    };
-    aarch64-linux = {
-      asset = "opencode-linux-arm64.tar.gz";
-      isZip = false;
-    };
-    aarch64-darwin = {
-      asset = "opencode-darwin-arm64.zip";
-      isZip = true;
-    };
+  hashesFile = ./hashes.json;
+  urlTemplate = "https://github.com/anomalyco/opencode/releases/download/v{version}/{platform}";
+  platforms = {
+    x86_64-linux = "opencode-linux-x64.tar.gz";
+    aarch64-linux = "opencode-linux-arm64.tar.gz";
+    aarch64-darwin = "opencode-darwin-arm64.zip";
+  };
+  unpack = "auto";
+  binary = "opencode";
+  kind = "loader";
+  runtimePkgs = [ corePins.ripgrep ];
+  # Nix manages this binary; stop the CLI from trying to self-update.
+  setEnv = {
+    OPENCODE_DISABLE_AUTOUPDATE = "1";
   };
 
-  platform = stdenv.hostPlatform.system;
-  platformInfo = platformMap.${platform} or (throw "Unsupported system: ${platform}");
-
-  src = fetchurl {
-    url = "https://github.com/anomalyco/opencode/releases/download/v${version}/${platformInfo.asset}";
-    hash = hashes.${platform};
-  };
-in
-stdenv.mkDerivation {
-  inherit pname version src;
-
-  nativeBuildInputs = [
-    makeWrapper
-  ]
-  ++ lib.optionals platformInfo.isZip [
-    unzip
-  ]
-  ++ lib.optionals stdenv.hostPlatform.isLinux [
-    wrapBuddy
-  ];
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ]
-  ++ lib.optionals stdenv.hostPlatform.isDarwin [
-    # clipboardy → system-architecture calls `sysctl -inq sysctl.proc_translated`
-    # at import time to detect Rosetta 2. In the Nix sandbox /usr/sbin/sysctl
-    # is absent, causing ENOENT and crashing the version check. Provide a
-    # minimal stub that reports "not translated" (exit 0, empty output) so the
-    # module resolves the native architecture without pulling in system_cmds.
-    (writeShellScriptBin "sysctl" "echo 0")
-  ];
-  # versionCheckHook runs with --ignore-environment by default, stripping PATH.
-  # We need PATH preserved so the sysctl stub (and node itself) can be found
-  # by child processes spawned during `opencode --version`.
-  versionCheckKeepEnvironment = "PATH";
-
-  buildInputs = lib.optionals stdenv.hostPlatform.isLinux [
-    stdenv.cc.cc.lib
-  ];
-
-  # @parcel/watcher's native .node addon is dlopen'd from bun's virtual
-  # filesystem at runtime.  wrapBuddy cannot patch it, but if libstdc++
-  # is already loaded in the process the linker resolves it from there.
-  # Inject libstdc++.so.6 as a DT_NEEDED entry via wrapBuddy so it's
-  # loaded before the addon (see #5170).
-  wrapBuddyExtraNeeded = lib.optionals stdenv.hostPlatform.isLinux [
-    "libstdc++.so.6"
-  ];
-
-  dontConfigure = true;
-  dontBuild = true;
-  # otherwise strip will remove the compressed typescript code
-  dontStrip = true;
-
-  unpackPhase = ''
-    runHook preUnpack
-  ''
-  + lib.optionalString platformInfo.isZip ''
-    unzip $src
-  ''
-  + lib.optionalString (!platformInfo.isZip) ''
-    tar -xzf $src
-  ''
-  + ''
-    runHook postUnpack
-  '';
-
-  installPhase = ''
-    runHook preInstall
-
-    mkdir -p $out/bin
-    install -m755 opencode $out/bin/opencode
-
-    # Wrap to add fzf and ripgrep to PATH
-    wrapProgram $out/bin/opencode \
-      --prefix PATH : ${
-        lib.makeBinPath [
-          fzf
-          ripgrep
-        ]
-      }
-
-    runHook postInstall
-  '';
-
-  passthru.category = "AI Coding Agents";
-  passthru.updater = mkUpdater {
+  category = "AI Coding Agents";
+  updater = mkUpdater {
     kind = "platform";
     versionSource = {
       type = "github";
@@ -140,19 +50,9 @@ stdenv.mkDerivation {
 
   meta = {
     description = "AI coding agent built for the terminal";
-    longDescription = ''
-      OpenCode is a terminal-based agent that can build anything.
-      It provides an interactive AI coding experience directly in your terminal.
-    '';
     homepage = "https://github.com/anomalyco/opencode";
-    changelog = "https://github.com/anomalyco/opencode/releases/tag/v${version}";
-    license = lib.licenses.mit;
-    sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
-    platforms = [
-      "x86_64-linux"
-      "aarch64-linux"
-      "aarch64-darwin"
-    ];
-    mainProgram = "opencode";
+    changelog = "https://github.com/anomalyco/opencode/releases";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.binaryNativeCode ];
   };
 }

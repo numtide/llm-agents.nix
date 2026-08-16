@@ -1,98 +1,34 @@
+# mcporter - built from source on corepkgs (nixpkgs-free) via mkPnpm. pnpm deps
+# vendored as a flat hoisted node_modules FOD; `pnpm run build` (tsc) produces
+# dist, and mkPnpm wraps `node dist/cli.js` on the naked node toolchain.
 {
-  lib,
-  stdenv,
-  fetchFromGitHub,
-  fetchPnpmDeps,
-  makeWrapper,
-  nodejs,
-  # Lockfile predates pnpm 11's stricter overrides validation
-  pnpm_10,
-  pnpmConfigHook,
-  versionCheckHook,
-  versionCheckHomeHook,
+  mkPnpm,
+  coreFetchurl,
+  flake,
 }:
-
 let
-  pnpm = pnpm_10;
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
 in
-stdenv.mkDerivation (finalAttrs: {
+mkPnpm {
   pname = "mcporter";
-  version = "0.13.7";
-
-  src = fetchFromGitHub {
-    owner = "openclaw";
-    repo = "mcporter";
-    tag = "v${finalAttrs.version}";
-    hash = "sha256-V1d+J9W7+r+XcXNodJMlQJJQJnuWF5aqjMNV3ccD+z0=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/openclaw/mcporter/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
+  pnpmDepsHash = data.pnpmDepsHash;
+  entry = "dist/cli.js";
+  # upstream's lockfile predates the pnpm.overrides vite entry; align the
+  # specifier so pnpm accepts the frozen lockfile.
+  postPatch = ''sed -i 's/specifier: \^8\.0\.8/specifier: 8.0.8/' pnpm-lock.yaml'';
 
-  # Upstream's lockfile was generated before the pnpm.overrides entry for vite
-  # was applied, so newer pnpm rejects it as out of sync with package.json.
-  # https://github.com/openclaw/mcporter/issues/new (lockfile drift)
-  postPatch = ''
-    sed -i 's/specifier: \^8\.0\.8/specifier: 8.0.8/' pnpm-lock.yaml
-  '';
-
-  pnpmDeps = fetchPnpmDeps {
-    inherit (finalAttrs)
-      pname
-      version
-      src
-      postPatch
-      ;
-    inherit pnpm;
-    hash = "sha256-uzn6SM04FmeunRo4HoSdh1yzVLXrq0FoQtEdbCu5+Hw=";
-    fetcherVersion = 3;
-  };
-
-  nativeBuildInputs = [
-    makeWrapper
-    nodejs
-    pnpm
-    pnpmConfigHook
-  ];
-
-  buildPhase = ''
-    runHook preBuild
-
-    pnpm build
-
-    runHook postBuild
-  '';
-
-  installPhase = ''
-    runHook preInstall
-
-    mkdir -p $out/{bin,lib/mcporter}
-
-    # Prune dev dependencies to reduce closure size
-    pnpm prune --prod
-
-    cp -r dist $out/lib/mcporter/
-    cp -r node_modules $out/lib/mcporter/
-    cp package.json $out/lib/mcporter/
-
-    makeWrapper ${nodejs}/bin/node $out/bin/mcporter \
-      --add-flags "$out/lib/mcporter/dist/cli.js"
-
-    runHook postInstall
-  '';
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ];
-
-  passthru.category = "Utilities";
-
+  category = "Utilities";
   meta = {
     description = "TypeScript runtime and CLI for the Model Context Protocol";
     homepage = "https://github.com/openclaw/mcporter";
     changelog = "https://github.com/openclaw/mcporter/releases";
-    license = lib.licenses.mit;
-    sourceProvenance = with lib.sourceTypes; [ fromSource ];
-    platforms = lib.platforms.all;
-    mainProgram = "mcporter";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ ];
   };
-})
+}

@@ -1,55 +1,34 @@
+# beads-viewer - built from source on corepkgs (nixpkgs-free) via mkGo, static
+# (CGO_ENABLED=0). No external deps (stdlib only), so no vendorHash.
 {
-  lib,
+  mkGo,
+  coreFetchurl,
   flake,
-  buildGoModule,
-  fetchFromGitHub,
-  versionCheckHook,
 }:
-
-buildGoModule rec {
+let
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
+in
+mkGo {
   pname = "beads-viewer";
-  version = "0.20.0";
-
-  src = fetchFromGitHub {
-    owner = "Dicklesworthstone";
-    repo = "beads_viewer";
-    tag = "v${version}";
-    hash = "sha256-myWY4/jYoHhW0UAzUsdPNbWIpDLBR+z6ZuhafKk1EG8=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/Dicklesworthstone/beads_viewer/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
-
-  vendorHash = null;
-
-  # Remove go version constraint that requires newer Go than nixpkgs provides
-  postPatch = ''
-    sed -i '/^toolchain /d' go.mod
-  '';
-
   subPackages = [ "cmd/bv" ];
-
+  binaries = [ "bv" ];
   ldflags = [
     "-s"
     "-w"
-    # Upstream resolves the exported Version in init() from the unexported
-    # `version` variable, so inject there.
-    "-X github.com/Dicklesworthstone/beads_viewer/pkg/version.version=v${version}"
+    "-X github.com/Dicklesworthstone/beads_viewer/pkg/version.version=v${data.version}"
   ];
-
-  doCheck = false;
-
-  doInstallCheck = true;
-
-  nativeInstallCheckInputs = [ versionCheckHook ];
-
-  passthru.category = "Workflow & Project Management";
-
-  meta = with lib; {
+  category = "Workflow & Project Management";
+  meta = {
     description = "Graph-aware TUI for the Beads issue tracker";
     homepage = "https://github.com/Dicklesworthstone/beads_viewer";
-    changelog = "https://github.com/Dicklesworthstone/beads_viewer/releases/tag/v${version}";
-    license = licenses.mit;
-    sourceProvenance = with sourceTypes; [ fromSource ];
-    maintainers = with flake.lib.maintainers; [ afterthought ];
-    mainProgram = "bv";
-    platforms = platforms.unix;
+    changelog = "https://github.com/Dicklesworthstone/beads_viewer/releases/tag/v${data.version}";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.afterthought ];
   };
 }

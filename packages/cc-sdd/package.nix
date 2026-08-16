@@ -1,80 +1,29 @@
+# cc-sdd - built from source on corepkgs (nixpkgs-free) via mkNpm. TypeScript CLI
+# (npm run build -> tsc -> dist/cli.js). Deps vendored as a node_modules FOD.
 {
-  lib,
-  buildNpmPackage,
-  fetchFromGitHub,
-  bun,
-  versionCheckHook,
-  versionCheckHomeHook,
-  mkUpdater,
+  mkNpm,
+  coreFetchurl,
+  flake,
 }:
-
 let
-  versionData = builtins.fromJSON (builtins.readFile ./hashes.json);
-  inherit (versionData) version hash npmDepsHash;
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
 in
-buildNpmPackage {
+mkNpm {
   pname = "cc-sdd";
-  inherit version npmDepsHash;
-
-  src = fetchFromGitHub {
-    owner = "gotalab";
-    repo = "cc-sdd";
-    tag = "v${version}";
-    inherit hash;
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/gotalab/cc-sdd/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
-
-  sourceRoot = "source/tools/cc-sdd";
-
-  # Build with tsc
-  buildPhase = ''
-    runHook preBuild
-    npm run build
-    runHook postBuild
-  '';
-
-  installPhase = ''
-    runHook preInstall
-
-    mkdir -p $out/bin $out/lib/cc-sdd
-
-    cp -r dist $out/lib/cc-sdd/
-    cp -r templates $out/lib/cc-sdd/
-    cp package.json $out/lib/cc-sdd/
-
-    chmod +x $out/lib/cc-sdd/dist/cli.js
-
-    substituteInPlace $out/lib/cc-sdd/dist/cli.js \
-      --replace-fail "#!/usr/bin/env node" "#!${bun}/bin/bun"
-
-    ln -s $out/lib/cc-sdd/dist/cli.js $out/bin/cc-sdd
-
-    runHook postInstall
-  '';
-
-  dontNpmBuild = false;
-
-  doInstallCheck = true;
-
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ];
-
-  passthru.category = "Workflow & Project Management";
-  passthru.updater = mkUpdater {
-    kind = "github-source";
-    purl = "pkg:github/gotalab/cc-sdd";
-    depHashKey = "npmDepsHash";
-  };
-
-  meta = with lib; {
-    description = "Spec-driven development framework for AI coding agents";
+  npmDepsHash = data.npmDepsHash;
+  sourceRoot = "tools/cc-sdd";
+  category = "Workflow & Project Management";
+  meta = {
+    description = "Bring spec-driven development to Claude Code, Cursor, Gemini CLI and other AI coding agents";
     homepage = "https://github.com/gotalab/cc-sdd";
-    changelog = "https://github.com/gotalab/cc-sdd/releases/tag/v${version}";
-    license = licenses.mit;
-    sourceProvenance = with lib.sourceTypes; [ fromSource ];
-    maintainers = with maintainers; [ ryoppippi ];
-    mainProgram = "cc-sdd";
-    platforms = platforms.all;
+    changelog = "https://github.com/gotalab/cc-sdd/releases/tag/v${data.version}";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.ryoppippi ];
   };
 }

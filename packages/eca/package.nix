@@ -1,155 +1,41 @@
+# eca (Editor Code Assistant) - built on corepkgs, the repo's nixpkgs-free
+# packaging system. `mkPackage` (from the flake scope) fetches the prebuilt
+# native GraalVM artifact and wraps it; version + per-platform hashes come from
+# the shared ./hashes.json (the same file nix-update bumps), so nothing drifts.
+#
+# eca ships a normal dynamic ELF (kind = "patchelf"): the interpreter/rpath are
+# rewritten to the pinned glibc plus zlib, which the native image links.
 {
-  pkgs,
+  mkPackage,
+  corePins,
   flake,
-  wrapBuddy,
-  versionCheckHomeHook,
 }:
-
 let
-  hashes = builtins.fromJSON (builtins.readFile ./hashes.json);
-  version = hashes.version;
-
-  # Function to create native binary derivation for each platform
-  mkNativeBinary =
-    {
-      system,
-      url,
-      hash,
-      wrapBuddy,
-      versionCheckHomeHook,
-    }:
-    pkgs.stdenv.mkDerivation {
-      pname = "eca";
-      inherit version;
-
-      src = pkgs.fetchurl {
-        inherit url hash;
-      };
-
-      nativeBuildInputs = [
-        pkgs.unzip
-      ]
-      ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [
-        wrapBuddy
-      ];
-
-      buildInputs = pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [
-        pkgs.zlib
-      ];
-
-      doInstallCheck = true;
-      nativeInstallCheckInputs = [
-        pkgs.versionCheckHook
-        versionCheckHomeHook
-      ];
-
-      unpackPhase = ''
-        runHook preUnpack
-        unzip $src
-        runHook postUnpack
-      '';
-
-      dontBuild = true;
-
-      installPhase = ''
-        runHook preInstall
-        mkdir -p $out/bin
-        cp eca $out/bin/eca
-        chmod +x $out/bin/eca
-        runHook postInstall
-      '';
-
-      passthru.category = "AI Coding Agents";
-
-      meta = with pkgs.lib; {
-        description = "Editor Code Assistant (ECA) - AI pair programming capabilities agnostic of editor";
-        homepage = "https://github.com/editor-code-assistant/eca";
-        changelog = "https://github.com/editor-code-assistant/eca/releases/tag/${version}";
-        license = licenses.asl20;
-        sourceProvenance = with sourceTypes; [ binaryNativeCode ];
-        maintainers = with flake.lib.maintainers; [ zrubing ];
-        mainProgram = "eca";
-        platforms = [ system ];
-      };
-    };
-
+  # system -> {platform} URL token, shared by every native release asset.
+  platforms = {
+    x86_64-linux = "linux-amd64";
+    aarch64-linux = "linux-aarch64";
+    aarch64-darwin = "macos-aarch64";
+  };
+  urlTemplate = "https://github.com/editor-code-assistant/eca/releases/download/{version}/eca-native-{platform}.zip";
 in
-# Use native binary for all supported platforms
-if pkgs.stdenv.hostPlatform.system == "x86_64-linux" then
-  mkNativeBinary {
-    inherit wrapBuddy versionCheckHomeHook;
-    system = "x86_64-linux";
-    url = "https://github.com/editor-code-assistant/eca/releases/download/${version}/eca-native-linux-amd64.zip";
-    hash = hashes."x86_64-linux";
-  }
-else if pkgs.stdenv.hostPlatform.system == "aarch64-linux" then
-  mkNativeBinary {
-    inherit wrapBuddy versionCheckHomeHook;
-    system = "aarch64-linux";
-    url = "https://github.com/editor-code-assistant/eca/releases/download/${version}/eca-native-linux-aarch64.zip";
-    hash = hashes."aarch64-linux";
-  }
-else if pkgs.stdenv.hostPlatform.system == "aarch64-darwin" then
-  mkNativeBinary {
-    inherit wrapBuddy versionCheckHomeHook;
-    system = "aarch64-darwin";
-    url = "https://github.com/editor-code-assistant/eca/releases/download/${version}/eca-native-macos-aarch64.zip";
-    hash = hashes."aarch64-darwin";
-  }
-else
-  # Fallback to JAR version for unsupported platforms
-  pkgs.stdenv.mkDerivation rec {
-    pname = "eca";
-    inherit version;
+mkPackage {
+  pname = "eca";
+  hashesFile = ./hashes.json;
+  inherit platforms urlTemplate;
+  unpack = "zip";
+  binary = "eca";
+  kind = "patchelf";
+  libs = [ corePins.zlib ];
 
-    src = pkgs.fetchurl {
-      url = "https://github.com/editor-code-assistant/eca/releases/download/${version}/eca.jar";
-      hash = hashes.jar;
-    };
+  category = "AI Coding Agents";
 
-    nativeBuildInputs = [
-      pkgs.makeWrapper
-    ];
-
-    buildInputs = [
-      pkgs.jre
-    ];
-
-    doInstallCheck = true;
-    nativeInstallCheckInputs = [
-      pkgs.versionCheckHook
-      versionCheckHomeHook
-    ];
-
-    dontUnpack = true;
-    dontBuild = true;
-
-    installPhase = ''
-      runHook preInstall
-      mkdir -p $out/bin
-      mkdir -p $out/lib
-      cp $src $out/lib/eca.jar
-
-      cat > $out/bin/eca << EOF
-      #!${pkgs.stdenv.shell}
-      export JAVA_HOME="${pkgs.jre}"
-      export PATH="${pkgs.jre}/bin:\$PATH"
-      exec "${pkgs.jre}/bin/java" -jar "$out/lib/eca.jar" "\$@"
-      EOF
-
-      chmod +x $out/bin/eca
-      runHook postInstall
-    '';
-
-    passthru.category = "AI Coding Agents";
-
-    meta = with pkgs.lib; {
-      description = "Editor Code Assistant (ECA) - AI pair programming capabilities agnostic of editor";
-      homepage = "https://github.com/editor-code-assistant/eca";
-      changelog = "https://github.com/editor-code-assistant/eca/releases/tag/${version}";
-      license = licenses.asl20;
-      sourceProvenance = with sourceTypes; [ binaryBytecode ];
-      maintainers = with flake.lib.maintainers; [ zrubing ];
-      mainProgram = "eca";
-    };
-  }
+  meta = {
+    description = "Editor Code Assistant (ECA) - AI pair programming capabilities agnostic of editor";
+    homepage = "https://github.com/editor-code-assistant/eca";
+    changelog = "https://github.com/editor-code-assistant/eca/releases";
+    license = flake.lib.licenses.asl20;
+    sourceProvenance = [ flake.lib.sourceTypes.binaryNativeCode ];
+    maintainers = [ flake.lib.maintainers.zrubing ];
+  };
+}

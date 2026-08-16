@@ -1,70 +1,49 @@
+# kilocode-cli (`kilocode`) - built on corepkgs, the repo's nixpkgs-free
+# packaging system. `mkPackage` (from the flake scope) fetches the prebuilt npm
+# tarball and wraps it; version + per-platform hashes come from the shared
+# ./hashes.json (the same file nix-update bumps), so nothing drifts.
+#
+# kilocode ships a bun --compile single-file binary (package/bin/kilo): on Linux
+# its appended JS payload segfaults on any ELF rewrite, so kind = "loader" leaves
+# it byte-intact and invokes the pinned glibc loader through the wrapper.
 {
-  lib,
+  mkPackage,
   mkUpdater,
-  stdenv,
-  platformSource,
-  makeWrapper,
-  wrapBuddy,
-  versionCheckHook,
-  versionCheckHomeHook,
+  flake,
 }:
-
 let
-  source = platformSource {
-    hashesFile = ./hashes.json;
-    platforms = {
-      x86_64-linux = "linux-x64";
-      aarch64-linux = "linux-arm64";
-      aarch64-darwin = "darwin-arm64";
-    };
-    urlTemplate = "https://registry.npmjs.org/@kilocode/cli-{platform}/-/cli-{platform}-{version}.tgz";
+  # system -> {platform} URL token, shared by the build and the updater.
+  platforms = {
+    x86_64-linux = "linux-x64";
+    aarch64-linux = "linux-arm64";
+    aarch64-darwin = "darwin-arm64";
   };
+  urlTemplate = "https://registry.npmjs.org/@kilocode/cli-{platform}/-/cli-{platform}-{version}.tgz";
 in
-stdenv.mkDerivation {
+mkPackage {
   pname = "kilocode-cli";
-  inherit (source) version src;
+  mainProgram = "kilocode";
+  hashesFile = ./hashes.json;
+  inherit platforms urlTemplate;
+  unpack = "tar";
+  binary = "package/bin/kilo";
+  kind = "loader";
 
-  sourceRoot = "package";
-
-  nativeBuildInputs = [ makeWrapper ] ++ lib.optionals stdenv.hostPlatform.isLinux [ wrapBuddy ];
-
-  dontBuild = true;
-  dontStrip = true;
-
-  installPhase = ''
-    runHook preInstall
-
-    install -Dm755 bin/kilo $out/bin/kilocode
-
-    runHook postInstall
-  '';
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ];
-  versionCheckProgramArg = "--version";
-
-  passthru.category = "AI Coding Agents";
-  passthru.updater = mkUpdater (
-    source.updater
-    // {
-      versionSource = {
-        type = "npm";
-        package = "@kilocode/cli";
-      };
-    }
-  );
+  category = "AI Coding Agents";
+  updater = mkUpdater {
+    kind = "platform";
+    inherit urlTemplate platforms;
+    versionSource = {
+      type = "npm";
+      package = "@kilocode/cli";
+    };
+  };
 
   meta = {
     description = "The open-source AI coding agent. Now available in your terminal.";
     homepage = "https://kilocode.ai/cli";
-    changelog = "https://github.com/Kilo-Org/kilocode/releases/tag/v${source.version}";
-    downloadPage = "https://www.npmjs.com/package/@kilocode/cli";
-    license = lib.licenses.asl20;
-    sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
-    mainProgram = "kilocode";
-    platforms = source.platforms;
+    changelog = "https://github.com/Kilo-Org/kilocode/releases";
+    license = flake.lib.licenses.asl20;
+    sourceProvenance = [ flake.lib.sourceTypes.binaryNativeCode ];
   };
 }

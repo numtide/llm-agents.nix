@@ -1,0 +1,22 @@
+{
+  "version": "1.97.1",
+  "hashes": {
+    "x86_64-linux": {
+      "rustc": "sha256-HEQeQwwcyknf9UqNWcQQOL9vefe4dWWWyy82URoBXro=",
+      "cargo": "sha256-kMvrit/oyg/L4BoYvZuZ0+Xpj9KcADAygo6/P/ug5O0=",
+      "std": "sha256-Rbkn7Pd2uWRcou1bKH/GgUgkoHPDDHxdXArUQlKV7O4=",
+      "muslStd": "sha256-0WDfyB0h/cclNIWfriSf7ParcGQDdfZPxOdwBaSMGNA="
+    },
+    "aarch64-linux": {
+      "rustc": "sha256-jZ8wlaMQjjgjLxI2ReKgNovKZ8l1+LkQiABPj/2abTk=",
+      "cargo": "sha256-yv3iQ1GLAW+CXROl8spP/X2A9ZZt++w1Oc0JLHxPmHE=",
+      "std": "sha256-zv+kKP5XNQdBiFjVmt00KzUXMHJfNvdnmyUei2gQPew=",
+      "muslStd": "sha256-mWWX9m7CLNBAHh8XFUXNhyZ9LvtVGdgRm3R0ZwU/Q4w="
+    },
+    "aarch64-darwin": {
+      "rustc": "sha256-t5megcH/LpAOa6Dswu50BlSWP9aibNemm4H9m91oqG4=",
+      "cargo": "sha256-THCEb9YRo+OQ7xSf51dAIYjyApAQKFcovQtMU1hsPDk=",
+      "std": "sha256-J7PaEeGt7+ugITr/c1h6zwv1BkHHdPCRA/t7KaNB7V0="
+    }
+  }
+}

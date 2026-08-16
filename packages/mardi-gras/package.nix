@@ -1,51 +1,39 @@
+# mardi-gras - built from source on corepkgs (nixpkgs-free) via mkGo.
+# CGO_ENABLED=0, so the output is a fully static binary (no glibc, no patchelf).
+# Modules are vendored by a single vendorHash FOD (go.sum hashes are not
+# fetchurl-compatible).
 {
-  lib,
+  mkGo,
+  coreFetchurl,
   flake,
-  buildGoModule,
-  fetchFromGitHub,
-  go-bin,
-  versionCheckHook,
-  versionCheckHomeHook,
 }:
-
-buildGoModule.override { go = go-bin; } rec {
+let
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
+in
+mkGo {
   pname = "mardi-gras";
-  version = "0.28.1";
-
-  src = fetchFromGitHub {
-    owner = "quietpublish";
-    repo = "mardi-gras";
-    tag = "v${version}";
-    hash = "sha256-H/v8mBZvRkyU1ZUlAbXaCHt1mmbdytrjYQN+94fxvu0=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/quietpublish/mardi-gras/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
-
-  vendorHash = "sha256-/pe+fZDPsw4A6ZobeiR85VXDyzbB4pLfir9prInpLeo=";
-
+  vendorHash = data.vendorHash;
   subPackages = [ "cmd/mg" ];
-
+  binaries = [ "mg" ];
   ldflags = [
     "-s"
     "-w"
-    "-X main.version=${version}"
+    "-X=main.version=${data.version}"
   ];
 
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ];
-  versionCheckProgramArg = [ "--version" ];
-
-  passthru.category = "Workflow & Project Management";
-
-  meta = with lib; {
+  category = "Workflow & Project Management";
+  meta = {
     description = "Terminal UI for Beads issue tracking with a parade-inspired workflow view";
     homepage = "https://github.com/quietpublish/mardi-gras";
-    changelog = "https://github.com/quietpublish/mardi-gras/releases/tag/v${version}";
-    license = licenses.mit;
-    sourceProvenance = with sourceTypes; [ fromSource ];
-    maintainers = with flake.lib.maintainers; [ smdex ];
+    changelog = "https://github.com/quietpublish/mardi-gras/releases/tag/v${data.version}";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.smdex ];
     mainProgram = "mg";
-    platforms = platforms.unix;
   };
 }

@@ -1,63 +1,39 @@
+# workmux - built from source on corepkgs (nixpkgs-free) via mkCargo. Pure
+# crates.io except one git dependency (an upstream crossterm fork), vendored via
+# gitDeps (the github archive at the locked rev, wired as a cargo source
+# replacement). No C libraries.
 {
-  lib,
-  stdenv,
-  rustPlatform,
-  fetchFromGitHub,
-  installShellFiles,
-  versionCheckHook,
-  versionCheckHomeHook,
+  mkCargo,
+  coreFetchurl,
+  flake,
 }:
-
-rustPlatform.buildRustPackage rec {
+let
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
+in
+mkCargo {
   pname = "workmux";
-  version = "0.1.238";
-
-  src = fetchFromGitHub {
-    owner = "raine";
-    repo = "workmux";
-    tag = "v${version}";
-    hash = "sha256-BKiIKVV+0ctNrJqY2cAi91GVlpghzm97kuOjBARdF6w=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/raine/workmux/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
-
-  cargoHash = "sha256-YSeMqTGY08af4kQ+v07wsl9XiZWbzigeTAUvsNcITAs=";
-
-  nativeBuildInputs = [
-    installShellFiles
+  cargoLock = ./Cargo.lock;
+  binaries = [ "workmux" ];
+  gitDeps = [
+    {
+      crate = "crossterm";
+      source = "git+https://github.com/raine/crossterm#f99eeae405e28fa8cb353a6c6e36c493e72891bd";
+      hash = data.crosstermHash;
+    }
   ];
 
-  # Some tests require filesystem access outside the sandbox
-  doCheck = false;
-
-  postInstall =
-    lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
-      export HOME=$(mktemp -d)
-      installShellCompletion --cmd workmux \
-        --bash <($out/bin/workmux completions bash) \
-        --fish <($out/bin/workmux completions fish) \
-        --zsh <($out/bin/workmux completions zsh)
-    ''
-    + ''
-      # Install Claude Code skills shipped with workmux so users can
-      # symlink $out/share/workmux/skills/* into ~/.claude/skills/
-      install -d $out/share/workmux
-      cp -r skills $out/share/workmux/skills
-    '';
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ];
-
-  passthru.category = "Workflow & Project Management";
-
-  meta = with lib; {
+  category = "Workflow & Project Management";
+  meta = {
     description = "Git worktrees + tmux windows for zero-friction parallel dev";
     homepage = "https://github.com/raine/workmux";
-    changelog = "https://github.com/raine/workmux/blob/v${version}/CHANGELOG.md";
-    license = licenses.mit;
-    sourceProvenance = with sourceTypes; [ fromSource ];
-    mainProgram = "workmux";
-    platforms = platforms.all;
+    changelog = "https://github.com/raine/workmux/blob/v${data.version}/CHANGELOG.md";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ ];
   };
 }

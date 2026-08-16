@@ -1,85 +1,47 @@
+# cline (Cline autonomous coding agent CLI) - built on corepkgs, the repo's
+# nixpkgs-free packaging system. `mkPackage` fetches the @cline/cli-<platform> npm
+# tarball and wraps its bundled binary (package/bin/cline); version +
+# per-platform hashes come from the shared ./hashes.json (the same file
+# nix-update bumps), so nothing drifts.
+#
+# The artifact is a bun --compile single-file binary: patchelf shifts its
+# appended JS payload and breaks bun's standalone-section lookup, so
+# kind = "loader" runs it byte-intact through the pinned glibc loader on Linux;
+# darwin links libSystem.
 {
-  lib,
+  mkPackage,
   flake,
-  stdenv,
-  fetchurl,
-  platformSource,
-  cacert,
-  makeWrapper,
-  nodejs,
-  wrapBuddy,
-  versionCheckHook,
-  versionCheckHomeHook,
 }:
-
 let
-  versionData = lib.importJSON ./hashes.json;
-  source = platformSource {
-    hashesFile = ./hashes.json;
-    platforms = {
-      x86_64-linux = "linux-x64";
-      aarch64-linux = "linux-arm64";
-      aarch64-darwin = "darwin-arm64";
-    };
-    urlTemplate = "https://registry.npmjs.org/@cline/cli-{platform}/-/cli-{platform}-{version}.tgz";
+  # system -> {platform} URL token, shared by the build.
+  platforms = {
+    x86_64-linux = "linux-x64";
+    aarch64-linux = "linux-arm64";
+    aarch64-darwin = "darwin-arm64";
   };
-  launcher = fetchurl {
-    url = "https://registry.npmjs.org/cline/-/cline-${source.version}.tgz";
-    hash = versionData.launcherHash;
-  };
+  urlTemplate = "https://registry.npmjs.org/@cline/cli-{platform}/-/cli-{platform}-{version}.tgz";
 in
-stdenv.mkDerivation {
+mkPackage {
   pname = "cline";
-  inherit (source) version src;
+  hashesFile = ./hashes.json;
+  inherit platforms urlTemplate;
+  unpack = "tar";
+  binary = "package/bin/cline";
+  kind = "loader";
+  # A non-empty setEnv is required: mk-binary's empty-setEnv while-loop returns 1
+  # under `set -e` and aborts the build before chmod. Marker var is harmless.
+  setEnv = {
+    CLINE_NIX_WRAPPED = "1";
+  };
 
-  sourceRoot = "package";
-
-  nativeBuildInputs = [
-    makeWrapper
-    nodejs
-  ]
-  ++ lib.optionals stdenv.hostPlatform.isLinux [ wrapBuddy ];
-
-  dontBuild = true;
-  dontStrip = true;
-
-  installPhase = ''
-    runHook preInstall
-
-    mkdir -p $out/lib/cline-platform $out/lib/cline-launcher
-    cp -r . $out/lib/cline-platform
-    tar -xzf ${launcher} --strip-components=1 -C $out/lib/cline-launcher package/bin
-
-    # Use the official npm launcher so Cline retains its OS trust-store
-    # handling. The npm postinstall normally caches this platform binary as
-    # bin/.cline; a symlink provides the same immutable Nix-store layout.
-    ln -s $out/lib/cline-platform/bin/cline $out/lib/cline-launcher/bin/.cline
-    patchShebangs $out/lib/cline-launcher/bin/cline
-
-    makeWrapper $out/lib/cline-launcher/bin/cline $out/bin/cline \
-      --set-default SSL_CERT_FILE ${cacert}/etc/ssl/certs/ca-bundle.crt \
-      --set-default SSL_CERT_DIR ${cacert}/etc/ssl/certs
-
-    runHook postInstall
-  '';
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ];
-
-  passthru.category = "AI Coding Agents";
+  category = "AI Coding Agents";
 
   meta = {
     description = "Autonomous coding agent CLI";
     homepage = "https://cline.bot";
-    changelog = "https://github.com/cline/cline/releases/tag/cli-v${source.version}";
-    downloadPage = "https://www.npmjs.com/package/cline";
-    license = lib.licenses.asl20;
-    sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
-    maintainers = with flake.lib.maintainers; [ poelzi ];
-    mainProgram = "cline";
-    platforms = source.platforms;
+    changelog = "https://github.com/cline/cline/releases";
+    license = flake.lib.licenses.asl20;
+    sourceProvenance = [ flake.lib.sourceTypes.binaryNativeCode ];
+    maintainers = [ flake.lib.maintainers.poelzi ];
   };
 }

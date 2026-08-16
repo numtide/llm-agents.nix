@@ -1,63 +1,39 @@
+# cli-proxy-api - built from source on corepkgs (nixpkgs-free) via mkGo.
+# CGO_ENABLED=0, so the output is a fully static binary (no glibc, no patchelf).
+# Modules are vendored by a single vendorHash FOD.
 {
-  lib,
-  buildGoModule,
-  go_1_26,
-  fetchFromGitHub,
-  unpinGoModVersionHook,
-  versionCheckHook,
+  mkGo,
+  coreFetchurl,
   flake,
-  mkUpdater,
 }:
-
 let
-  versionData = builtins.fromJSON (builtins.readFile ./hashes.json);
-  inherit (versionData) version hash vendorHash;
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
 in
-buildGoModule.override { go = go_1_26; } {
+mkGo {
   pname = "cli-proxy-api";
-  inherit version vendorHash;
-
-  src = fetchFromGitHub {
-    owner = "router-for-me";
-    repo = "CLIProxyAPI";
-    tag = "v${version}";
-    inherit hash;
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/router-for-me/CLIProxyAPI/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
-
-  nativeBuildInputs = [ unpinGoModVersionHook ];
-
+  vendorHash = data.vendorHash;
   subPackages = [ "cmd/server" ];
-
+  binaries = [ "cli-proxy-api" ];
   ldflags = [
     "-s"
     "-w"
-    "-X main.Version=${version}"
+    "-X main.Version=${data.version}"
     "-X main.Commit=nixpkgs"
     "-X main.BuildDate=1970-01-01T00:00:00Z"
   ];
 
-  postInstall = ''
-    mv $out/bin/server $out/bin/cli-proxy-api
-  '';
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [ versionCheckHook ];
-
-  passthru.category = "Utilities";
-  passthru.updater = mkUpdater {
-    kind = "github-source";
-    purl = "pkg:github/router-for-me/CLIProxyAPI";
-    depHashKey = "vendorHash";
-  };
-
-  meta = with lib; {
+  category = "Utilities";
+  meta = {
     description = "Unified proxy providing OpenAI/Gemini/Claude/Codex compatible APIs for AI coding CLI tools";
     homepage = "https://github.com/router-for-me/CLIProxyAPI";
     changelog = "https://github.com/router-for-me/CLIProxyAPI/releases";
-    license = licenses.mit;
-    sourceProvenance = with lib.sourceTypes; [ fromSource ];
-    maintainers = with flake.lib.maintainers; [ odysseus0 ];
-    mainProgram = "cli-proxy-api";
-    platforms = platforms.all;
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.odysseus0 ];
   };
 }

@@ -1,38 +1,35 @@
+# toon - built from source on corepkgs (nixpkgs-free) via mkCargo. Pure crates.io
+# deps, no C libraries; the "cli" feature pulls the toon binary. Source is the
+# published crate tarball from crates.io (not a GitHub archive).
 {
-  lib,
+  mkCargo,
+  coreFetchurl,
   flake,
-  rustPlatform,
-  fetchCrate,
 }:
-
-rustPlatform.buildRustPackage rec {
+let
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
+in
+mkCargo {
   pname = "toon-format";
-  version = "0.5.0";
-
-  src = fetchCrate {
-    inherit pname version;
-    hash = "sha256-b47t8qpLjm/5xsrUlydEng+Wdy/vsve4sF2+yO8g19k=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://static.crates.io/crates/toon-format/toon-format-${data.version}.crate";
+    inherit (data) hash;
   };
-
-  cargoHash = "sha256-fp621Aa2EVK9ghxdlJJHGsjzwZi4eAx9Qhh4Y39c9I0=";
-
+  cargoLock = ./Cargo.lock;
+  binaries = [ "toon" ];
   cargoBuildFlags = [
     "--features"
     "cli"
   ];
 
-  doCheck = false;
-
-  passthru.category = "Utilities";
-
-  meta = with lib; {
+  category = "Utilities";
+  meta = {
     description = "Rust implementation of TOON - Token-Oriented Object Notation for LLM prompts";
     homepage = "https://github.com/toon-format/toon-rust";
-    changelog = "https://github.com/toon-format/toon-rust/releases/tag/v${version}";
-    license = licenses.mit;
-    sourceProvenance = with sourceTypes; [ fromSource ];
-    maintainers = with flake.lib.maintainers; [ antono ];
-    mainProgram = "toon";
-    platforms = platforms.all;
+    changelog = "https://github.com/toon-format/toon-rust/releases/tag/v${data.version}";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.antono ];
   };
 }

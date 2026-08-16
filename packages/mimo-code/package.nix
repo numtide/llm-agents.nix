@@ -1,125 +1,52 @@
+# mimo-code (Xiaomi's MiMoCode, an OpenCode-based coding agent) - built on
+# corepkgs, the repo's nixpkgs-free packaging system. `mkPackage` fetches the
+# prebuilt release tarball and wraps it; version + per-platform hashes come from
+# the shared ./hashes.json.
+#
+# mimo is a bun --compile single-file binary, so kind = "loader" leaves it
+# byte-intact and invokes the pinned glibc loader through the wrapper. It shells
+# out to ripgrep, pinned onto PATH.
+#
+# The darwin asset is a .zip while linux ships .tar.gz, so unpack = "auto" infers
+# the archive kind per platform from the resolved URL extension.
 {
-  lib,
-  stdenv,
-  fetchurl,
-  makeWrapper,
-  unzip,
-  wrapBuddy,
-  fzf,
-  ripgrep,
-  versionCheckHook,
-  versionCheckHomeHook,
-  writeShellScriptBin,
-  flake,
+  mkPackage,
   mkUpdater,
+  corePins,
+  flake,
 }:
-
 let
-  pname = "mimo-code";
-  versionData = builtins.fromJSON (builtins.readFile ./hashes.json);
-  inherit (versionData) version hashes;
-
-  platformMap = {
-    x86_64-linux = {
-      asset = "mimocode-linux-x64.tar.gz";
-      isZip = false;
-    };
-    aarch64-linux = {
-      asset = "mimocode-linux-arm64.tar.gz";
-      isZip = false;
-    };
-    aarch64-darwin = {
-      asset = "mimocode-darwin-arm64.zip";
-      isZip = true;
-    };
+  # system -> {platform} release asset, shared by the build and the updater.
+  platforms = {
+    x86_64-linux = "mimocode-linux-x64.tar.gz";
+    aarch64-linux = "mimocode-linux-arm64.tar.gz";
+    aarch64-darwin = "mimocode-darwin-arm64.zip";
   };
-
-  platform = stdenv.hostPlatform.system;
-  platformInfo = platformMap.${platform} or (throw "Unsupported system: ${platform}");
-
-  src = fetchurl {
-    url = "https://github.com/XiaomiMiMo/MiMo-Code/releases/download/v${version}/${platformInfo.asset}";
-    hash = hashes.${platform};
-  };
+  urlTemplate = "https://github.com/XiaomiMiMo/MiMo-Code/releases/download/v{version}/{platform}";
 in
-stdenv.mkDerivation {
-  inherit pname version src;
+mkPackage {
+  pname = "mimo-code";
+  hashesFile = ./hashes.json;
+  inherit platforms urlTemplate;
+  unpack = "auto";
+  binary = "mimo";
+  mainProgram = "mimo";
+  kind = "loader";
+  runtimePkgs = [ corePins.ripgrep ];
+  # Inert marker; also keeps setEnv non-empty (a historical wrapper-generation
+  # quirk). mimo does not read it.
+  setEnv = {
+    MIMO_CODE_NAKED = "1";
+  };
 
-  nativeBuildInputs = [
-    makeWrapper
-  ]
-  ++ lib.optionals platformInfo.isZip [
-    unzip
-  ]
-  ++ lib.optionals stdenv.hostPlatform.isLinux [
-    wrapBuddy
-  ];
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ]
-  ++ lib.optionals stdenv.hostPlatform.isDarwin [
-    (writeShellScriptBin "sysctl" "echo 0")
-  ];
-  versionCheckKeepEnvironment = "PATH";
-
-  buildInputs = lib.optionals stdenv.hostPlatform.isLinux [
-    stdenv.cc.cc.lib
-  ];
-
-  wrapBuddyExtraNeeded = lib.optionals stdenv.hostPlatform.isLinux [
-    "libstdc++.so.6"
-  ];
-
-  dontConfigure = true;
-  dontBuild = true;
-  dontStrip = true;
-
-  unpackPhase = ''
-    runHook preUnpack
-  ''
-  + lib.optionalString platformInfo.isZip ''
-    unzip $src
-  ''
-  + lib.optionalString (!platformInfo.isZip) ''
-    tar -xzf $src
-  ''
-  + ''
-    runHook postUnpack
-  '';
-
-  installPhase = ''
-    runHook preInstall
-
-    mkdir -p $out/bin
-    install -m755 mimo $out/bin/mimo
-
-    wrapProgram $out/bin/mimo \
-      --prefix PATH : ${
-        lib.makeBinPath [
-          fzf
-          ripgrep
-        ]
-      }
-
-    runHook postInstall
-  '';
-
-  passthru.category = "AI Coding Agents";
-  passthru.updater = mkUpdater {
+  category = "AI Coding Agents";
+  updater = mkUpdater {
     kind = "platform";
+    inherit urlTemplate platforms;
     versionSource = {
       type = "github";
       owner = "XiaomiMiMo";
       repo = "MiMo-Code";
-    };
-    urlTemplate = "https://github.com/XiaomiMiMo/MiMo-Code/releases/download/v{version}/{platform}";
-    platforms = {
-      x86_64-linux = "mimocode-linux-x64.tar.gz";
-      aarch64-linux = "mimocode-linux-arm64.tar.gz";
-      aarch64-darwin = "mimocode-darwin-arm64.zip";
     };
   };
 
@@ -131,11 +58,9 @@ stdenv.mkDerivation {
       goal-driven autonomous loops, and compose workflows.
     '';
     homepage = "https://github.com/XiaomiMiMo/MiMo-Code";
-    changelog = "https://github.com/XiaomiMiMo/MiMo-Code/releases/tag/v${version}";
-    license = lib.licenses.mit;
-    sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
-    maintainers = with flake.lib.maintainers; [ scotttrinh ];
-    platforms = builtins.attrNames platformMap;
-    mainProgram = "mimo";
+    changelog = "https://github.com/XiaomiMiMo/MiMo-Code/releases";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.binaryNativeCode ];
+    maintainers = [ flake.lib.maintainers.scotttrinh ];
   };
 }

@@ -1,51 +1,36 @@
+# chainlink - built from source on corepkgs (nixpkgs-free) via mkCargo. The rust
+# crate lives in the chainlink/ subdir. rusqlite is used with the "bundled"
+# feature, so libsqlite3-sys compiles its own C through the `cc` crate (our
+# `zig cc` wrapper as $CC) - no external C libraries. The build.rs tries to
+# embed a git hash; with no .git it falls back to CARGO_PKG_VERSION. The
+# upstream Cargo.toml version (0.1.3) does not match release tags, so the
+# reported --version reflects the crate manifest, not this package version.
 {
-  lib,
+  mkCargo,
+  coreFetchurl,
   flake,
-  fetchFromGitHub,
-  rustPlatform,
-  versionCheckHook,
 }:
-
-rustPlatform.buildRustPackage rec {
+let
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
+in
+mkCargo {
   pname = "chainlink";
-  version = "1.6.0";
-
-  src = fetchFromGitHub {
-    owner = "dollspace-gay";
-    repo = "chainlink";
-    tag = "chainlink-${version}";
-    hash = "sha256-2n+cM1ADmeDrKZKjMY5Ct4mVxl38as4iu1Y4ZSCuBho=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/dollspace-gay/chainlink/archive/refs/tags/chainlink-${data.version}.tar.gz";
+    inherit (data) hash;
   };
+  cargoLock = ./Cargo.lock;
+  sourceRoot = "chainlink";
+  binaries = [ "chainlink" ];
 
-  # The Rust crate is in the chainlink subdirectory
-  cargoRoot = "chainlink";
-  buildAndTestSubdir = "chainlink";
-
-  cargoHash = "sha256-WmV6PRSuzdoCMXy4LMSMdHsSbI+A8jx89lwUt64DWmc=";
-
-  # Upstream Cargo.toml version doesn't match release tags, and is sporadically
-  # updated; replace it with the package version being careful to only update
-  # within [package].
-  postPatch = ''
-    sed -i '/^\[package\]/,/^\[/{s/^version = ".*"/version = "${lib.versions.pad 3 version}"/}' chainlink/Cargo.toml
-  '';
-
-  # Tests require a writable filesystem
-  doCheck = false;
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [ versionCheckHook ];
-
-  passthru.category = "Workflow & Project Management";
-
-  meta = with lib; {
+  category = "Workflow & Project Management";
+  meta = {
     description = "Simple, lean issue tracker CLI designed for AI-assisted development";
     homepage = "https://github.com/dollspace-gay/chainlink";
-    changelog = "https://github.com/dollspace-gay/chainlink/releases/tag/chainlink-${version}";
-    license = licenses.mit;
-    sourceProvenance = with sourceTypes; [ fromSource ];
-    maintainers = with flake.lib.maintainers; [ Chickensoupwithrice ];
-    mainProgram = "chainlink";
-    platforms = platforms.all;
+    changelog = "https://github.com/dollspace-gay/chainlink/releases/tag/chainlink-${data.version}";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.Chickensoupwithrice ];
   };
 }

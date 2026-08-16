@@ -1,83 +1,40 @@
+# fence - built from source on corepkgs (nixpkgs-free) via mkGo. CGO_ENABLED=0,
+# so the output is a fully static binary (no glibc, no patchelf). Modules are
+# vendored by a single vendorHash FOD (go.sum hashes are not fetchurl-compatible).
 {
-  lib,
+  mkGo,
+  coreFetchurl,
   flake,
-  stdenv,
-  buildGoModule,
-  fetchFromGitHub,
-  installShellFiles,
-  makeWrapper,
-  versionCheckHook,
-  versionCheckHomeHook,
-  # Linux dependencies
-  bubblewrap,
-  socat,
-  bpftrace,
 }:
-
-buildGoModule rec {
+let
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
+in
+mkGo {
   pname = "fence";
-  version = "0.1.66";
-
-  src = fetchFromGitHub {
-    owner = "fencesandbox";
-    repo = "fence";
-    tag = "v${version}";
-    hash = "sha256-I3nrM2W21n6YdYnE8OhjqBF0969EaWY0k9U6BJDGFHw=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/fencesandbox/fence/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
-
-  vendorHash = "sha256-WjhfAw8wgxvTbTkYwURm9vN2oSvQWiMP2RhwZDCQ0DU=";
-
-  nativeBuildInputs = [
-    installShellFiles
-    makeWrapper
-  ];
-
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ];
-
+  vendorHash = data.vendorHash;
   subPackages = [ "cmd/fence" ];
-
-  doCheck = false;
-
-  doInstallCheck = true;
-
+  binaries = [ "fence" ];
   ldflags = [
     "-s"
     "-w"
-    "-X=main.version=${version}"
+    "-X=main.version=${data.version}"
     "-X=main.buildTime=1970-01-01T00:00:00Z"
-    "-X=main.gitCommit=v${version}"
+    "-X=main.gitCommit=v${data.version}"
   ];
 
-  postInstall = ''
-    installShellCompletion --cmd fence \
-      --bash <($out/bin/fence completion bash) \
-      --fish <($out/bin/fence completion fish) \
-      --zsh <($out/bin/fence completion zsh)
-  '';
-
-  postFixup = lib.optionalString stdenv.hostPlatform.isLinux ''
-    wrapProgram $out/bin/fence \
-      --prefix PATH : ${
-        lib.makeBinPath [
-          bubblewrap
-          socat
-          bpftrace
-        ]
-      }
-  '';
-
-  passthru.category = "Sandboxing & Isolation";
-
-  meta = with lib; {
+  category = "Sandboxing & Isolation";
+  meta = {
     description = "Lightweight, container-free sandbox for running commands with network and filesystem restrictions";
     homepage = "https://fencesandbox.com/";
     changelog = "https://github.com/fencesandbox/fence/releases";
-    license = licenses.asl20;
-    sourceProvenance = with sourceTypes; [ fromSource ];
-    maintainers = with flake.lib.maintainers; [ uesyn ];
+    license = flake.lib.licenses.asl20;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.uesyn ];
     mainProgram = "fence";
   };
 }

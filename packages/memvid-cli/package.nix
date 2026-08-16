@@ -1,87 +1,64 @@
+# memvid-cli (`memvid`, AI memory CLI) - built on corepkgs, the repo's
+# nixpkgs-free packaging system. `mkPackage` fetches the prebuilt release artifact
+# and wraps it. There is no ./hashes.json here (no nix-update source of truth), so
+# the version + tarball hash live inline via coreFetchurl.
+#
+# memvid is a jpackage-style native launcher with a bundled JVM: the `memvid` ELF
+# and its sibling .so files (libjvm, libawt, libtika_native, ...) live in one npm
+# tarball dir. dir-install the whole tree so intra-tree deps resolve via $ORIGIN.
+# The binary needs openssl + zlib; the bundled AWT/X11/sound libs are optional
+# (headless CLI) so leave their SONAMEs missing, like autoPatchelfIgnoreMissingDeps.
 {
-  lib,
+  mkPackage,
+  coreFetchurl,
   flake,
-  stdenv,
-  fetchzip,
-  makeWrapper,
-  formatelf,
-  libx11,
-  libxext,
-  libxi,
-  libxrender,
-  libxtst,
-  openssl,
-  zlib,
-  alsa-lib,
+  corePins,
 }:
-
-stdenv.mkDerivation rec {
+let
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
+in
+mkPackage {
   pname = "memvid-cli";
-  version = "2.0.160";
-
-  src = fetchzip {
-    url = "https://registry.npmjs.org/@memvid/cli-linux-x64/-/cli-linux-x64-${version}.tgz";
-    hash = "sha256-we0KZzKrYRATJElP9OkR4hERQ5S+Zb9qFDCO3WJtV/I=";
+  inherit (data) version;
+  mainProgram = "memvid";
+  src = coreFetchurl {
+    url = "https://registry.npmjs.org/@memvid/cli-linux-x64/-/cli-linux-x64-${data.version}.tgz";
+    inherit (data) hash;
   };
-
-  nativeBuildInputs = [
-    formatelf
-    makeWrapper
+  unpack = "tar";
+  installDir = "package";
+  entrypoint = "memvid";
+  kind = "patchelf";
+  libs = [
+    corePins.openssl
+    corePins.zlib
+  ];
+  # Force the bundled JVM headless so the optional AWT/X11/sound libs below are
+  # never dlopen'd - the CLI has no GUI. Keeps ignoreMissing honest.
+  setEnv = {
+    _JAVA_AWT_HEADLESS = "true";
+  };
+  ignoreMissing = [
+    "libasound.so.2"
+    "libX11.so.6"
+    "libXext.so.6"
+    "libXi.so.6"
+    "libXrender.so.1"
+    "libXtst.so.6"
   ];
 
-  buildInputs = [
-    alsa-lib
-    libx11
-    libxext
-    libxi
-    libxrender
-    libxtst
-    openssl
-    stdenv.cc.cc.lib
-    zlib
-  ];
+  category = "Memory & Code Intelligence";
 
-  installPhase = ''
-    runHook preInstall
-
-    install -d $out/libexec/memvid-cli
-    cp -R $src/. $out/libexec/memvid-cli/
-    chmod -R u+w $out/libexec/memvid-cli
-    chmod 755 $out/libexec/memvid-cli/memvid
-
-    makeWrapper $out/libexec/memvid-cli/memvid $out/bin/memvid \
-      --prefix LD_LIBRARY_PATH : "$out/libexec/memvid-cli"
-
-    runHook postInstall
-  '';
-
-  doInstallCheck = true;
-
-  # No versionCheckHook: --version prints the bundled memvid-core version,
-  # not the npm package version.
-  installCheckPhase = ''
-    runHook preInstallCheck
-
-    tmp_home=$(mktemp -d)
-    tmp_cache=$(mktemp -d)
-    HOME="$tmp_home" XDG_CACHE_HOME="$tmp_cache" $out/bin/memvid --help > /dev/null
-
-    runHook postInstallCheck
-  '';
-
-  passthru.category = "Memory & Code Intelligence";
-
-  meta = with lib; {
+  meta = {
     description = "AI memory CLI - crash-safe, single-file storage with semantic search";
+    # Inline-pinned x86_64 binary only (mkPackage cannot yet read this
+    # package's nested per-platform hashes.json); gate accordingly.
+    platforms = [ "x86_64-linux" ];
     homepage = "https://memvid.com";
     changelog = "https://github.com/memvid/memvid/releases";
-    license = licenses.asl20;
+    license = flake.lib.licenses.asl20;
     # CLI is closed-source; upstream repo only contains the memvid-core library.
-    sourceProvenance = with sourceTypes; [
-      binaryNativeCode
-    ];
-    maintainers = with flake.lib.maintainers; [ smdex ];
-    mainProgram = "memvid";
-    platforms = [ "x86_64-linux" ];
+    sourceProvenance = [ flake.lib.sourceTypes.binaryNativeCode ];
+    maintainers = [ flake.lib.maintainers.smdex ];
   };
 }

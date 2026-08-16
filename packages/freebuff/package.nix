@@ -1,69 +1,44 @@
+# freebuff (Codebuff's free coding agent) - built on corepkgs, the repo's
+# nixpkgs-free packaging system. `mkPackage` (from the flake scope) fetches the
+# prebuilt release tarball and wraps it; version + per-platform hashes come from
+# the shared ./hashes.json (the same file nix-update bumps), so nothing drifts.
+#
+# freebuff ships a bun --compile single-file binary in a tarball: on Linux its
+# appended JS payload segfaults on any ELF rewrite, so kind = "loader" leaves it
+# byte-intact and invokes the pinned glibc loader through the wrapper. It shells
+# out to ripgrep, so the pinned rg joins the wrapper PATH.
 {
-  lib,
-  stdenv,
-  platformSource,
-  makeWrapper,
-  wrapBuddy,
-  ripgrep,
-  versionCheckHook,
-  versionCheckHomeHook,
+  mkPackage,
+  flake,
+  corePins,
 }:
-
 let
-  source = platformSource {
-    hashesFile = ./hashes.json;
-    platforms = {
-      x86_64-linux = "linux-x64";
-      aarch64-linux = "linux-arm64";
-      aarch64-darwin = "darwin-arm64";
-    };
-    urlTemplate = "https://github.com/CodebuffAI/codebuff-community/releases/download/freebuff-v{version}/freebuff-{platform}.tar.gz";
+  # system -> {platform} URL token.
+  platforms = {
+    x86_64-linux = "linux-x64";
+    aarch64-linux = "linux-arm64";
+    aarch64-darwin = "darwin-arm64";
   };
+  urlTemplate = "https://github.com/CodebuffAI/codebuff-community/releases/download/freebuff-v{version}/freebuff-{platform}.tar.gz";
 in
-stdenv.mkDerivation {
+mkPackage {
   pname = "freebuff";
-  inherit (source) version src;
+  hashesFile = ./hashes.json;
+  inherit platforms urlTemplate;
+  unpack = "tar";
+  binary = "freebuff";
+  kind = "loader";
 
-  nativeBuildInputs = [
-    makeWrapper
-  ]
-  ++ lib.optionals stdenv.hostPlatform.isLinux [ wrapBuddy ];
+  runtimePkgs = [ corePins.ripgrep ];
 
-  sourceRoot = ".";
+  category = "AI Coding Agents";
 
-  dontStrip = true; # bun runtime embeds JS at the tail of the binary
-
-  installPhase = ''
-    runHook preInstall
-
-    mkdir -p $out/bin
-    install -m755 freebuff $out/bin/freebuff
-    install -m644 tree-sitter.wasm $out/bin/tree-sitter.wasm
-
-    wrapProgram $out/bin/freebuff \
-      --argv0 freebuff \
-      --prefix PATH : ${lib.makeBinPath [ ripgrep ]}
-
-    runHook postInstall
-  '';
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    versionCheckHook
-    versionCheckHomeHook
-  ];
-  versionCheckProgramArg = "--version";
-
-  passthru.category = "AI Coding Agents";
-
-  meta = with lib; {
+  meta = {
     description = "The world's strongest free coding agent";
     homepage = "https://freebuff.com";
-    changelog = "https://github.com/CodebuffAI/codebuff-community/releases/tag/freebuff-v${source.version}";
-    license = licenses.asl20;
-    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
-    maintainers = with maintainers; [ ocfox ];
-    platforms = source.platforms;
-    mainProgram = "freebuff";
+    changelog = "https://github.com/CodebuffAI/codebuff-community/releases";
+    license = flake.lib.licenses.asl20;
+    sourceProvenance = [ flake.lib.sourceTypes.binaryNativeCode ];
+    maintainers = [ flake.lib.maintainers.ocfox ];
   };
 }

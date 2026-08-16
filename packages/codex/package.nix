@@ -11,7 +11,7 @@
   libcap,
   versionCheckHook,
   callPackage,
-  mkRustyV8Archive ? callPackage ../../lib/rusty-v8.nix { },
+  mkRustyV8Archive ? callPackage ../../corepkgs/lib/rusty-v8.nix { },
   versionData ? builtins.fromJSON (builtins.readFile ./hashes.json),
   version ? versionData.version,
   hash ? versionData.hash,

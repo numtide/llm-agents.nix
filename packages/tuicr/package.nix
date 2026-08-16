@@ -1,58 +1,32 @@
+# tuicr - built from source on corepkgs (nixpkgs-free) via mkCargo. Uses git2,
+# whose libgit2-sys bundles and compiles its own libgit2 C through the `cc` crate
+# (our `zig cc` wrapper as $CC) when no system libgit2 is found - so no external
+# C libraries. Pure crates.io, no git deps.
 {
-  lib,
-  fetchFromGitHub,
-  rustPlatform,
-  pkg-config,
-  libgit2,
-  git,
-  python3Packages,
+  mkCargo,
+  coreFetchurl,
   flake,
 }:
-rustPlatform.buildRustPackage (finalAttrs: {
+let
+  data = builtins.fromJSON (builtins.readFile ./hashes.json);
+in
+mkCargo {
   pname = "tuicr";
-  version = "0.22.0";
-
-  src = fetchFromGitHub {
-    owner = "agavra";
-    repo = "tuicr";
-    tag = "v${finalAttrs.version}";
-    hash = "sha256-MotMXx3YEdR7s3Bz3ZW5Lk733S65zLzl9Pu6jReO9Bw=";
+  inherit (data) version;
+  src = coreFetchurl {
+    url = "https://github.com/agavra/tuicr/archive/refs/tags/v${data.version}.tar.gz";
+    inherit (data) hash;
   };
+  cargoLock = ./Cargo.lock;
+  binaries = [ "tuicr" ];
 
-  cargoHash = "sha256-7qrRsZ7SFi1LB9wI7oiwmE58cI+240IgmU7Zyhi6MAg=";
-
-  nativeBuildInputs = [
-    pkg-config
-  ];
-
-  buildInputs = [
-    libgit2
-  ];
-
-  doCheck = false;
-
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [
-    git
-    python3Packages.pexpect
-  ];
-  installCheckPhase = ''
-    runHook preInstallCheck
-    # tuicr has no --version flag; verify the binary runs and produces expected output
-    python3 ${./check-tuicr.py} $out/bin/tuicr
-    runHook postInstallCheck
-  '';
-
-  passthru.category = "Code Review";
-
+  category = "Code Review";
   meta = {
     description = "Review AI-generated diffs like a GitHub pull request, right from your terminal";
     homepage = "https://github.com/agavra/tuicr";
-    changelog = "https://github.com/agavra/tuicr/releases/tag/v${finalAttrs.version}";
-    license = lib.licenses.mit;
-    mainProgram = "tuicr";
-    sourceProvenance = with lib.sourceTypes; [ fromSource ];
-    platforms = lib.platforms.unix;
-    maintainers = with flake.lib.maintainers; [ ypares ];
+    changelog = "https://github.com/agavra/tuicr/releases/tag/v${data.version}";
+    license = flake.lib.licenses.mit;
+    sourceProvenance = [ flake.lib.sourceTypes.fromSource ];
+    maintainers = [ flake.lib.maintainers.ypares ];
   };
-})
+}
