@@ -10,5 +10,14 @@
       "url": "https://persistent.oaistatic.com/codex-app-prod/linux/deb/pool/main/c/chatgpt/chatgpt_26.818.31338_amd64.deb",
       "hash": "sha256-Q4J4SKdHJLVyvn+NyVRpirLMCRb3+dWZGg7oKJlE+Vs="
     }
+  },
+  "runtimeSources": {
+    "x86_64-linux": {
+      "version": "26.819.11345",
+      "pythonVersion": "3.12.13",
+      "nodeVersion": "v24.19.0",
+      "url": "https://persistent.oaistatic.com/codex-primary-runtime/26.819.11345/codex-primary-runtime-linux-x64-26.819.11345.tar.xz",
+      "hash": "sha256-XBJSS/Y2yX1pJrz0gtb78X4e9ZM1+lTopTruaJggSq8="
+    }
   }
 }

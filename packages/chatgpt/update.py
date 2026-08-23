@@ -1,11 +1,13 @@
 #!/usr/bin/env nix
 #! nix shell --inputs-from .# nixpkgs#gnupg nixpkgs#python3 --command python3
-"""Update ChatGPT from OpenAI's signed Debian repository."""
+"""Update ChatGPT and its primary runtime from OpenAI's distribution servers."""
 
 import hashlib
+import json
 import subprocess
 import sys
 import tempfile
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -24,19 +26,30 @@ PLATFORMS = {
     "aarch64-linux": "arm64",
     "x86_64-linux": "amd64",
 }
+RUNTIME_MANIFESTS = {
+    "x86_64-linux": (
+        "https://persistent.oaistatic.com/"
+        "codex-primary-runtime/latest/linux-x64/LATEST.json"
+    ),
+}
 USER_AGENT = (
     "llm-agents.nix package updater (+https://github.com/numtide/llm-agents.nix)"
 )
 
 
-def fetch(path: str) -> bytes:
-    """Fetch one path from OpenAI's Debian repository."""
+def fetch_url(url: str) -> bytes:
+    """Fetch one OpenAI URL."""
     request = urllib.request.Request(
-        f"{REPO_BASE}/{path}",
+        url,
         headers={"User-Agent": USER_AGENT},
     )
     with urllib.request.urlopen(request) as response:
         return bytes(response.read())
+
+
+def fetch(path: str) -> bytes:
+    """Fetch one path from OpenAI's Debian repository."""
+    return fetch_url(f"{REPO_BASE}/{path}")
 
 
 def verify_inrelease(inrelease: bytes) -> str:
@@ -178,12 +191,77 @@ def source_from_index(platform: str, architecture: str, release: str) -> dict[st
     }
 
 
+def runtime_source(platform: str, manifest_url: str) -> dict[str, str]:
+    """Return the primary runtime source described by OpenAI's latest manifest."""
+    manifest = json.loads(fetch_url(manifest_url))
+    required_fields = (
+        "archiveSha256",
+        "archiveUrl",
+        "bundleVersion",
+        "format",
+        "nodeVersion",
+        "pythonVersion",
+        "runtimeRootDirectoryName",
+        "targetArch",
+        "targetPlatform",
+    )
+    missing_fields = [field for field in required_fields if field not in manifest]
+    if missing_fields:
+        msg = (
+            f"primary runtime ({platform}) missing fields: {', '.join(missing_fields)}"
+        )
+        raise ValueError(msg)
+
+    expected_architecture = {"x86_64-linux": "x64"}[platform]
+    if (
+        manifest["targetPlatform"] != "linux"
+        or manifest["targetArch"] != expected_architecture
+    ):
+        msg = (
+            f"primary runtime ({platform}) target mismatch: "
+            f"{manifest['targetPlatform']}-{manifest['targetArch']}"
+        )
+        raise ValueError(msg)
+    if manifest["runtimeRootDirectoryName"] != "codex-primary-runtime":
+        msg = f"unexpected primary runtime root for {platform}"
+        raise ValueError(msg)
+    if manifest["format"] != "tar.xz":
+        msg = f"unexpected primary runtime format for {platform}: {manifest['format']}"
+        raise ValueError(msg)
+
+    archive_url = manifest["archiveUrl"]
+    parsed_url = urllib.parse.urlparse(archive_url)
+    if (
+        parsed_url.scheme != "https"
+        or parsed_url.hostname != "persistent.oaistatic.com"
+    ):
+        msg = f"unsafe primary runtime URL for {platform}: {archive_url}"
+        raise ValueError(msg)
+
+    archive_hash = manifest["archiveSha256"]
+    if len(bytes.fromhex(archive_hash)) != hashlib.sha256().digest_size:
+        msg = f"invalid primary runtime SHA256 for {platform}"
+        raise ValueError(msg)
+
+    return {
+        "version": manifest["bundleVersion"],
+        "pythonVersion": manifest["pythonVersion"],
+        "nodeVersion": manifest["nodeVersion"],
+        "url": archive_url,
+        "hash": hex_to_sri(archive_hash),
+    }
+
+
 def main() -> None:
-    """Refresh all sources from OpenAI's signed APT metadata."""
+    """Refresh the desktop package and primary runtime sources."""
     release = verify_inrelease(fetch(INRELEASE_PATH))
     sources = {
         platform: source_from_index(platform, architecture, release)
         for platform, architecture in PLATFORMS.items()
+    }
+    runtime_sources = {
+        platform: runtime_source(platform, manifest_url)
+        for platform, manifest_url in RUNTIME_MANIFESTS.items()
     }
 
     versions = {source["version"] for source in sources.values()}
@@ -206,12 +284,35 @@ def main() -> None:
             )
             raise ValueError(msg)
 
-    if current_sources == sources:
+    current_runtime_sources = current.get("runtimeSources", {})
+    for platform, source in runtime_sources.items():
+        current_version = current_runtime_sources.get(platform, {}).get("version", "")
+        if (
+            current_version
+            and source["version"] != current_version
+            and not should_update(current_version, source["version"])
+        ):
+            msg = (
+                f"refusing to downgrade {platform} primary runtime from "
+                f"{current_version} to {source['version']}"
+            )
+            raise ValueError(msg)
+
+    if current_sources == sources and current_runtime_sources == runtime_sources:
         print("chatgpt: already up to date")
         return
 
-    save_hashes(HASHES_FILE, {"sources": sources})
-    print(f"chatgpt: updated to {versions.pop()}")
+    save_hashes(
+        HASHES_FILE,
+        {
+            "sources": sources,
+            "runtimeSources": runtime_sources,
+        },
+    )
+    print(
+        f"chatgpt: updated to {versions.pop()} "
+        f"(primary runtime {runtime_sources['x86_64-linux']['version']})"
+    )
 
 
 if __name__ == "__main__":
