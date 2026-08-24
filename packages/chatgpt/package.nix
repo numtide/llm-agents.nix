@@ -3,7 +3,8 @@
   callPackage,
   stdenvNoCC,
   makeShellWrapper,
-  nodejs_24,
+  nodejs,
+  bubblewrap,
   chatgpt-unwrapped ? callPackage ./unwrapped.nix { },
   chatgpt-runtime-python ?
     if stdenvNoCC.hostPlatform.system == "x86_64-linux" then
@@ -26,7 +27,13 @@ stdenvNoCC.mkDerivation {
 
     mkdir -p "$out/bin"
     makeShellWrapper ${chatgpt-unwrapped}/bin/chatgpt "$out/bin/chatgpt" \
-      --set CODEX_MCP_NODE_PATH ${lib.getExe nodejs_24} \
+      --set CODEX_MCP_NODE_PATH ${lib.getExe nodejs} \
+      --prefix PATH : ${
+        lib.makeBinPath [
+          bubblewrap
+          nodejs
+        ]
+      } \
       ${
         lib.optionalString (
           chatgpt-runtime-python != null
