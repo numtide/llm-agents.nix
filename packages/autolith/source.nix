@@ -1,7 +1,7 @@
 { fetchFromGitHub }:
 
 let
-  version = "0.35.0";
+  version = "0.40.0";
 in
 {
   inherit version;
@@ -10,6 +10,6 @@ in
     owner = "lambda-symbolics";
     repo = "autolith";
     tag = "v${version}";
-    hash = "sha256-a26Tkz+VsRCA5PEl3mUPfLM8RMnmVYE4IeojRt8M6eo=";
+    hash = "sha256-apPIPXqXoTI5lH/nz9vZvdzYX9vBL3qk2tDe2LZg9+4=";
   };
 }
