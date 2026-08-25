@@ -2,80 +2,75 @@
   lib,
   flake,
   stdenv,
-  fetchurl,
+  stdenvNoCC,
+  callPackage,
   libxcrypt-legacy,
   makeWrapper,
+  python312,
   wrapBuddy,
   zlib,
+  chatgpt-runtime-source ? callPackage ./runtime-source.nix { },
 }:
 
 let
-  sourceData = builtins.fromJSON (builtins.readFile ./hashes.json);
-  platform = stdenv.hostPlatform.system;
-  source =
-    sourceData.runtimeSources.${platform}
-      or (throw "Unsupported ChatGPT primary runtime platform: ${platform}");
+  runtimeMetadata = chatgpt-runtime-source.runtimeMetadata;
   runtimeLibraryPath = lib.makeLibraryPath [
     libxcrypt-legacy
     zlib
     stdenv.cc.cc.lib
   ];
+
+  runtimePythonPackages = python312.pkgs.toPythonModule (
+    stdenv.mkDerivation {
+      pname = "chatgpt-primary-runtime-python-packages";
+      inherit (runtimeMetadata) version;
+
+      src = chatgpt-runtime-source;
+      sourceRoot = "codex-primary-runtime/dependencies/python/${python312.sitePackages}";
+
+      nativeBuildInputs = [ wrapBuddy ];
+      buildInputs = [
+        libxcrypt-legacy
+        zlib
+        stdenv.cc.cc.lib
+      ];
+
+      # The module tree contains a Bun executable whose embedded payload is
+      # corrupted by patchelf and strip. wrapBuddy supplies a compatible ELF
+      # loader without modifying the executable itself.
+      dontPatchELF = true;
+      dontStrip = true;
+
+      installPhase = ''
+        runHook preInstall
+
+        mkdir -p "$out/${python312.sitePackages}"
+        cp -a . "$out/${python312.sitePackages}/"
+
+        runHook postInstall
+      '';
+    }
+  );
+
+  pythonEnvironment = python312.withPackages (_: [ runtimePythonPackages ]);
 in
-stdenv.mkDerivation {
+assert
+  lib.versions.majorMinor python312.version == lib.versions.majorMinor runtimeMetadata.pythonVersion;
+stdenvNoCC.mkDerivation {
   pname = "chatgpt-primary-runtime-python";
-  inherit (source) version;
+  inherit (runtimeMetadata) version;
 
-  src = fetchurl {
-    inherit (source) url hash;
-  };
-
-  sourceRoot = "codex-primary-runtime/dependencies/python";
-
-  nativeBuildInputs = [
-    makeWrapper
-    wrapBuddy
-  ];
-
-  buildInputs = [
-    libxcrypt-legacy
-    zlib
-    stdenv.cc.cc.lib
-  ];
-
-  # The runtime contains a Bun executable whose embedded payload is corrupted by
-  # patchelf and strip. wrapBuddy supplies a compatible ELF loader without
-  # modifying the executable itself.
-  dontPatchELF = true;
-  dontStrip = true;
+  dontUnpack = true;
+  nativeBuildInputs = [ makeWrapper ];
 
   installPhase = ''
     runHook preInstall
 
-    mkdir -p "$out"
-    cp -a . "$out/"
-
-    # Upstream's archive contains absolute symlinks into its temporary assembly
-    # directory. Retarget them to the immutable runtime installed here.
-    while IFS= read -r -d "" link; do
-      target="$(readlink "$link")"
-      case "$target" in
-        /tmp/codex-primary-runtime-*/python-download/python/*)
-          relative="''${target#*/python-download/python/}"
-          ln -sfn "$out/$relative" "$link"
-          ;;
-        *)
-          echo "unexpected dangling symlink in primary runtime: $link -> $target" >&2
-          exit 1
-          ;;
-      esac
-    done < <(find "$out" -xtype l -print0)
-
-    # This malformed linker stub is unused by the bundled interpreter and
-    # extensions; libpython3.12.so is the functional development symlink.
-    rm "$out/lib/libpython3.so"
-
-    wrapProgram "$out/bin/python3.12" \
-      --prefix LD_LIBRARY_PATH : "$out/lib:${runtimeLibraryPath}"
+    mkdir -p "$out/bin"
+    makeWrapper ${pythonEnvironment}/bin/python3 "$out/bin/python3" \
+      --prefix LD_LIBRARY_PATH : ${lib.escapeShellArg runtimeLibraryPath}
+    ln -s python3 "$out/bin/python"
+    ln -s python3 "$out/bin/python3.12"
 
     runHook postInstall
   '';
@@ -84,11 +79,11 @@ stdenv.mkDerivation {
   installCheckPhase = ''
     runHook preInstallCheck
 
-    "$out/bin/python3" - <<'PY'
+    HOME="$TMPDIR" "$out/bin/python3" - <<'PY'
     import sys
     from pathlib import Path
 
-    assert sys.version.startswith("${source.pythonVersion}")
+    assert sys.version.startswith("${lib.versions.majorMinor runtimeMetadata.pythonVersion}")
 
     import artifact_tool_v2
     import cryptography
@@ -109,12 +104,20 @@ stdenv.mkDerivation {
     runHook postInstallCheck
   '';
 
+  allowSubstitutes = false;
+  preferLocalBuild = true;
+
+  passthru = {
+    inherit pythonEnvironment runtimePythonPackages;
+    runtimeSource = chatgpt-runtime-source;
+  };
+
   meta = with lib; {
-    description = "Python environment bundled with ChatGPT's primary workspace runtime";
+    description = "Python environment for ChatGPT's primary workspace runtime";
     homepage = "https://chatgpt.com";
     license = flake.lib.licenses.unfree;
     sourceProvenance = with sourceTypes; [ binaryNativeCode ];
-    platforms = builtins.attrNames sourceData.runtimeSources;
+    platforms = chatgpt-runtime-source.meta.platforms;
     mainProgram = "python3";
   };
 }

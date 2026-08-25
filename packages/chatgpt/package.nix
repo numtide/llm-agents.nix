@@ -6,9 +6,14 @@
   nodejs,
   bubblewrap,
   chatgpt-unwrapped ? callPackage ./unwrapped.nix { },
-  chatgpt-runtime-python ?
-    if stdenvNoCC.hostPlatform.system == "x86_64-linux" then
-      callPackage ./runtime-python.nix { }
+  # Keep proprietary runtime contents out of the default package and CI closure.
+  withPrimaryRuntime ? false,
+  chatgpt-runtime-python ? if withPrimaryRuntime then callPackage ./runtime-python.nix { } else null,
+  chatgpt-primary-runtime ?
+    if withPrimaryRuntime then
+      callPackage ./runtime.nix {
+        inherit chatgpt-runtime-python;
+      }
     else
       null,
   commandLineArgs ? "",
@@ -39,6 +44,11 @@ stdenvNoCC.mkDerivation {
           chatgpt-runtime-python != null
         ) "--set PYTHON ${lib.getExe chatgpt-runtime-python}"
       } \
+      ${
+        lib.optionalString (
+          chatgpt-primary-runtime != null
+        ) "--set CODEX_PRIMARY_RUNTIME_PATH ${chatgpt-primary-runtime}"
+      } \
       --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform=wayland}}" \
       --add-flags ${lib.escapeShellArg commandLineArgs}
     ln -s ${chatgpt-unwrapped}/share "$out/share"
@@ -48,8 +58,10 @@ stdenvNoCC.mkDerivation {
 
   passthru = {
     category = "AI Coding Agents";
+    primaryRuntime = chatgpt-primary-runtime;
     runtimePython = chatgpt-runtime-python;
     unwrapped = chatgpt-unwrapped;
+    inherit withPrimaryRuntime;
   };
 
   inherit (chatgpt-unwrapped) meta;
