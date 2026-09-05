@@ -43,7 +43,7 @@ function writeUrl() {
   history.replaceState(null, "", s ? `?${s}` : location.pathname);
 }
 
-// Rank name matches above description matches; all terms must match.
+// Name matches rank above description matches. All terms must match.
 function score(pkg, terms) {
   let total = 0;
   for (const t of terms) {
@@ -99,7 +99,7 @@ function link(href, text, label) {
   return a;
 }
 
-// aria-label is not allowed on plain spans; prefix visually hidden text instead.
+// aria-label is not allowed on plain spans.
 function described(prefix, text) {
   const s = document.createElement("span");
   const sr = document.createElement("span");
@@ -120,12 +120,12 @@ function card(p) {
   li.querySelector(".desc").textContent = p.description;
   const badges = li.querySelector(".badges");
   badges.append(badge(p.source, p.source));
-  // flake.lib marks unfree licenses `free = true` to skip allowUnfree, so go by name.
+  // flake.lib sets `free = true` on unfree licenses, so match by name.
   if (/unfree/i.test(p.license)) badges.append(badge("unfree", "unfree"));
   const cmd = `nix run ${REPO}#${p.name}`;
   const code = li.querySelector(".cmd code");
   code.textContent = cmd;
-  // Horizontally scrollable on narrow screens, so must be keyboard reachable.
+  // Scrollable on narrow screens, so it must be focusable.
   code.tabIndex = 0;
   const copy = li.querySelector(".copy");
   copy.setAttribute("aria-label", `Copy nix run command for ${p.name}`);

@@ -1,4 +1,4 @@
-/* Palette and type follow numtide.com: charcoal, #f58220 orange, GT Pressura. */
+/* Palette and type follow numtide.com. */
 :root {
   --black: #1c1c1c;
   --ink: #232323;
@@ -113,7 +113,7 @@ footer code { color: var(--white); }
   header h1 .accent { display: inline; }
   .tagline { display: none; }
   #results { grid-template-columns: 1fr; }
-  /* Category chips would push results below the fold; scroll them sideways instead. */
+  /* Scroll chips sideways so results stay above the fold. */
   .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   .chip { white-space: nowrap; }
   .card .badges { margin-left: 0; }

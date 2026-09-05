@@ -1,5 +1,4 @@
-# nixbot (hercules-ci-effects compatible) effects. mkEffect is inlined so the
-# flake does not grow a nixbot/hercules-ci-effects input just for CI.
+# nixbot effects. mkEffect is inlined to avoid a nixbot flake input.
 { pkgs, site }:
 let
   inherit (pkgs) lib;
@@ -9,7 +8,7 @@ let
       name,
       effectScript,
       inputs ? [ ],
-      # nixbot mounts a pushable clone at /build/checkout, see nixbot docs/EFFECTS.md.
+      # Pushable clone at $NIXBOT_EFFECT_CHECKOUT, see nixbot docs/EFFECTS.md.
       checkout ? false,
     }:
     pkgs.stdenvNoCC.mkDerivation {
@@ -58,7 +57,7 @@ in
       cd "$NIXBOT_EFFECT_CHECKOUT"
       git config user.email "nixbot@numtide.com"
       git config user.name "nixbot"
-      # Orphan commit: history of generated files is not worth keeping.
+      # History of generated files is not worth keeping.
       git checkout -q --orphan gh-pages
       git rm -rfq .
       cp -r --no-preserve=mode,ownership ${site}/. .

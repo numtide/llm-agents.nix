@@ -53,7 +53,7 @@ let
         hasReadme = builtins.pathExists (../. + "/${name}/README.md");
       };
 
-  # `site` itself is part of allPackages; skip it to avoid infinite recursion.
+  # Skip `site` itself to avoid infinite recursion.
   packagesJson = builtins.toJSON (
     lib.filter (m: m != null) (lib.mapAttrsToList metadata (removeAttrs allPackages [ "site" ]))
   );
@@ -76,8 +76,7 @@ stdenvNoCC.mkDerivation {
   meta = {
     description = "Static package search site for llm-agents.nix";
     license = lib.licenses.mit;
-    # Some packages throw for unsupported systems when their attributes are
-    # forced; the metadata is system-independent and CI deploys from Linux.
+    # Some packages throw "Unsupported system" when evaluated on darwin.
     platforms = [ "x86_64-linux" ];
   };
 }
