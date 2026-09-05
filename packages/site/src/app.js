@@ -76,50 +76,76 @@ function render() {
   writeUrl();
 }
 
+const BADGE_TITLES = {
+  source: "Built from source",
+  binary: "Prebuilt upstream binary",
+  bytecode: "Prebuilt bytecode",
+  unfree: "Unfree license",
+};
+
 function badge(text, cls) {
   const s = document.createElement("span");
   s.className = `badge ${cls}`;
   s.textContent = text;
+  s.title = BADGE_TITLES[text] ?? text;
   return s;
 }
 
-function link(href, text) {
+function link(href, text, label) {
   const a = document.createElement("a");
   a.href = href;
   a.textContent = text;
+  if (label) a.setAttribute("aria-label", label);
   return a;
+}
+
+// aria-label is not allowed on plain spans; prefix visually hidden text instead.
+function described(prefix, text) {
+  const s = document.createElement("span");
+  const sr = document.createElement("span");
+  sr.className = "sr-only";
+  sr.textContent = `${prefix} `;
+  s.append(sr, text);
+  return s;
+}
+
+function announce(msg) {
+  $("#announce").textContent = msg;
 }
 
 function card(p) {
   const li = tpl.content.firstElementChild.cloneNode(true);
-  const name = li.querySelector(".name");
-  name.textContent = p.name;
-  name.href = `?q=${encodeURIComponent(p.name)}`;
-  li.querySelector(".version").textContent = p.version;
+  li.querySelector(".name").textContent = p.name;
+  li.querySelector(".version").replaceChildren(described("version", p.version));
   li.querySelector(".desc").textContent = p.description;
   const badges = li.querySelector(".badges");
   badges.append(badge(p.source, p.source));
   // flake.lib marks unfree licenses `free = true` to skip allowUnfree, so go by name.
   if (/unfree/i.test(p.license)) badges.append(badge("unfree", "unfree"));
   const cmd = `nix run ${REPO}#${p.name}`;
-  li.querySelector(".cmd code").textContent = cmd;
-  li.querySelector(".copy").addEventListener("click", (e) => {
-    navigator.clipboard.writeText(cmd);
-    e.target.textContent = "Copied";
-    setTimeout(() => (e.target.textContent = "Copy"), 1200);
+  const code = li.querySelector(".cmd code");
+  code.textContent = cmd;
+  // Horizontally scrollable on narrow screens, so must be keyboard reachable.
+  code.tabIndex = 0;
+  const copy = li.querySelector(".copy");
+  copy.setAttribute("aria-label", `Copy nix run command for ${p.name}`);
+  copy.addEventListener("click", async () => {
+    await navigator.clipboard.writeText(cmd);
+    copy.textContent = "Copied";
+    announce(`Copied: ${cmd}`);
+    setTimeout(() => (copy.textContent = "Copy"), 1500);
   });
   const links = li.querySelector(".links");
-  const parts = [];
-  if (p.homepage) parts.push(link(p.homepage, "Homepage"));
-  parts.push(link(`${SRC}/${p.name}/package.nix`, "package.nix"));
-  if (p.hasReadme) parts.push(link(`${SRC}/${p.name}/README.md`, "README"));
-  parts.push(document.createTextNode(p.license));
-  parts.push(document.createTextNode(p.platforms.join(", ")));
-  parts.forEach((el, i) => {
-    if (i) links.append(" · ");
+  const item = (...nodes) => {
+    const el = document.createElement("li");
+    el.append(...nodes);
     links.append(el);
-  });
-  li.title = p.category;
+  };
+  if (p.homepage) item(link(p.homepage, "Homepage", `${p.name} homepage`));
+  item(link(`${SRC}/${p.name}/package.nix`, "package.nix", `Nix source for ${p.name}`));
+  if (p.hasReadme) item(link(`${SRC}/${p.name}/README.md`, "README", `README for ${p.name}`));
+  item(described("license", p.license));
+  item(described("platforms", p.platforms.join(", ")));
   return li;
 }
 
@@ -135,7 +161,8 @@ function buildChips() {
     b.type = "button";
     b.className = "chip";
     b.dataset.value = value;
-    b.innerHTML = `${label} <span class="n">${n}</span>`;
+    b.setAttribute("aria-label", `${label}, ${n} packages`);
+    b.innerHTML = `${label} <span class="n" aria-hidden="true">${n}</span>`;
     b.addEventListener("click", () => {
       state.category = state.category === value ? "" : value;
       render();

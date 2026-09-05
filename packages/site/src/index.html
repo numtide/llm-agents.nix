@@ -9,19 +9,21 @@
     <link rel="icon" href="numtide.svg" />
   </head>
   <body>
+    <a class="skip" href="#q">Skip to search</a>
     <header>
       <div class="wrap">
-        <div class="brand">
-          <a href="https://numtide.com"><img src="numtide.svg" alt="Numtide" /></a>
-          <a href="https://numtide.com">Numtide</a>
-          <span class="sep">/</span>
+        <nav class="brand" aria-label="Project">
+          <a href="https://numtide.com"><img src="numtide.svg" alt="" />Numtide</a>
+          <span class="sep" aria-hidden="true">/</span>
           <a href="https://github.com/numtide/llm-agents.nix">llm-agents.nix</a>
-        </div>
+        </nav>
         <h1>AI coding agents <span class="accent">packaged with Nix.</span></h1>
         <p class="tagline muted">Auto-updated daily. Prebuilt from the Numtide binary cache for Linux and macOS.</p>
-        <input id="q" type="search" placeholder="Search packages…" autofocus autocomplete="off" spellcheck="false" />
+        <search>
+        <label for="q" class="sr-only">Search packages</label>
+        <input id="q" type="search" placeholder="Search packages…" autocomplete="off" spellcheck="false" aria-controls="results" aria-describedby="count" />
         <div class="filters">
-          <div id="categories" class="chips" role="group" aria-label="Category"></div>
+          <div id="categories" class="chips" role="group" aria-label="Filter by category"></div>
           <div class="row">
             <select id="platform" aria-label="Platform">
               <option value="">All platforms</option>
@@ -34,15 +36,18 @@
               <option value="source">Built from source</option>
               <option value="binary">Prebuilt binary</option>
             </select>
-            <span id="count" class="muted"></span>
+            <span id="count" class="muted" role="status" aria-live="polite"></span>
           </div>
         </div>
+        </search>
       </div>
     </header>
     <main>
       <div class="wrap">
-        <ul id="results"></ul>
+        <h2 class="sr-only" id="results-heading">Packages</h2>
+        <ul id="results" aria-labelledby="results-heading"></ul>
         <p id="empty" hidden>No packages match.</p>
+        <div id="announce" class="sr-only" role="status" aria-live="polite"></div>
       </div>
     </main>
     <footer class="wrap muted">
@@ -56,16 +61,16 @@
     <template id="card">
       <li class="card">
         <div class="head">
-          <a class="name"></a>
+          <h3 class="name"></h3>
           <span class="version muted"></span>
           <span class="badges"></span>
         </div>
         <p class="desc"></p>
         <div class="cmd">
           <code></code>
-          <button type="button" class="copy" title="Copy">Copy</button>
+          <button type="button" class="copy">Copy</button>
         </div>
-        <div class="links muted"></div>
+        <ul class="links muted"></ul>
       </li>
     </template>
     <script src="app.js" type="module"></script>
