@@ -76,7 +76,7 @@ main { background: var(--lightgray); color: var(--black); padding: 1.5rem 0 2rem
   display: flex; flex-direction: column;
 }
 .card .head { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
-.card .name { margin: 0; font-weight: 500; font-size: 1.15rem; color: var(--primary); }
+.card .name { margin: 0; font-weight: 600; font-size: 1.2rem; color: var(--white); letter-spacing: 0.01em; }
 .card .version { font-size: 0.8rem; font-family: ui-monospace, monospace; }
 .card .badges { margin-left: auto; display: flex; gap: 0.3rem; }
 .badge {
