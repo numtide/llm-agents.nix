@@ -1,0 +1,8 @@
+{
+  "version": "3.4.2",
+  "hashes": {
+    "aarch64-darwin": "sha256-mBOYdrNqtXGt/J/fsyIvUzEG/RW8Zn88t5ZaB3tQjxY=",
+    "aarch64-linux": "sha256-mBOYdrNqtXGt/J/fsyIvUzEG/RW8Zn88t5ZaB3tQjxY=",
+    "x86_64-linux": "sha256-mBOYdrNqtXGt/J/fsyIvUzEG/RW8Zn88t5ZaB3tQjxY="
+  }
+}

@@ -1210,6 +1210,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>greptile-cli</strong> - Greptile code review from your terminal</summary>
+
+- **Source**: bytecode
+- **License**: MIT
+- **Homepage**: https://www.greptile.com/cli
+- **Usage**: `nix run github:numtide/llm-agents.nix#greptile-cli -- --help`
+- **Nix**: [packages/greptile-cli/package.nix](packages/greptile-cli/package.nix)
+
+</details>
+<details>
 <summary><strong>hunk</strong> - Terminal diff viewer for agentic changesets</summary>
 
 - **Source**: source
