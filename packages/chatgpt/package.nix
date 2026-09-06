@@ -50,7 +50,7 @@ stdenvNoCC.mkDerivation {
       ${lib.optionalString stdenv.hostPlatform.isLinux "--run '. ${patchRuntime}' --set-default DOTNET_SYSTEM_GLOBALIZATION_INVARIANT 1"} \
       --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform=wayland}}" \
       --add-flags ${lib.escapeShellArg commandLineArgs}
-    ln -s ${chatgpt-unwrapped}/share "$out/share"
+    ${lib.optionalString stdenv.hostPlatform.isLinux "ln -s ${chatgpt-unwrapped}/share \"\$out/share\""}
 
     runHook postInstall
   '';

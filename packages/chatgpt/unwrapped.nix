@@ -8,6 +8,7 @@
   formatelf,
   makeWrapper,
   python3,
+  unzip,
   wrapGAppsHook3,
   alsa-lib,
   at-spi2-atk,
@@ -51,6 +52,8 @@
 let
   sourceData = builtins.fromJSON (builtins.readFile ./hashes.json);
   platform = stdenv.hostPlatform.system;
+  isLinux = stdenv.hostPlatform.isLinux;
+  isDarwin = stdenv.hostPlatform.isDarwin;
   source = sourceData.sources.${platform} or (throw "Unsupported system: ${platform}");
 in
 stdenv.mkDerivation {
@@ -64,15 +67,22 @@ stdenv.mkDerivation {
   dontStrip = true;
   dontWrapGApps = true;
 
-  nativeBuildInputs = [
-    formatelf
-    dpkg
-    makeWrapper
-    python3
-    wrapGAppsHook3
-  ];
+  nativeBuildInputs =
+    lib.optionals isLinux [
+      formatelf
+      dpkg
+      makeWrapper
+      wrapGAppsHook3
+    ]
+    ++ [
+      # patch-asar.py runs on both platforms.
+      python3
+    ]
+    ++ lib.optionals isDarwin [
+      unzip
+    ];
 
-  buildInputs = [
+  buildInputs = lib.optionals isLinux [
     alsa-lib
     at-spi2-atk
     at-spi2-core
@@ -112,7 +122,7 @@ stdenv.mkDerivation {
   # Electron loads these at runtime rather than linking them directly. Put
   # them on each ELF object's RPATH without leaking a broad LD_LIBRARY_PATH
   # into Electron's Node and Chromium children.
-  runtimeDependencies = [
+  runtimeDependencies = lib.optionals isLinux [
     libGL
     libgbm
     libsecret
@@ -127,7 +137,7 @@ stdenv.mkDerivation {
   # The Qt shims are optional and selected dynamically, so autoPatchelf cannot
   # resolve both of their runtimes during its direct dependency pass. Their
   # version-specific RPATHs are added in postFixup below.
-  autoPatchelfIgnoreMissingDeps = [
+  autoPatchelfIgnoreMissingDeps = lib.optionals isLinux [
     "libc++_shared.so"
     "libc.musl-x86_64.so.1"
     "liblog.so"
@@ -139,36 +149,60 @@ stdenv.mkDerivation {
     "libQt6Widgets.so.6"
   ];
 
-  unpackPhase = ''
-    runHook preUnpack
-    dpkg-deb -x "$src" .
-    runHook postUnpack
-  '';
+  unpackPhase =
+    if isLinux then
+      ''
+        runHook preUnpack
+        dpkg-deb -x "$src" .
+        runHook postUnpack
+      ''
+    else
+      ''
+        runHook preUnpack
+        # The darwin distribution is a zip of the ChatGPT.app bundle.
+        unzip -q "$src"
+        runHook postUnpack
+      '';
 
-  installPhase = ''
-    runHook preInstall
+  installPhase =
+    if isLinux then
+      ''
+        runHook preInstall
 
-    mkdir -p "$out/bin" "$out/lib" "$out/share"
-    cp -r usr/lib/chatgpt "$out/lib/"
-    cp -r usr/share/applications usr/share/pixmaps "$out/share/"
-    ln -s ../lib/chatgpt/codex-launcher "$out/bin/chatgpt"
+        mkdir -p "$out/bin" "$out/lib" "$out/share"
+        cp -r usr/lib/chatgpt "$out/lib/"
+        cp -r usr/share/applications usr/share/pixmaps "$out/share/"
+        ln -s ../lib/chatgpt/codex-launcher "$out/bin/chatgpt"
 
-    # See patch-asar.py for the NixOS-specific source patches.
-    python3 ${./patch-asar.py} "$out/lib/chatgpt/resources/app.asar"
+        # See patch-asar.py for the NixOS-specific source patches.
+        python3 ${./patch-asar.py} "$out/lib/chatgpt/resources/app.asar"
 
-    wrapProgram "$out/lib/chatgpt/ChatGPT" \
-      "''${gappsWrapperArgs[@]}" \
-      --prefix PATH : ${
-        lib.makeBinPath [
-          coreutils
-          xdg-utils
-        ]
-      }
+        wrapProgram "$out/lib/chatgpt/ChatGPT" \
+          "''${gappsWrapperArgs[@]}" \
+          --prefix PATH : ${
+            lib.makeBinPath [
+              coreutils
+              xdg-utils
+            ]
+          }
 
-    runHook postInstall
-  '';
+        runHook postInstall
+      ''
+    else
+      ''
+        runHook preInstall
 
-  postFixup = ''
+        mkdir -p "$out/Applications" "$out/bin"
+        mv ChatGPT.app "$out/Applications/"
+        ln -s ../Applications/ChatGPT.app/Contents/MacOS/ChatGPT "$out/bin/chatgpt"
+
+        # See patch-asar.py for the darwin store-mode patches.
+        python3 ${./patch-asar.py} "$out/Applications/ChatGPT.app/Contents/Resources/app.asar" darwin
+
+        runHook postInstall
+      '';
+
+  postFixup = lib.optionalString isLinux ''
     patchelf --add-rpath ${lib.makeLibraryPath [ qt5.qtbase ]} \
       "$out/lib/chatgpt/libqt5_shim.so"
     patchelf --add-rpath ${lib.makeLibraryPath [ qt6.qtbase ]} \
@@ -186,6 +220,7 @@ stdenv.mkDerivation {
     platforms = [
       "x86_64-linux"
       "aarch64-linux"
+      "aarch64-darwin"
     ];
   };
 }

@@ -1,12 +1,14 @@
 #!/usr/bin/env nix
 #! nix shell --inputs-from .# nixpkgs#gnupg nixpkgs#python3 --command python3
-"""Update ChatGPT from OpenAI's signed Debian repository."""
+"""Update ChatGPT from OpenAI's signed Debian repository and Sparkle appcast."""
 
 import hashlib
+import re
 import subprocess
 import sys
 import tempfile
 import urllib.request
+import xml.etree.ElementTree as ET  # conventional stdlib alias
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
@@ -20,23 +22,30 @@ KEY_FILE = PACKAGE_DIR / "openai-archive-key.asc"
 KEY_FINGERPRINT = "3BFA0E4AE8B8CC16A2D9BA684A3B4A566C4660E4"
 REPO_BASE = "https://persistent.oaistatic.com/codex-app-prod/linux/deb"
 INRELEASE_PATH = "dists/stable/InRelease"
+APPCAST_URL = "https://persistent.oaistatic.com/codex-app-prod/appcast.xml"
 PLATFORMS = {
     "aarch64-linux": "arm64",
     "x86_64-linux": "amd64",
 }
+DARWIN_PLATFORM = "aarch64-darwin"
 USER_AGENT = (
     "llm-agents.nix package updater (+https://github.com/numtide/llm-agents.nix)"
 )
 
 
-def fetch(path: str) -> bytes:
-    """Fetch one path from OpenAI's Debian repository."""
+def fetch_url(url: str) -> bytes:
+    """Fetch one absolute URL from OpenAI's static hosting."""
     request = urllib.request.Request(
-        f"{REPO_BASE}/{path}",
+        url,
         headers={"User-Agent": USER_AGENT},
     )
     with urllib.request.urlopen(request) as response:
         return bytes(response.read())
+
+
+def fetch(path: str) -> bytes:
+    """Fetch one path from OpenAI's Debian repository."""
+    return fetch_url(f"{REPO_BASE}/{path}")
 
 
 def verify_inrelease(inrelease: bytes) -> str:
@@ -178,21 +187,63 @@ def source_from_index(platform: str, architecture: str, release: str) -> dict[st
     }
 
 
+def fetch_sha256(url: str) -> str:
+    """Stream a file and return its hex sha256."""
+    hasher = hashlib.sha256()
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(request) as response:
+        while chunk := response.read(1 << 20):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def darwin_source(current: dict[str, str] | None) -> dict[str, str]:
+    """Return the arm64 darwin source advertised by OpenAI's Sparkle appcast.
+
+    The appcast carries only an EdDSA signature, not a content hash, so the
+    zip is downloaded and hashed. The existing entry is reused unchanged to
+    avoid re-downloading the ~600MB archive on every run.
+    """
+    # The appcast is served over HTTPS from the pinned static host and only
+    # version/url pairings are extracted; the artifact's authenticity is
+    # enforced by the pinned hash in review (see S314).
+    root = ET.fromstring(fetch_url(APPCAST_URL))  # noqa: S314
+    for item in root.iter("item"):
+        version = (item.findtext("title") or "").strip()
+        enclosure = item.find("enclosure")
+        url = (enclosure.get("url") if enclosure is not None else "") or ""
+        if not version or not re.search(r"-arm64-[\w.]+\.zip$", url):
+            continue
+        if current and current.get("version") == version and current.get("url") == url:
+            return current
+        print(f"chatgpt: downloading {url} to compute its hash")
+        return {
+            "version": version,
+            "url": url,
+            "hash": hex_to_sri(fetch_sha256(url)),
+        }
+
+    msg = "no arm64 darwin release found in OpenAI appcast"
+    raise ValueError(msg)
+
+
 def main() -> None:
-    """Refresh all sources from OpenAI's signed APT metadata."""
+    """Refresh all sources from OpenAI's signed APT metadata and appcast."""
     release = verify_inrelease(fetch(INRELEASE_PATH))
+
+    current = load_hashes(HASHES_FILE)
+    current_sources = current.get("sources", {})
+
     sources = {
         platform: source_from_index(platform, architecture, release)
         for platform, architecture in PLATFORMS.items()
     }
+    sources[DARWIN_PLATFORM] = darwin_source(current_sources.get(DARWIN_PLATFORM))
 
     versions = {source["version"] for source in sources.values()}
     if len(versions) != 1:
-        msg = f"OpenAI architecture versions differ: {sorted(versions)}"
+        msg = f"OpenAI platform versions differ: {sorted(versions)}"
         raise ValueError(msg)
-
-    current = load_hashes(HASHES_FILE)
-    current_sources = current.get("sources", {})
     for platform, source in sources.items():
         current_version = current_sources.get(platform, {}).get("version", "")
         if (
