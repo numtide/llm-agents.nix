@@ -1,5 +1,6 @@
 {
   lib,
+  flake,
   mkUpdater,
   stdenv,
   platformSource,
@@ -63,6 +64,7 @@ stdenv.mkDerivation {
     changelog = "https://github.com/greptileai/cli/releases/tag/v${source.version}";
     license = licenses.mit;
     sourceProvenance = with sourceTypes; [ binaryBytecode ];
+    maintainers = with flake.lib.maintainers; [ RestartDK ];
     mainProgram = "greptile";
     platforms = source.platforms;
   };
