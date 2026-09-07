@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>llm-agents.nix - package search</title>
+    <meta name="description" content="Nix packages for AI coding agents and development tools." />
+    <link rel="stylesheet" href="style.css?v=ynvi6fjd9v1q" />
+    <link rel="icon" href="numtide.svg" />
+  </head>
+  <body>
+    <a class="skip" href="#q">Skip to search</a>
+    <header>
+      <div class="wrap">
+        <nav class="brand" aria-label="Project">
+          <a href="https://numtide.com"><img src="numtide.svg" alt="" />Numtide</a>
+          <span class="sep" aria-hidden="true">/</span>
+          <a href="https://github.com/numtide/llm-agents.nix">llm-agents.nix</a>
+          <a class="gh" href="https://github.com/numtide/llm-agents.nix" aria-label="GitHub repository" title="GitHub">
+            <svg viewBox="0 0 16 16" width="24" height="24" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.540 2.29 6.530 5.470 7.590.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.490-2.010.37-2.530-.49-2.690-.94-.09-.23-.48-.94-.82-1.130-.28-.15-.68-.52-.01-.53.63-.01 1.080.58 1.230.82.72 1.210 1.870.87 2.330.66.07-.52.28-.87.51-1.070-1.780-.2-3.640-.89-3.640-3.950 0-.87.31-1.590.82-2.150-.08-.2-.36-1.020.08-2.120 0 0 .67-.21 2.200.82.64-.18 1.320-.27 2-.27s1.360.09 2 .27c1.530-1.040 2.200-.82 2.200-.82.44 1.100.16 1.920.08 2.120.51.56.82 1.270.82 2.150 0 3.070-1.870 3.750-3.650 3.950.29.25.54.73.54 1.480 0 1.070-.01 1.930-.01 2.200 0 .21.15.46.55.38A8.010 8.010 0 0 0 16 8c0-4.420-3.580-8-8-8z"/></svg>
+          </a>
+        </nav>
+        <h1>AI coding agents <span class="accent">packaged with Nix.</span></h1>
+        <p class="tagline muted">Auto-updated daily. Prebuilt from the Numtide binary cache for Linux and macOS.</p>
+        <search>
+        <label for="q" class="sr-only">Search packages</label>
+        <input id="q" type="search" placeholder="Search packages…" autocomplete="off" spellcheck="false" aria-controls="results" aria-describedby="count" />
+        <div class="filters">
+          <div id="categories" class="chips" role="group" aria-label="Filter by category"></div>
+          <div class="row">
+            <select id="platform" aria-label="Platform">
+              <option value="">All platforms</option>
+              <option value="x86_64-linux">x86_64-linux</option>
+              <option value="aarch64-linux">aarch64-linux</option>
+              <option value="aarch64-darwin">aarch64-darwin</option>
+            </select>
+            <span id="count" class="muted" role="status" aria-live="polite"></span>
+          </div>
+        </div>
+        </search>
+      </div>
+    </header>
+    <main>
+      <div class="wrap">
+        <h2 class="sr-only" id="results-heading">Packages</h2>
+        <ul id="results" aria-labelledby="results-heading"></ul>
+        <p id="empty" hidden>No packages match.</p>
+        <div id="announce" class="sr-only" role="status" aria-live="polite"></div>
+      </div>
+    </main>
+    <footer class="wrap muted">
+      <p>
+        <code>nix run github:numtide/llm-agents.nix#&lt;name&gt;</code> ·
+        <a href="https://github.com/numtide/llm-agents.nix">GitHub</a> ·
+        <a href="https://github.com/numtide/llm-agents.nix#installation">Installation</a> ·
+        <a href="packages.json">packages.json</a> ·
+        by <a href="https://numtide.com">Numtide</a>
+      </p>
+    </footer>
+    <template id="card">
+      <li class="card">
+        <div class="head">
+          <h3 class="name"><button type="button" aria-expanded="false"></button></h3>
+          <span class="version muted"></span>
+        </div>
+        <p class="desc"></p>
+        <ul class="links muted"></ul>
+      </li>
+    </template>
+    <script src="app.js?v=ynvi6fjd9v1q" type="module"></script>
+  </body>
+</html>
