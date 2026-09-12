@@ -4,6 +4,7 @@
   buildNpmPackage,
   fetchurl,
   flake,
+  jq,
   makeWrapper,
   nodejs,
   runCommand,
@@ -15,7 +16,13 @@ let
   versionData = lib.importJSON ./hashes.json;
   inherit (versionData) version;
 
-  srcWithLock = runCommand "dsh-source" { } ''
+  # The npm tarball ships no lockfile, so vendor one alongside the source. The
+  # lockfile is generated without devDependencies (see update.py), so the
+  # manifest has to lose them too or npm re-resolves the whole tree:
+  # devDependencies name @deepseek-ai/dsh-experimental-code-runtime-python,
+  # which upstream never published, and `npm install --package-lock-only`
+  # aborts on it with E404.
+  srcWithLock = runCommand "dsh-source" { nativeBuildInputs = [ jq ]; } ''
     mkdir -p $out
     tar -xzf ${
       fetchurl {
@@ -23,6 +30,8 @@ let
         hash = versionData.sourceHash;
       }
     } -C $out --strip-components=1
+    jq 'del(.devDependencies)' $out/package.json > $out/package.json.tmp
+    mv $out/package.json.tmp $out/package.json
     cp ${./package-lock.json} $out/package-lock.json
   '';
 in

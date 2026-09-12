@@ -14,4 +14,9 @@ update_npm_package(
     Path(__file__).parent,
     "@deepseek-ai/dsh",
     ".#dsh",
+    # The tarball ships no lockfile, so npm has to resolve the tree itself.
+    # devDependencies name @deepseek-ai/dsh-experimental-code-runtime-python,
+    # which upstream never published; without this the resolve aborts with
+    # E404 and the update never lands. Mirror in package.nix.
+    strip_dev_dependencies=True,
 )
