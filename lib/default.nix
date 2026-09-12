@@ -274,6 +274,11 @@ inputs."nixpkgs".lib.extend (
         githubId = 76489193;
         name = "Brayden Willenborg";
       };
+      bet4it = {
+        github = "bet4it";
+        githubId = 16643669;
+        name = "Bet4";
+      };
     };
   }
 )

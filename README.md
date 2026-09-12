@@ -1676,6 +1676,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>opencodex</strong> - Universal provider proxy for OpenAI Codex, Claude Code, Claude Desktop & Grok Build</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/lidge-jun/opencodex
+- **Usage**: `nix run github:numtide/llm-agents.nix#opencodex -- --help`
+- **Nix**: [packages/opencodex/package.nix](packages/opencodex/package.nix)
+
+</details>
+<details>
 <summary><strong>parallel-cli</strong> - AI-powered web search, extraction, and research CLI from Parallel</summary>
 
 - **Source**: source
