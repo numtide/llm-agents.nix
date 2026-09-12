@@ -173,13 +173,13 @@ let
     };
   };
 
-  version = "2026.8.31";
+  version = "2026.9.7";
 
   src = fetchFromGitHub {
     owner = "NousResearch";
     repo = "hermes-agent";
     tag = "v${version}";
-    hash = "sha256-vT5ZhN2NUd0Iv5YplUQfwdHEOVM8yoy94MqJjLvXOJ8=";
+    hash = "sha256-hOWnBUhBCPsPusPha9dhglNlBj9g3BHbv2mk1QyUhKc=";
     # contributors/emails/ holds paths differing only in case; they collapse
     # on case-insensitive stores (APFS) so the NAR hash diverges between
     # Linux and darwin. Unused at build/runtime. Upstream:
