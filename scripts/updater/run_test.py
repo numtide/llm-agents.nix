@@ -106,6 +106,23 @@ class TestRun(unittest.TestCase):
         assert flows["npm"].args is not None
         self.assertEqual(flows["npm"].args[1], "skills")
 
+    def test_npm_dist_tag(self) -> None:
+        flows = recorders()
+        run(
+            PKG,
+            {
+                "kind": "npm",
+                "purl": "pkg:npm/omo-ai?x_dist_tag=beta",
+                "flakeAttr": ".#omo-ai",
+            },
+            flows=flows,  # type: ignore[arg-type]
+        )
+        rec = flows["npm"]
+        assert rec.args is not None
+        self.assertEqual(rec.args[1], "omo-ai")
+        assert rec.kwargs is not None
+        self.assertEqual(rec.kwargs["dist_tag"], "beta")
+
     def test_platform_github_source(self) -> None:
         flows = recorders()
         run(

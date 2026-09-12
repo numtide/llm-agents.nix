@@ -17,22 +17,26 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-def _npm_purl(npm_package: str, *, fetchzip: bool) -> Purl:
+def _npm_purl(npm_package: str, *, fetchzip: bool, dist_tag: str | None = None) -> Purl:
     """Build the pkg:npm purl for a (possibly scoped) package name."""
     if npm_package.startswith("@"):
         scope, _, name = npm_package.partition("/")
         purl = Purl("npm", scope, name)
     else:
         purl = Purl("npm", None, npm_package)
+    if dist_tag:
+        # Track a non-default registry dist-tag (e.g. beta channels).
+        purl = purl.with_qualifiers(x_dist_tag=dist_tag)
     # fetchzip hashes the unpacked tarball; flag it so source_hash unpacks.
     return purl.with_qualifiers(x_unpack="true") if fetchzip else purl
 
 
-def update_npm_package(
+def update_npm_package(  # noqa: PLR0913 -- declarative passthru.updater config fields map 1:1
     pkg_dir: Path,
     npm_package: str,
     flake_attr: str,
     *,
+    dist_tag: str | None = None,
     lockfile_env: dict[str, str] | None = None,
     strip_dev_dependencies: bool = False,
     require_lockfile: bool = True,
@@ -43,13 +47,14 @@ def update_npm_package(
 
     fetchzip=True hashes the unpacked tarball and stores it under "hash"
     instead of "sourceHash" (for derivations using fetchzip, not fetchurl).
+    dist_tag tracks a non-default npm dist-tag instead of "latest".
     """
     hashes_file = pkg_dir / "hashes.json"
     data = load_hashes(hashes_file)
     current = data["version"]
 
     fetcher = PurlFetcher.default()
-    purl = _npm_purl(npm_package, fetchzip=fetchzip)
+    purl = _npm_purl(npm_package, fetchzip=fetchzip, dist_tag=dist_tag)
     resolved = fetcher.resolve(purl)
 
     print(f"Current: {current}, Latest: {resolved.version}")

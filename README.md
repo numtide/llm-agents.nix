@@ -391,6 +391,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>omo-ai</strong> - Standalone Senpi edition of Oh My OpenAgent (the omo coding agent)</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/code-yeongyu/oh-my-openagent
+- **Usage**: `nix run github:numtide/llm-agents.nix#omo-ai -- --help`
+- **Nix**: [packages/omo-ai/package.nix](packages/omo-ai/package.nix)
+
+</details>
+<details>
 <summary><strong>omp</strong> - A terminal-based coding agent with multi-model support</summary>
 
 - **Source**: source

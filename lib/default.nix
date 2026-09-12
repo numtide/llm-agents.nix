@@ -274,6 +274,11 @@ inputs."nixpkgs".lib.extend (
         githubId = 76489193;
         name = "Brayden Willenborg";
       };
+      ankarhem = {
+        github = "ankarhem";
+        githubId = 14110063;
+        name = "Jakob Ankarhem";
+      };
     };
   }
 )

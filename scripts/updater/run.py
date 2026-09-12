@@ -119,6 +119,7 @@ def run(pkg_dir: Path, config: dict[str, Any], *, flows: FlowMap | None = None) 
             pkg_dir,
             package,
             config["flakeAttr"],
+            dist_tag=purl.q("x_dist_tag"),
             fetchzip=config.get("fetchzip", False),
             require_lockfile=config.get("requireLockfile", True),
             strip_dev_dependencies=config.get("stripDevDependencies", False),
