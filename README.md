@@ -833,6 +833,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>cpa-usage-keeper</strong> - Standalone CliProxyAPI usage tracker with SQLite persistence and built-in dashboard</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/Willxup/cpa-usage-keeper
+- **Usage**: `nix run github:numtide/llm-agents.nix#cpa-usage-keeper -- --help`
+- **Nix**: [packages/cpa-usage-keeper/package.nix](packages/cpa-usage-keeper/package.nix)
+
+</details>
+<details>
 <summary><strong>entire</strong> - CLI tool that captures AI agent sessions and links them to code changes</summary>
 
 - **Source**: source
