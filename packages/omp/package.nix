@@ -8,11 +8,12 @@
   cargo,
   rustPlatform,
   pkg-config,
+  cmake,
+  ninja,
   makeWrapper,
   rcodesign,
   formatelf,
   zlib,
-  libopus,
   python3,
   zig,
   libpulseaudio,
@@ -67,16 +68,16 @@ stdenv.mkDerivation {
     # bindgen (zlob, maudio-sys) needs libclang and clang flags for libc headers
     rustPlatform.bindgenHook
     pkg-config
+    # opusic-sys compiles its bundled libopus with cmake -G Ninja
+    cmake
+    ninja
     makeWrapper
     zig
   ]
   ++ lib.optionals stdenv.hostPlatform.isLinux [ formatelf ]
   ++ lib.optionals stdenv.hostPlatform.isDarwin [ rcodesign ];
 
-  buildInputs = [
-    libopus
-  ]
-  ++ lib.optionals stdenv.hostPlatform.isLinux [
+  buildInputs = lib.optionals stdenv.hostPlatform.isLinux [
     stdenv.cc.cc.lib
     zlib
     # pi-natives' wayland-pipewire feature links system libpipewire (pkg-config)
@@ -130,6 +131,7 @@ stdenv.mkDerivation {
     "
   '';
 
+  dontUseCmakeConfigure = true;
   dontUseBunBuild = true;
   dontUseBunInstall = true;
   dontRunLifecycleScripts = true;
@@ -138,6 +140,11 @@ stdenv.mkDerivation {
   dontStrip = true;
 
   postPatch = ''
+    # Upstream bug: everything else imports the pi-utils re-export; bare
+    # chalk is only reachable through a devDependency.
+    substituteInPlace packages/coding-agent/src/cli/collab-cli.ts \
+      --replace-fail 'from "chalk"' 'from "@oh-my-pi/pi-utils/chalk"'
+
     # Strip ^ and ~ prefixes: bun resolves range specifiers via the npm
     # registry, which is unreachable in the sandbox.
     for f in package.json packages/*/package.json; do
