@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Protocol, runtime_checkable
 
 from .hash import calculate_url_hash
 from .http import fetch_json, fetch_text
-from .interpolate import interpolate
+from .interpolate import interpolate, version_vars
 from .version import compare_versions, should_update
 
 if TYPE_CHECKING:
@@ -261,7 +261,7 @@ def templated_locations(
     """
     unpack = purl.q("x_unpack") == "true"
     fmt: dict[str, str] = {
-        "version": resolved.version,
+        **version_vars(resolved.version),
         "ref": resolved.ref,
         **{k: str(v) for k, v in resolved.extra.items()},
     }

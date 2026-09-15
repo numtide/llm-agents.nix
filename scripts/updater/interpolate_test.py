@@ -9,7 +9,7 @@ import json
 import unittest
 from pathlib import Path
 
-from updater.interpolate import interpolate
+from updater.interpolate import interpolate, version_vars
 
 _CASES = json.loads((Path(__file__).parent / "interpolate_cases.json").read_text())
 
@@ -18,7 +18,10 @@ class TestInterpolate(unittest.TestCase):
     def test_shared_cases(self) -> None:
         for case in _CASES:
             with self.subTest(case=case["name"]):
-                got = interpolate(case["template"], case["vars"])
+                variables = dict(case["vars"])
+                if "versionVars" in case:
+                    variables = {**version_vars(case["versionVars"]), **variables}
+                got = interpolate(case["template"], variables)
                 self.assertEqual(got, case["expected"])
 
 

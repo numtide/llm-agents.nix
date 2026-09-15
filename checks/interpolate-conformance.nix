@@ -7,9 +7,13 @@
 }:
 let
   interpolate = import ../lib/interpolate.nix;
+  versionVars = import ../lib/version-vars.nix { inherit (pkgs) lib; };
+  # Cases with `versionVars` derive {version}/{versionEnc} from it, proving
+  # lib/version-vars.nix and version_vars() encode identically.
+  varsFor = case: (if case ? versionVars then versionVars case.versionVars else { }) // case.vars;
   casesJson = builtins.readFile ../scripts/updater/interpolate_cases.json;
   cases = builtins.fromJSON casesJson;
-  nixResults = map (case: interpolate case.template case.vars) cases;
+  nixResults = map (case: interpolate case.template (varsFor case)) cases;
 in
 pkgs.runCommand "interpolate-conformance"
   {
@@ -25,12 +29,15 @@ pkgs.runCommand "interpolate-conformance"
     python3 - <<'PY'
     import json
     from pathlib import Path
-    from updater.interpolate import interpolate
+    from updater.interpolate import interpolate, version_vars
 
     cases = json.loads(Path("cases.json").read_text())
     nix = json.loads(Path("nix.json").read_text())
     for case, nix_out in zip(cases, nix, strict=True):
-        py_out = interpolate(case["template"], case["vars"])
+        vars = dict(case["vars"])
+        if "versionVars" in case:
+            vars = {**version_vars(case["versionVars"]), **vars}
+        py_out = interpolate(case["template"], vars)
         if not (py_out == nix_out == case["expected"]):
             msg = (
                 f"interpolate divergence in case {case['name']!r}:\n"

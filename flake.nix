@@ -97,7 +97,7 @@
                 fetchurlTemplate
                 ;
               platformSource = import ./lib/platform-source.nix {
-                inherit (pkgs) stdenv;
+                inherit (pkgs) lib stdenv;
                 inherit fetchurlTemplate;
               };
               # Validate a declarative passthru.updater config (see

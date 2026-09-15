@@ -3,6 +3,7 @@
   flake,
   stdenv,
   platformSource,
+  mkUpdater,
   fetchzip,
   makeWrapper,
   writeShellScriptBin,
@@ -42,21 +43,16 @@ let
     socat
   ];
   linuxBubblewrapPath = lib.makeBinPath [ bubblewrap ];
+  platforms = {
+    x86_64-linux = "linux-amd64";
+    aarch64-linux = "linux-arm64";
+    aarch64-darwin = "darwin-arm64";
+  };
   source = platformSource {
     hashesFile = ./hashes.json;
-    platforms = {
-      x86_64-linux = "linux-amd64";
-      aarch64-linux = "linux-arm64";
-      aarch64-darwin = "darwin-arm64";
-    };
-    # Snowflake requires URL-encoded build metadata; the shared template
-    # interpolator does not encode variable values.
-    urlTemplate =
-      let
-        version = (builtins.fromJSON (builtins.readFile ./hashes.json)).version;
-        encodedVersion = lib.replaceStrings [ "+" ] [ "%2B" ] version;
-      in
-      "${baseUrl}/${encodedVersion}/coco-${encodedVersion}-{platform}.tar.gz";
+    inherit platforms;
+    # Snowflake 404s on a literal `+` in the path, hence {versionEnc}.
+    urlTemplate = "${baseUrl}/{versionEnc}/coco-{versionEnc}-{platform}.tar.gz";
   };
   displayVersion = lib.head (lib.splitString "+" source.version);
 
@@ -323,6 +319,19 @@ stdenv.mkDerivation {
   '';
 
   passthru.category = "AI Coding Agents";
+  passthru.updater = mkUpdater {
+    kind = "manifest-checksums";
+    versionSource = {
+      type = "text";
+      url = "${baseUrl}/stable_version.txt";
+    };
+    manifestUrl = "${baseUrl}/{versionEnc}/manifest.json";
+    checksumPath = "packages.{platform}.checksum";
+    # Manifest nests os.arch where the tarball name uses os-arch.
+    platforms = lib.mapAttrs (_: lib.replaceStrings [ "-" ] [ "." ]) platforms;
+    # Snowflake moves the stable pointer backwards on rollbacks.
+    versionPolicy = "follow_pointer";
+  };
 
   meta = with lib; {
     description = "Snowflake CoCo CLI, an AI coding agent for Snowflake";
