@@ -11,13 +11,13 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "codex-auth";
-  version = "0.2.10";
+  version = "0.3.0";
 
   src = fetchFromGitHub {
     owner = "loongphy";
     repo = "codex-auth";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-ecB7/bNNqOuMPlB5C+mO3UlDWZgy27gb0TwOtq1z/7s=";
+    hash = "sha256-TrJtVP4gRdupx6StKWc2PIXoVnnlFMUqFw6JtEmWqZ4=";
   };
 
   # Upstream v0.2.8 does not compile with nixpkgs' default zig 0.16.0
