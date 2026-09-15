@@ -100,7 +100,7 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
-<summary><strong>coco</strong> - Snowflake CoCo CLI, an AI coding agent for Snowflake</summary>
+<summary><strong>coco</strong> - Snowflake Cortex Code CLI, an AI coding agent for Snowflake</summary>
 
 - **Source**: binary
 - **License**: unfree
