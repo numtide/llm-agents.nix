@@ -100,6 +100,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>coco</strong> - Snowflake Cortex Code CLI, an AI coding agent for Snowflake</summary>
+
+- **Source**: binary
+- **License**: unfree
+- **Homepage**: https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli
+- **Usage**: `nix run github:numtide/llm-agents.nix#coco -- --help`
+- **Nix**: [packages/coco/package.nix](packages/coco/package.nix)
+
+</details>
+<details>
 <summary><strong>code</strong> - Fork of codex. Orchestrate agents from OpenAI, Claude, Gemini or any provider.</summary>
 
 - **Source**: source

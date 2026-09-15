@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from updater.hash import hex_to_sri
 from updater.hashes_file import load_hashes, save_hashes
-from updater.interpolate import interpolate
+from updater.interpolate import interpolate, version_vars
 from updater.version import should_update
 
 if TYPE_CHECKING:
@@ -62,7 +62,7 @@ def update_manifest_checksums(
 
     from updater.http import fetch_json  # noqa: PLC0415 -- patched in tests
 
-    manifest_url = interpolate(manifest_url_template, {"version": latest})
+    manifest_url = interpolate(manifest_url_template, version_vars(latest))
     manifest = fetch_json(manifest_url)
     if not isinstance(manifest, dict):
         msg = f"expected a JSON object from {manifest_url}"

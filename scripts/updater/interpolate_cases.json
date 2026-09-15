@@ -2,25 +2,36 @@
   {
     "name": "version-and-platform",
     "template": "https://h/{version}/tool-{platform}.tar.gz",
-    "vars": { "version": "1.2.3", "platform": "linux-x64" },
+    "vars": {
+      "version": "1.2.3",
+      "platform": "linux-x64"
+    },
     "expected": "https://h/1.2.3/tool-linux-x64.tar.gz"
   },
   {
     "name": "multi-var-os-cpu",
     "template": "https://h/{version}/binary/{os}/{cpu}/x-{version}-{os}-{cpu}.tgz",
-    "vars": { "version": "1.0", "os": "linux", "cpu": "x86_64" },
+    "vars": {
+      "version": "1.0",
+      "os": "linux",
+      "cpu": "x86_64"
+    },
     "expected": "https://h/1.0/binary/linux/x86_64/x-1.0-linux-x86_64.tgz"
   },
   {
     "name": "repeated-placeholder",
     "template": "{version}-{version}",
-    "vars": { "version": "9" },
+    "vars": {
+      "version": "9"
+    },
     "expected": "9-9"
   },
   {
     "name": "no-placeholders",
     "template": "https://static/download",
-    "vars": { "version": "1.0" },
+    "vars": {
+      "version": "1.0"
+    },
     "expected": "https://static/download"
   },
   {
@@ -32,25 +43,45 @@
   {
     "name": "unknown-placeholder-left-as-is",
     "template": "{unknown}/{version}",
-    "vars": { "version": "1.0" },
+    "vars": {
+      "version": "1.0"
+    },
     "expected": "{unknown}/1.0"
   },
   {
     "name": "single-pass-no-rescan",
     "template": "{a}",
-    "vars": { "a": "{b}", "b": "X" },
+    "vars": {
+      "a": "{b}",
+      "b": "X"
+    },
     "expected": "{b}"
   },
   {
     "name": "extra-var-unused",
     "template": "v{version}",
-    "vars": { "version": "2", "ref": "v2", "unused": "z" },
+    "vars": {
+      "version": "2",
+      "ref": "v2",
+      "unused": "z"
+    },
     "expected": "v2"
   },
   {
     "name": "empty-template",
     "template": "",
-    "vars": { "version": "1" },
+    "vars": {
+      "version": "1"
+    },
     "expected": ""
+  },
+  {
+    "name": "version-enc",
+    "template": "https://h/{versionEnc}/x-{versionEnc}-{platform}.tgz?raw={version}",
+    "versionVars": "1.1.87+175514.04f5c9 ~/x",
+    "vars": {
+      "platform": "linux-amd64"
+    },
+    "expected": "https://h/1.1.87%2B175514.04f5c9%20~%2Fx/x-1.1.87%2B175514.04f5c9%20~%2Fx-linux-amd64.tgz?raw=1.1.87+175514.04f5c9 ~/x"
   }
 ]

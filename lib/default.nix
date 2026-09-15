@@ -219,6 +219,11 @@ inputs."nixpkgs".lib.extend (
         githubId = 24687232;
         name = "Selmison Miranda";
       };
+      frankzvitale = {
+        github = "frankzvitale";
+        githubId = 171281102;
+        name = "Frank Vitale";
+      };
       RyougiShiki-214 = {
         github = "RyougiShiki-214";
         githubId = 53418317;
