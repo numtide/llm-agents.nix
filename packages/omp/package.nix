@@ -1,8 +1,6 @@
 {
   lib,
   stdenv,
-  stdenvNoCC,
-  fetchurl,
   fetchFromGitHub,
   bun2nixLib,
   bun,
@@ -10,15 +8,15 @@
   cargo,
   rustPlatform,
   pkg-config,
+  cmake,
+  ninja,
   makeWrapper,
   rcodesign,
   formatelf,
   zlib,
-  libopus,
   python3,
   zig,
   libpulseaudio,
-  unzip,
   pipewire,
 }:
 
@@ -27,26 +25,14 @@ let
   inherit (versionData) version hash cargoHash;
   platformsBySystem = {
     aarch64-darwin = {
-      bunTemplate = {
-        name = "bun-darwin-aarch64";
-        hash = "sha256-2LliIYKK1vl6x6wKt+lYcjQa92MAHogD6CZ2UsJlJiA=";
-      };
       nativeLib = "libpi_natives.dylib";
       nodeTag = "darwin-arm64";
     };
     aarch64-linux = {
-      bunTemplate = {
-        name = "bun-linux-aarch64";
-        hash = "sha256-on/7Y6gxA3WDbg1vZorhf6jY0YuIw3yCHGUzGXOhmjs=";
-      };
       nativeLib = "libpi_natives.so";
       nodeTag = "linux-arm64";
     };
     x86_64-linux = {
-      bunTemplate = {
-        name = "bun-linux-x64";
-        hash = "sha256-lR7iruhV8IWVruxiJSJqKY0/6oOj3NZGXAnLzN9+hI8=";
-      };
       nativeLib = "libpi_natives.so";
       nodeTag = "linux-x64";
     };
@@ -54,32 +40,6 @@ let
   platform =
     platformsBySystem.${stdenv.hostPlatform.system}
       or (throw "Unsupported platform for omp: ${stdenv.hostPlatform.system}");
-  # Bun 1.3.14's compiler corrupts Nix-patched executable templates
-  # (oven-sh/bun#31023), so Bun 1.3.13 writes OMP into an unmodified 1.3.14
-  # template. Remove once a stable release contains oven-sh/bun#31024.
-  bunRuntimeVersion = "1.3.14";
-  bunRuntimeTemplate = stdenvNoCC.mkDerivation {
-    pname = "omp-bun-runtime-template";
-    version = bunRuntimeVersion;
-
-    src = fetchurl {
-      url = "https://github.com/oven-sh/bun/releases/download/bun-v${bunRuntimeVersion}/${platform.bunTemplate.name}.zip";
-      inherit (platform.bunTemplate) hash;
-    };
-
-    sourceRoot = platform.bunTemplate.name;
-    nativeBuildInputs = [ unzip ];
-    dontConfigure = true;
-    dontBuild = true;
-    # This is build data, not run here. Fixup would alter the PT_LOAD layout.
-    dontFixup = true;
-
-    installPhase = ''
-      runHook preInstall
-      install -Dm755 ./bun $out/libexec/bun
-      runHook postInstall
-    '';
-  };
   rustTarget = stdenv.hostPlatform.rust.rustcTarget;
 
   src = fetchFromGitHub {
@@ -108,16 +68,16 @@ stdenv.mkDerivation {
     # bindgen (zlob, maudio-sys) needs libclang and clang flags for libc headers
     rustPlatform.bindgenHook
     pkg-config
+    # opusic-sys compiles its bundled libopus with cmake -G Ninja
+    cmake
+    ninja
     makeWrapper
     zig
   ]
   ++ lib.optionals stdenv.hostPlatform.isLinux [ formatelf ]
   ++ lib.optionals stdenv.hostPlatform.isDarwin [ rcodesign ];
 
-  buildInputs = [
-    libopus
-  ]
-  ++ lib.optionals stdenv.hostPlatform.isLinux [
+  buildInputs = lib.optionals stdenv.hostPlatform.isLinux [
     stdenv.cc.cc.lib
     zlib
     # pi-natives' wayland-pipewire feature links system libpipewire (pkg-config)
@@ -171,6 +131,7 @@ stdenv.mkDerivation {
     "
   '';
 
+  dontUseCmakeConfigure = true;
   dontUseBunBuild = true;
   dontUseBunInstall = true;
   dontRunLifecycleScripts = true;
@@ -179,6 +140,11 @@ stdenv.mkDerivation {
   dontStrip = true;
 
   postPatch = ''
+    # Upstream bug: everything else imports the pi-utils re-export; bare
+    # chalk is only reachable through a devDependency.
+    substituteInPlace packages/coding-agent/src/cli/collab-cli.ts \
+      --replace-fail 'from "chalk"' 'from "@oh-my-pi/pi-utils/chalk"'
+
     # Strip ^ and ~ prefixes: bun resolves range specifiers via the npm
     # registry, which is unreachable in the sandbox.
     for f in package.json packages/*/package.json; do
@@ -249,7 +215,7 @@ stdenv.mkDerivation {
     # compile-standalone.ts drives upstream's compile-binary.ts helper because
     # `bun build --compile` cannot load the required virtual-module plugin.
     echo "Compiling standalone binary..."
-    (cd packages/coding-agent && bun ${./compile-standalone.ts} "${bunRuntimeTemplate}/libexec/bun")
+    (cd packages/coding-agent && bun ${./compile-standalone.ts})
 
     runHook postBuild
   '';
@@ -288,7 +254,7 @@ stdenv.mkDerivation {
     runHook preInstallCheck
     HOME=$TMPDIR $out/bin/omp --smoke-test | grep -q "smoke-test: ok"
     BUN_BE_BUN=1 $out/lib/omp/omp -e \
-      'if (Bun.version !== "${bunRuntimeVersion}" || typeof Bun.Image !== "function") process.exit(1)'
+      'if (Bun.version !== "${bun.version}" || typeof Bun.Image !== "function") process.exit(1)'
     runHook postInstallCheck
   '';
 
