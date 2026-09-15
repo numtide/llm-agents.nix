@@ -3,15 +3,10 @@
 // plugin `bun build --compile` cannot load.
 //
 // Usage (from packages/coding-agent, so bare package imports resolve like
-// upstream's build-binary.ts): bun compile-standalone.ts <bun-executable-template>
+// upstream's build-binary.ts): bun compile-standalone.ts
 
 import { createRequire } from "node:module";
 import * as path from "node:path";
-
-const executablePath = process.argv[2];
-if (!executablePath) {
-	throw new Error("usage: compile-standalone.ts <bun-executable-template>");
-}
 
 const codingAgentDir = process.cwd();
 const repoRoot = path.resolve(codingAgentDir, "..", "..");
@@ -31,5 +26,4 @@ await compileCodingAgent({
 	entrypoint: path.join(codingAgentDir, "src", "cli.ts"),
 	outfile: path.join(repoRoot, "dist", "omp"),
 	transformersVersion: transformersManifest.version,
-	executablePath,
 });
