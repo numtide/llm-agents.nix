@@ -37,7 +37,7 @@ codesignCheckFile() {
   local file=$1 magic nfat i
   echo "codesignCheckHook: checking $file"
   # verify walks every slice of a universal binary by itself
-  rcodesign verify "$file" >/dev/null
+  rcodesign verify "$file"
   magic=$(head -c 4 "$file" | od -An -tx1 | tr -d ' \n')
   case $magic in
   cafebabe | bebafeca)
