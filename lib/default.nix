@@ -194,6 +194,11 @@ inputs."nixpkgs".lib.extend (
         githubId = 321014;
         name = "Iain Lane";
       };
+      InsightFactoryAPP = {
+        github = "InsightFactoryAPP";
+        githubId = 168487014;
+        name = "InsightFactoryAPP";
+      };
       kmjayadeep = {
         github = "kmjayadeep";
         githubId = 6793260;

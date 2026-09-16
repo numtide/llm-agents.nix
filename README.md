@@ -581,6 +581,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>yylo</strong> - YYLO (why-lo): task-driven AI subagent orchestration</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/yylo-dev/yylo
+- **Usage**: `nix run github:numtide/llm-agents.nix#yylo -- --help`
+- **Nix**: [packages/yylo/package.nix](packages/yylo/package.nix)
+
+</details>
+<details>
 <summary><strong>zaly</strong> - Hackable terminal coding agent</summary>
 
 - **Source**: bytecode
