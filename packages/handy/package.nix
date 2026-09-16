@@ -94,6 +94,9 @@ stdenv.mkDerivation {
 
   desktopItems = lib.optionals stdenv.hostPlatform.isLinux [ desktopItem ];
 
+  # stripping invalidates the darwin code signature
+  dontStrip = stdenv.hostPlatform.isDarwin;
+
   unpackPhase =
     if stdenv.hostPlatform.isLinux then
       ''

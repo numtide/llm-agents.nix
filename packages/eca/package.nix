@@ -59,6 +59,8 @@ let
       '';
 
       dontBuild = true;
+      # stripping invalidates the darwin code signature
+      dontStrip = pkgs.stdenv.hostPlatform.isDarwin;
 
       installPhase = ''
         runHook preInstall
