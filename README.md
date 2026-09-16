@@ -1797,6 +1797,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>terminal-browser</strong> - Browser that runs inside your terminal, with a CLI for agents</summary>
+
+- **Source**: binary
+- **License**: MIT
+- **Homepage**: https://terminal-browser.com/
+- **Usage**: `nix run github:numtide/llm-agents.nix#terminal-browser -- --help`
+- **Nix**: [packages/terminal-browser/package.nix](packages/terminal-browser/package.nix)
+
+</details>
+<details>
 <summary><strong>terminal-use</strong> - Headless virtual terminal for AI agents</summary>
 
 - **Source**: source
