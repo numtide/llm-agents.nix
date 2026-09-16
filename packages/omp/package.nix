@@ -10,6 +10,7 @@
   cargo,
   rustPlatform,
   pkg-config,
+  cmake,
   makeWrapper,
   rcodesign,
   formatelf,
@@ -107,6 +108,8 @@ stdenv.mkDerivation {
     rustPlatform.cargoSetupHook
     # bindgen (zlob, maudio-sys) needs libclang and clang flags for libc headers
     rustPlatform.bindgenHook
+    # opusic-sys (new in 18.2.1) builds its bundled opus with cmake
+    cmake
     pkg-config
     makeWrapper
     zig
