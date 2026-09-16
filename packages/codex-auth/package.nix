@@ -6,6 +6,7 @@
   zig,
   makeWrapper,
   nodejs,
+  curl,
   versionCheckHook,
 }:
 
@@ -28,13 +29,16 @@ stdenv.mkDerivation (finalAttrs: {
   zigBuildFlags = [ "-Doptimize=ReleaseSafe" ];
 
   doCheck = true;
+  # the CLI shells out to curl for API-backed usage refresh; the tests exercise it
+  nativeCheckInputs = [ curl ];
 
   # codex-auth shells out to Node.js for ChatGPT HTTP/usage queries
   # (CODEX_AUTH_NODE_EXECUTABLE in src/api/http_types.zig). Pin it so the
   # tool works without a system Node install.
   postInstall = ''
     wrapProgram $out/bin/codex-auth \
-      --set CODEX_AUTH_NODE_EXECUTABLE ${lib.getExe nodejs}
+      --set CODEX_AUTH_NODE_EXECUTABLE ${lib.getExe nodejs} \
+      --prefix PATH : ${lib.makeBinPath [ curl ]}
   '';
 
   doInstallCheck = true;
