@@ -9,6 +9,7 @@
   libsecret,
   versionCheckHook,
   versionCheckHomeHook,
+  codesignCheckHook,
 }:
 
 let
@@ -49,8 +50,11 @@ stdenv.mkDerivation {
   nativeInstallCheckInputs = [
     versionCheckHook
     versionCheckHomeHook
+    codesignCheckHook
   ];
   versionCheckProgramArg = [ "--version" ];
+  codesignTeamId = "47UZS55279";
+  codesignSources = source.darwinSrcs;
 
   passthru.category = "Code Review";
   passthru.updater = mkUpdater (
