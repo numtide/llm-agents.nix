@@ -10,6 +10,7 @@
   copyDesktopItems,
   makeDesktopItem,
   undmg,
+  codesignCheckHook,
 
   alsa-lib,
   at-spi2-atk,
@@ -90,13 +91,20 @@ stdenvNoCC.mkDerivation {
   pname = "zcode";
   inherit (source) version src;
 
-  nativeBuildInputs =
-    lib.optionals isLinux [
-      formatelf
-      copyDesktopItems
-      makeWrapper
-    ]
-    ++ lib.optionals (!isLinux) [ undmg ];
+  # undmg on Linux too: codesignCheckHook unpacks the darwin dmg there.
+  nativeBuildInputs = [
+    undmg
+  ]
+  ++ lib.optionals isLinux [
+    formatelf
+    copyDesktopItems
+    makeWrapper
+  ];
+
+  doInstallCheck = true;
+  nativeInstallCheckInputs = [ codesignCheckHook ];
+  codesignTeamId = "8A5X4JJ39T";
+  codesignSources = source.darwinSrcs;
 
   buildInputs = lib.optionals isLinux [
     adwaita-icon-theme

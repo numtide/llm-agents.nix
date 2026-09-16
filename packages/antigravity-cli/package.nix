@@ -6,6 +6,7 @@
   formatelf,
   versionCheckHook,
   versionCheckHomeHook,
+  codesignCheckHook,
 }:
 
 let
@@ -13,15 +14,19 @@ let
   inherit (versionData) version urls hashes;
 
   platform = stdenv.hostPlatform.system;
+
+  srcFor =
+    system:
+    fetchurl {
+      url = urls.${system} or (throw "Unsupported system: ${system}");
+      hash = hashes.${system} or (throw "Unsupported system: ${system}");
+    };
 in
 stdenv.mkDerivation {
   pname = "antigravity-cli";
   inherit version;
 
-  src = fetchurl {
-    url = urls.${platform} or (throw "Unsupported system: ${platform}");
-    hash = hashes.${platform} or (throw "Unsupported system: ${platform}");
-  };
+  src = srcFor platform;
 
   nativeBuildInputs = lib.optionals stdenv.hostPlatform.isLinux [ formatelf ];
 
@@ -44,8 +49,11 @@ stdenv.mkDerivation {
   doInstallCheck = true;
   nativeInstallCheckInputs = [
     versionCheckHomeHook
+    codesignCheckHook
   ]
   ++ lib.optionals (!stdenv.hostPlatform.isLinux) [ versionCheckHook ];
+  codesignTeamId = "EQHXZ8M8AV";
+  codesignSources = [ (srcFor "aarch64-darwin") ];
 
   installCheckPhase = lib.optionalString stdenv.hostPlatform.isLinux ''
     runHook preInstallCheck

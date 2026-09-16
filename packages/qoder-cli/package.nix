@@ -7,22 +7,24 @@
   wrapBuddy,
   versionCheckHook,
   versionCheckHomeHook,
+  codesignCheckHook,
 }:
 
 let
   versionData = builtins.fromJSON (builtins.readFile ./hashes.json);
   inherit (versionData) version platforms;
 
-  platform = stdenv.hostPlatform.system;
-  src = platforms.${platform} or (throw "Unsupported system: ${platform}");
+  srcFor =
+    system:
+    fetchurl {
+      inherit (platforms.${system} or (throw "Unsupported system: ${system}")) url hash;
+    };
 in
 stdenv.mkDerivation {
   pname = "qoder-cli";
   inherit version;
 
-  src = fetchurl {
-    inherit (src) url hash;
-  };
+  src = srcFor stdenv.hostPlatform.system;
 
   nativeBuildInputs = lib.optionals stdenv.hostPlatform.isLinux [ wrapBuddy ];
 
@@ -43,7 +45,10 @@ stdenv.mkDerivation {
   nativeInstallCheckInputs = [
     versionCheckHook
     versionCheckHomeHook
+    codesignCheckHook
   ];
+  codesignTeamId = "T27K5A5ZWD";
+  codesignSources = [ (srcFor "aarch64-darwin") ];
 
   passthru.category = "AI Coding Agents";
   passthru.updater = mkUpdater {

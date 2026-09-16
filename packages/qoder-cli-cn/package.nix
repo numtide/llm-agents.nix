@@ -10,8 +10,11 @@ let
   versionData = builtins.fromJSON (builtins.readFile ./hashes.json);
   inherit (versionData) version platforms;
 
-  platform = stdenv.hostPlatform.system;
-  src = platforms.${platform} or (throw "Unsupported system: ${platform}");
+  srcFor =
+    system:
+    fetchurl {
+      inherit (platforms.${system} or (throw "Unsupported system: ${system}")) url hash;
+    };
 in
 # Same bun-compiled binary as qoder-cli, but built for the mainland China
 # service: separate release channel/CDN, binary name and account backend.
@@ -19,9 +22,7 @@ qoder-cli.overrideAttrs (old: {
   pname = "qoder-cli-cn";
   inherit version;
 
-  src = fetchurl {
-    inherit (src) url hash;
-  };
+  src = srcFor stdenv.hostPlatform.system;
 
   installPhase = ''
     runHook preInstall
@@ -30,6 +31,9 @@ qoder-cli.overrideAttrs (old: {
 
     runHook postInstall
   '';
+
+  codesignTeamId = "9DFNGU9AK5";
+  codesignSources = [ (srcFor "aarch64-darwin") ];
 
   passthru = old.passthru // {
     updater = mkUpdater {
