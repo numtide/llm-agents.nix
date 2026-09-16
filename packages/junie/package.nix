@@ -7,6 +7,7 @@
   makeWrapper,
   formatelf,
   versionCheckHook,
+  codesignCheckHook,
   zlib,
 }:
 
@@ -96,7 +97,10 @@ stdenv.mkDerivation {
   doInstallCheck = true;
   nativeInstallCheckInputs = [
     versionCheckHook
+    codesignCheckHook
   ];
+  codesignTeamId = "2ZEFAR8TH3";
+  codesignSources = source.darwinSrcs;
   versionCheckProgramArg = "--version";
   # OpenJDK resolves user.home via getpwuid() and ignores $HOME. In the Nix
   # sandbox /etc/passwd lists the home directory as the literal string
