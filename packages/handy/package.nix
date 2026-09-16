@@ -6,6 +6,7 @@
   gcc-unwrapped,
   dpkg,
   makeWrapper,
+  codesignCheckHook,
   makeDesktopItem,
   copyDesktopItems,
   # Runtime dependencies for Linux
@@ -149,8 +150,11 @@ stdenv.mkDerivation {
         runHook postInstall
       '';
 
-  # GUI-only Tauri app - no CLI version support, would block trying to start GUI
-  doInstallCheck = false;
+  # GUI-only Tauri app: no versionCheckHook, it would block starting the GUI.
+  doInstallCheck = true;
+  nativeInstallCheckInputs = [ codesignCheckHook ];
+  codesignTeamId = "UWFLB4GC25";
+  codesignSources = [ srcs.aarch64-darwin ];
 
   passthru.category = "Voice & Transcription";
 
