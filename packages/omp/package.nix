@@ -127,6 +127,9 @@ stdenv.mkDerivation {
     pipewire
   ];
 
+  # cmake is only for the opusic-sys build script, not for configuring omp
+  dontUseCmakeConfigure = true;
+
   env = {
     # smallvec's `specialization` feature needs nightly features on stable rustc
     RUSTC_BOOTSTRAP = 1;
