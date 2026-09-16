@@ -10,6 +10,8 @@
   cargo,
   rustPlatform,
   pkg-config,
+  cmake,
+  ninja,
   makeWrapper,
   rcodesign,
   formatelf,
@@ -107,6 +109,10 @@ stdenv.mkDerivation {
     rustPlatform.cargoSetupHook
     # bindgen (zlob, maudio-sys) needs libclang and clang flags for libc headers
     rustPlatform.bindgenHook
+    # opusic-sys (new in 18.2.1) builds its bundled opus with cmake; upstream
+    # .cargo/config.toml forces the Ninja generator
+    cmake
+    ninja
     pkg-config
     makeWrapper
     zig
@@ -123,6 +129,12 @@ stdenv.mkDerivation {
     # pi-natives' wayland-pipewire feature links system libpipewire (pkg-config)
     pipewire
   ];
+
+  # cmake is only for the opusic-sys build script, not for configuring omp
+  dontUseCmakeConfigure = true;
+  dontUseNinjaBuild = true;
+  dontUseNinjaInstall = true;
+  dontUseNinjaCheck = true;
 
   env = {
     # smallvec's `specialization` feature needs nightly features on stable rustc
