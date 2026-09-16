@@ -13,12 +13,12 @@ codesignIsMachO() {
   esac
 }
 
+# $@ selects the slice of a universal binary (--universal-index N).
 codesignCheckSlice() {
   local file=$1
   shift
   local dir subject
   dir=$(mktemp -d)
-  rcodesign verify "$@" "$file" >/dev/null
   rcodesign extract "$@" cms-pem "$file" >"$dir/cms.pem"
   rcodesign extract "$@" code-directory-raw "$file" >"$dir/cd.bin"
   # apple marks its developer id extension critical; openssl rejects unknown
@@ -36,6 +36,8 @@ codesignCheckSlice() {
 codesignCheckFile() {
   local file=$1 magic nfat i
   echo "codesignCheckHook: checking $file"
+  # verify walks every slice of a universal binary by itself
+  rcodesign verify "$file" >/dev/null
   magic=$(head -c 4 "$file" | od -An -tx1 | tr -d ' \n')
   case $magic in
   cafebabe | bebafeca)
