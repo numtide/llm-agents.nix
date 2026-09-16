@@ -3,11 +3,17 @@
   flake,
   wrapBuddy,
   versionCheckHomeHook,
+  codesignCheckHook,
 }:
 
 let
   hashes = builtins.fromJSON (builtins.readFile ./hashes.json);
   version = hashes.version;
+
+  darwinSrc = pkgs.fetchurl {
+    url = "https://github.com/editor-code-assistant/eca/releases/download/${version}/eca-native-macos-aarch64.zip";
+    hash = hashes."aarch64-darwin";
+  };
 
   # Function to create native binary derivation for each platform
   mkNativeBinary =
@@ -41,7 +47,10 @@ let
       nativeInstallCheckInputs = [
         pkgs.versionCheckHook
         versionCheckHomeHook
+        codesignCheckHook
       ];
+      codesignTeamId = "762737A9Q2";
+      codesignSources = [ darwinSrc ];
 
       unpackPhase = ''
         runHook preUnpack
@@ -93,7 +102,7 @@ else if pkgs.stdenv.hostPlatform.system == "aarch64-darwin" then
   mkNativeBinary {
     inherit wrapBuddy versionCheckHomeHook;
     system = "aarch64-darwin";
-    url = "https://github.com/editor-code-assistant/eca/releases/download/${version}/eca-native-macos-aarch64.zip";
+    url = darwinSrc.url;
     hash = hashes."aarch64-darwin";
   }
 else
