@@ -3,7 +3,7 @@
   stdenv,
   flake,
   fetchFromGitHub,
-  zig_0_15,
+  zig,
   makeWrapper,
   nodejs,
   versionCheckHook,
@@ -20,11 +20,8 @@ stdenv.mkDerivation (finalAttrs: {
     hash = "sha256-TrJtVP4gRdupx6StKWc2PIXoVnnlFMUqFw6JtEmWqZ4=";
   };
 
-  # Upstream v0.2.8 does not compile with nixpkgs' default zig 0.16.0
-  # (`error: discard of capture; omit it instead`). Pin zig_0_15 to package
-  # the latest stable release without carrying a source compatibility patch.
   nativeBuildInputs = [
-    zig_0_15.hook
+    zig.hook
     makeWrapper
   ];
 
