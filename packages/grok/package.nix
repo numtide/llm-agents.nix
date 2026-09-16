@@ -8,6 +8,7 @@
   wrapBuddy,
   versionCheckHook,
   versionCheckHomeHook,
+  codesignCheckHook,
 }:
 
 let
@@ -71,7 +72,10 @@ stdenv.mkDerivation {
   nativeInstallCheckInputs = [
     versionCheckHook
     versionCheckHomeHook
+    codesignCheckHook
   ];
+  codesignTeamId = "5Y6N3AJ54S";
+  codesignSources = source.darwinSrcs;
   postInstallCheck = ''
     grep -q GROK_DISABLE_AUTOUPDATER $out/libexec/grok/grok-launcher
     grep -q GROK_DISABLE_AUTOUPDATER $out/libexec/grok/agent-launcher
