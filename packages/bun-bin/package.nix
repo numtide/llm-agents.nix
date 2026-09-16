@@ -4,6 +4,7 @@
   platformSource,
   mkUpdater,
   unzip,
+  codesignCheckHook,
 }:
 
 # Unmodified upstream bun to be used as `bun build --compile --target` runtime.
@@ -30,6 +31,11 @@ stdenvNoCC.mkDerivation {
   nativeBuildInputs = [ unzip ];
 
   dontFixup = true;
+
+  doInstallCheck = true;
+  nativeInstallCheckInputs = [ codesignCheckHook ];
+  codesignTeamId = "7FRXF46ZSN";
+  codesignSources = source.darwinSrcs;
 
   installPhase = ''
     runHook preInstall
