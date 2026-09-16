@@ -4,6 +4,7 @@
   flake,
   fetchurlTemplate,
   versionCheckHook,
+  codesignCheckHook,
   mkUpdater,
 }:
 
@@ -18,22 +19,28 @@ let
   };
 
   system = stdenvNoCC.hostPlatform.system;
-  platform = platforms.${system} or (throw "Unsupported system: ${system}");
 
   downloadBase = "https://lookaside.facebook.com/lookaside/muse/download/?channel=muse&version={version}";
+
+  srcFor =
+    system:
+    let
+      platform = platforms.${system} or (throw "Unsupported system: ${system}");
+    in
+    fetchurlTemplate {
+      urlTemplate = "${downloadBase}&file=muse-{platform}";
+      vars = {
+        inherit version platform;
+      };
+      name = "muse-${version}-${platform}";
+      hash = versionData.hashes.${system};
+    };
 in
 stdenvNoCC.mkDerivation {
   pname = "muse-code";
   inherit version;
 
-  src = fetchurlTemplate {
-    urlTemplate = "${downloadBase}&file=muse-{platform}";
-    vars = {
-      inherit version platform;
-    };
-    name = "muse-${version}-${platform}";
-    hash = versionData.hashes.${system};
-  };
+  src = srcFor system;
 
   dontUnpack = true;
 
@@ -44,7 +51,12 @@ stdenvNoCC.mkDerivation {
   '';
 
   doInstallCheck = true;
-  nativeInstallCheckInputs = [ versionCheckHook ];
+  nativeInstallCheckInputs = [
+    versionCheckHook
+    codesignCheckHook
+  ];
+  codesignTeamId = "V9WTTPBFK9";
+  codesignSources = [ (srcFor "aarch64-darwin") ];
 
   passthru.category = "AI Coding Agents";
   passthru.updater = mkUpdater {
