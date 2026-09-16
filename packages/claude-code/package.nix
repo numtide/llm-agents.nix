@@ -6,6 +6,7 @@
   makeWrapper,
   wrapBuddy,
   versionCheckHook,
+  codesignCheckHook,
   bubblewrap,
   socat,
   mkUpdater,
@@ -74,7 +75,12 @@ stdenv.mkDerivation {
   __noChroot = stdenv.hostPlatform.isDarwin;
 
   doInstallCheck = true;
-  nativeInstallCheckInputs = [ versionCheckHook ];
+  nativeInstallCheckInputs = [
+    versionCheckHook
+    codesignCheckHook
+  ];
+  codesignTeamId = "Q6L2SF6YDW";
+  codesignSources = source.darwinSrcs;
 
   passthru.category = "AI Coding Agents";
   passthru.updater = mkUpdater {
