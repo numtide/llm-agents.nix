@@ -351,6 +351,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>minimax-code</strong> - An open-source coding agent for your terminal, powered by MiniMax.</summary>
+
+- **Source**: bytecode
+- **License**: MIT
+- **Homepage**: https://github.com/MiniMax-AI/minimax-code
+- **Usage**: `nix run github:numtide/llm-agents.nix#minimax-code -- --help`
+- **Nix**: [packages/minimax-code/package.nix](packages/minimax-code/package.nix)
+
+</details>
+<details>
 <summary><strong>mistral-vibe</strong> - Minimal CLI coding agent by Mistral AI - open-source command-line coding assistant powered by Devstral</summary>
 
 - **Source**: source
