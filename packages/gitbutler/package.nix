@@ -104,6 +104,10 @@ rustPlatform.buildRustPackage (finalAttrs: {
   doCheck = false;
 
   env = {
+    # Stable GitButler production channel. This must be set at build time so
+    # the frontend and backend use the production API/login endpoints.
+    CHANNEL = "release";
+
     # Let `crates/gitbutler-tauri/inject-git-binaries.sh` find the Rust target dir.
     TRIPLE_OVERRIDE = rust.envVars.rustHostPlatformSpec;
 
