@@ -41,16 +41,19 @@ stdenvNoCC.mkDerivation {
   nativeBuildInputs = [ jq ];
   passAsFile = [ "packagesJson" ];
   inherit packagesJson;
+  # The document root lives at share/llm-agents-site so that the package root
+  # stays FHS-like; lib/hercules-ci.nix copies that directory to gh-pages.
   installPhase = ''
     runHook preInstall
-    mkdir -p $out
-    cp -r ./* $out/
+    doc=$out/share/llm-agents-site
+    mkdir -p "$doc"
+    cp -r ./* "$doc"/
     # GitHub Pages caches assets for 10 minutes. Mismatched index.html and
     # app.js after a deploy broke the page, so pin assets to this build.
     v=$(basename $out | cut -c1-12)
-    sed -i -e "s|app.js|app.js?v=$v|" -e "s|style.css|style.css?v=$v|" $out/index.html
-    jq -c 'sort_by(.name)' "$packagesJsonPath" > $out/packages.json
-    touch $out/.nojekyll
+    sed -i -e "s|app.js|app.js?v=$v|" -e "s|style.css|style.css?v=$v|" "$doc"/index.html
+    jq -c 'sort_by(.name)' "$packagesJsonPath" > "$doc"/packages.json
+    touch "$doc"/.nojekyll
     runHook postInstall
   '';
   passthru.hideFromDocs = true;

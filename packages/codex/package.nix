@@ -89,12 +89,23 @@ rustPlatform.buildRustPackage (
 
     inherit preBuild;
 
+    # codex accepts a bundled bwrap only at <exe dir>/codex-resources/bwrap or
+    # one level above it (codex-rs/linux-sandbox/src/bundled_bwrap.rs), and
+    # reaches for codex-code-mode-host next to the executable
+    # (codex-rs/install-context/src/lib.rs), so the whole set moves together
+    # into libexec/ -- mirroring upstream's package layout -- and bin/ keeps
+    # only the entry points. codex-resources/ at the package root collided in
+    # buildEnv and home-manager profiles (#9364).
     postFixup = lib.optionalString stdenv.hostPlatform.isLinux ''
-      mkdir -p $out/codex-resources
-      ln -s ${lib.getExe bubblewrap} $out/codex-resources/bwrap
+      mkdir -p $out/libexec/codex/bin $out/libexec/codex/codex-resources
+      ln -s ${lib.getExe bubblewrap} $out/libexec/codex/codex-resources/bwrap
+      mv $out/bin/codex $out/bin/codex-code-mode-host $out/bin/logs_client \
+        $out/libexec/codex/bin/
 
-      wrapProgram $out/bin/codex \
+      makeWrapper $out/libexec/codex/bin/codex $out/bin/codex \
         --prefix PATH : ${lib.makeBinPath [ bubblewrap ]}
+      ln -s ../libexec/codex/bin/codex-code-mode-host $out/bin/codex-code-mode-host
+      ln -s ../libexec/codex/bin/logs_client $out/bin/logs_client
     '';
 
     doCheck = false;

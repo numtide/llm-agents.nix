@@ -60,7 +60,7 @@ in
       # History of generated files is not worth keeping.
       git checkout -q --orphan gh-pages
       git rm -rfq .
-      cp -r --no-preserve=mode,ownership ${site}/. .
+      cp -r --no-preserve=mode,ownership ${site}/share/llm-agents-site/. .
       git add -A
       git commit -q -m "Deploy site for ${primaryRepo.rev}"
       git push -f origin gh-pages
