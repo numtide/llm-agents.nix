@@ -1726,6 +1726,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>hol-guard</strong> - Open-source antivirus and runtime protection for AI agents</summary>
+
+- **Source**: source
+- **License**: Apache-2.0
+- **Homepage**: https://hol.org/guard
+- **Usage**: `nix run github:numtide/llm-agents.nix#hol-guard -- --help`
+- **Nix**: [packages/hol-guard/package.nix](packages/hol-guard/package.nix)
+
+</details>
+<details>
 <summary><strong>mcporter</strong> - TypeScript runtime and CLI for the Model Context Protocol</summary>
 
 - **Source**: source

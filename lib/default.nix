@@ -129,6 +129,11 @@ inputs."nixpkgs".lib.extend (
         githubId = 105790745;
         name = "Sergii Maksymov";
       };
+      kantorcodes = {
+        github = "kantorcodes";
+        githubId = 6068672;
+        name = "Michael Kantor";
+      };
       kusold = {
         github = "kusold";
         githubId = 509966;
