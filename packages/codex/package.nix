@@ -87,6 +87,19 @@ rustPlatform.buildRustPackage (
       NIX_CFLAGS_LINK = "-fuse-ld=${lib.getExe' lld "ld64.lld"}";
     };
 
+    # The future returned by `connectors::list_connectors` nests deeply
+    # enough that computing its layout exceeds rustc's default query depth
+    # limit of 128 ("queries overflow the depth limit"). Raise the limit for
+    # this crate, as rustc's diagnostic suggests and as upstream already does
+    # for app-server, exec and tui.
+    postPatch = ''
+      if ! grep -q 'recursion_limit' chatgpt/src/lib.rs; then
+        substituteInPlace chatgpt/src/lib.rs \
+          --replace-fail 'pub mod apply_command;' \
+          $'#![recursion_limit = "256"]\n\npub mod apply_command;'
+      fi
+    '';
+
     inherit preBuild;
 
     # codex looks for codex-resources/bwrap and codex-code-mode-host next to
