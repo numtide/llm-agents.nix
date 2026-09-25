@@ -58,6 +58,11 @@
   libcap_ng,
   libseccomp,
 
+  # Host side of Cowork's virtual machines, see coworkFirmware below.
+  OVMF,
+  virtiofsd,
+  runCommandLocal,
+
   buildFHSEnv,
   mesa,
   vulkan-loader,
@@ -128,6 +133,22 @@ let
       };
     };
   };
+
+  # Cowork runs its tasks in a QEMU/KVM virtual machine. The app looks up
+  # qemu-system-* on PATH, which is left to the host to keep the closure small
+  # (the .deb only recommends QEMU). The UEFI firmware and virtiofsd are
+  # expected at Debian's fixed paths instead: /usr/share/OVMF/OVMF_CODE.fd
+  # (AAVMF on aarch64) with the VARS template next to it, and
+  # /usr/{libexec,bin}/virtiofsd; the bundled virtiofsd is only used on
+  # Ubuntu 22.04. Without them the workspace VM is reported as unsupported.
+  coworkFirmware =
+    let
+      dir = if stdenvNoCC.hostPlatform.isAarch64 then "AAVMF" else "OVMF";
+    in
+    runCommandLocal "claude-desktop-cowork-firmware" { } ''
+      mkdir -p $out/share/${dir}
+      ln -s ${OVMF.firmware} ${OVMF.variables} $out/share/${dir}/
+    '';
 
   passthru = {
     category = "AI Coding Agents";
@@ -312,6 +333,9 @@ else
       mesa
       libgbm
       vulkan-loader
+      # Cowork
+      virtiofsd
+      coworkFirmware
     ];
 
     runScript = "claude-desktop";
