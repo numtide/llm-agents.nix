@@ -20,17 +20,17 @@
 buildNpmPackage (finalAttrs: {
   npmDepsFetcherVersion = 2;
   pname = "prime-agent";
-  version = "0.9.5";
+  version = "0.9.6";
 
   src = fetchFromGitHub {
     owner = "PrimeIntellect-ai";
     repo = "prime-agent";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-BCfiwDhocJJ5PMBnERKGnVsT8lFFuOmiZ6jkoEeHEmY=";
+    hash = "sha256-X54K6AdJ2hrEkKOVl6sk8kt8ZK86s1WxafqN2WJqp1c=";
   };
 
   nodejs = nodejs_22;
-  npmDepsHash = "sha256-qx12eAjHQxr0HtBs842XSJk342DNgTUr7bynlDSoYCY=";
+  npmDepsHash = "sha256-oXnZ2G4L8TeSdfP4VFfPoTMBVDINN83Tg2ya/OFG0rw=";
 
   nativeBuildInputs = [
     makeWrapper
@@ -84,7 +84,7 @@ buildNpmPackage (finalAttrs: {
   ];
 
   postInstallCheck = ''
-    expectedSkills="agent-message agent-observe attach-image compact edit goal linear notion prime-intellect refine rlm-heartbeat skill-creator websearch"
+    expectedSkills="agent-message agent-observe attach-image compact edit goal mcp prime-intellect refine rlm-heartbeat skill-creator websearch"
     installedSkills="$(${finalAttrs.passthru.pythonRuntime}/bin/python3 - "$out/lib/prime-agent/packages/coding-agent/skills" <<'PY'
     from pathlib import Path
     import sys
@@ -110,7 +110,7 @@ buildNpmPackage (finalAttrs: {
     import importlib.metadata
 
     import agent_message, agent_observe, attach_image, compact, edit, goal
-    import linear, notion, refine, rlm, rlm_heartbeat, websearch
+    import refine, rlm, rlm_heartbeat, websearch
 
     assert callable(rlm.spawn)
     assert inspect.signature(rlm.spawn).parameters["name"].default is inspect.Parameter.empty
@@ -124,6 +124,11 @@ buildNpmPackage (finalAttrs: {
     assert callable(agent_observe.recent_messages)
     assert callable(refine.run)
     assert callable(refine.status)
+
+    # The markdown-only mcp skill drives rlm.mcp, which replaced the linear/notion skills.
+    import rlm.mcp
+    for name in ["list_plugins", "search_plugins", "list_connections", "search_tools", "describe_tool", "list_tools", "call_tool"]:
+        assert callable(getattr(rlm.mcp, name, None)), name
 
     distributions = importlib.metadata.packages_distributions()["rlm"]
     assert distributions == ["prime-agent-runtime"], distributions
@@ -289,26 +294,6 @@ buildNpmPackage (finalAttrs: {
             directory = "goal";
             version = "0.1.0";
             dependencies = [ runtime ];
-          })
-          (buildSkill {
-            directory = "linear";
-            version = "0.1.0";
-            pname = "prime-agent-skill-linear";
-            dependencies = with python.pkgs; [
-              httpx
-              mcp
-              runtime
-            ];
-          })
-          (buildSkill {
-            directory = "notion";
-            version = "0.1.0";
-            pname = "prime-agent-skill-notion";
-            dependencies = with python.pkgs; [
-              httpx
-              mcp
-              runtime
-            ];
           })
           (buildSkill {
             directory = "refine";
