@@ -2,6 +2,7 @@
   lib,
   stdenv,
   fetchFromGitHub,
+  fetchpatch,
   bun2nixLib,
   bun,
   rustc,
@@ -52,6 +53,18 @@ in
 stdenv.mkDerivation {
   pname = "omp";
   inherit version src;
+
+  patches = [
+    # Pin the Apple Foundation Models bridge to nixpkgs' SDKROOT. Otherwise a
+    # host macOS 27 Command Line Tools SDK leaks into the unsandboxed darwin
+    # build, ld64 rejects its .tbd stubs, and omp segfaults at startup.
+    (fetchpatch {
+      url = "https://github.com/can1357/oh-my-pi/pull/13168.patch";
+      # The PR also adds a CHANGELOG entry that does not apply to the release.
+      includes = [ "crates/pi-natives/src/applefm/build-bridge.sh" ];
+      hash = "sha256-thPBgfIab4B8Eq074Ko45XTL9vzCtJ/b63FE1vZknrw=";
+    })
+  ];
 
   cargoDeps = rustPlatform.fetchCargoVendor {
     name = "omp-${version}-cargo-vendor";
