@@ -1,6 +1,6 @@
 {
-  "version": "5.0.0-0.beta.90",
-  "hash": "sha256-kKOc3hOQ0/qUsfYjBn/PStEASK08J1oyF7Thyv613Pg=",
-  "senpiVersion": "2026.9.24-3",
-  "senpiHash": "sha256-2qXPkK5Zk94M6+6Fgc4JZ/COGe1KmSpOsheOiF/6W58="
+  "version": "5.0.0",
+  "hash": "sha256-p8GL4/46eIhQk80cL6kjPfPAY7vcC0NdkSs1Ug0Dg+c=",
+  "senpiVersion": "2026.9.26",
+  "senpiHash": "sha256-6h5L7ph2dBZeqJrbMy/2lfKJCwkG3jaDO55W6SsrzEY="
 }
