@@ -6,16 +6,16 @@
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "plannotator-tui";
-  version = "0.9.2";
+  version = "0.9.4";
 
   src = fetchFromGitHub {
     owner = "plannotator";
     repo = "plannotator-tui";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-DN3jRovKYUpT6Isu6B1HgKMB+v7KfELX7BRjxG/INRA=";
+    hash = "sha256-oJ+AMl2G9m/hxFJLwiN6CQ9urhyhK0w6VEcbnpUgQv0=";
   };
 
-  cargoHash = "sha256-CEExsInt7DmfqEAe5bXFsL++caiaBQoduSr+/X11I6g=";
+  cargoHash = "sha256-EK3iCT+VJQ/1Sjhdt06nc1pUdo0B6tPBjbjSV9jsRKY=";
 
   preCheck = ''
     export HOME=$(mktemp -d)
