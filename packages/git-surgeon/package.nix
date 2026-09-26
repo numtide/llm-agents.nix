@@ -2,6 +2,7 @@
   lib,
   fetchFromGitHub,
   rustPlatform,
+  installAgentSkills,
   versionCheckHook,
 }:
 
@@ -18,10 +19,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   cargoHash = "sha256-PbhASsdDxmVcIzV+oHIbpX70zjSeNvkwGcbhQRi88rE=";
 
-  postInstall = ''
-    install -d $out/share/git-surgeon
-    cp -r skills $out/share/git-surgeon/skills
-  '';
+  nativeBuildInputs = [ installAgentSkills ];
 
   doInstallCheck = true;
   nativeInstallCheckInputs = [ versionCheckHook ];
