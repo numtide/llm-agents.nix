@@ -1,7 +1,7 @@
 {
-  "version": "0.157.1",
-  "hash": "sha256-HuNL5VGd2LenhbCdcz0i8b6lRw3sicwXytyfXgCgy88=",
-  "cargoHash": "sha256-Mp4chq9QuQB19FrOZBhmUtPrDoEpZZna79+MZs9rGUo=",
+  "version": "0.158.0",
+  "hash": "sha256-6ogqs75pG4+hxG6RqwBwJPWd3wGks2wBID/epha9+Ds=",
+  "cargoHash": "sha256-D8+caV6Q9H2JnZNhazV1kqgV0dePh3qQyXnRMgeSYak=",
   "librusty_v8": {
     "version": "150.4.0",
     "profile": "ptrcomp_sandbox_release",
