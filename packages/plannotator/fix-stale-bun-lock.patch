@@ -1,5 +1,5 @@
 diff --git a/bun.lock b/bun.lock
-index 33a8f53..294eb52 100644
+index 05d14f6..3848dec 100644
 --- a/bun.lock
 +++ b/bun.lock
 @@ -312,7 +312,7 @@

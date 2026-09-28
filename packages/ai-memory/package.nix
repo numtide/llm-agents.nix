@@ -30,16 +30,16 @@ let
 in
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "ai-memory";
-  version = "2.4.0";
+  version = "2.4.1";
 
   src = fetchFromGitHub {
     owner = "akitaonrails";
     repo = "ai-memory";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-q2cXJ3cMM5/AutsPtXR6KYpphi4jEkEr7MW0uKeSqIw=";
+    hash = "sha256-rSGITfYUHH21PeJc3zBtUhmarUSbIMSW5GuLxltcEFM=";
   };
 
-  cargoHash = "sha256-0cFkWqIfWcFk5yUQO4Pk+y6C/N68Rs9VWyuHJzaweXI=";
+  cargoHash = "sha256-DcIrlUYCMbI9DJGsW58za9SBBh2GFfML+pyVlKwQA3s=";
 
   cargoBuildFlags = [
     "--package"

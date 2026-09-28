@@ -12,13 +12,13 @@
 
 buildNpmPackage rec {
   pname = "gnhf";
-  version = "0.1.49";
+  version = "0.1.50";
 
   src = fetchFromGitHub {
     owner = "kunchenguid";
     repo = "gnhf";
     tag = "gnhf-v${version}";
-    hash = "sha256-Fumuia94JlyMU7HHsbjevK6YULjZ1qlH+0Bi373Nx9Y=";
+    hash = "sha256-SL1qHjbKTOF6a4Aac00Q8vTY8DdWf7dGYcVo7XGWK7w=";
   };
 
   npmDeps = null;
@@ -26,7 +26,7 @@ buildNpmPackage rec {
     inherit pname version src;
     inherit pnpm;
     fetcherVersion = 4;
-    hash = "sha256-Zc/e7J7+2VntYqxT96uKQ2C0emG6Iy8Q/YIgUpAa5Wo=";
+    hash = "sha256-dmQ7bJi4L4ME0imJp9hkkkkITzQksgKdJ2d08SIrMYY=";
   };
 
   nativeBuildInputs = [ pnpm ];
