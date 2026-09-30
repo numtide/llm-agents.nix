@@ -24,6 +24,7 @@
   gdk-pixbuf,
   gitMinimal,
   glib,
+  gsettings-desktop-schemas,
   gtk3,
   libGL,
   libdrm,
@@ -94,6 +95,7 @@ stdenv.mkDerivation {
     freetype
     gdk-pixbuf
     glib
+    gsettings-desktop-schemas
     gtk3
     libGL
     libdrm
@@ -180,6 +182,7 @@ stdenv.mkDerivation {
         # Let each shim discover plugins from its own Qt installation.
         wrapProgram "$out/lib/chatgpt/ChatGPT" \
           "''${gappsWrapperArgs[@]}" \
+          --prefix XDG_DATA_DIRS : "$GSETTINGS_SCHEMAS_PATH" \
           --unset QT_PLUGIN_PATH \
           --unset QT_QPA_PLATFORM_PLUGIN_PATH \
           --prefix PATH : ${
