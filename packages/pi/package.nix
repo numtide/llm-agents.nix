@@ -74,14 +74,16 @@ buildNpmPackage {
   # entry point. The Node mode is useful on older CPUs where Bun's binary
   # requires unsupported instruction sets.
   preInstall = lib.optionalString useBun ''
-    # Upstream embeds the worker as ./src/utils/image-resize-worker.ts and
-    # loads it by that path at runtime; the npm tarball only ships dist/.
-    mkdir -p src/utils src/modes src/core
+    # Upstream embeds workers at their src/ paths and loads them by those
+    # paths at runtime; the npm tarball only ships dist/.
+    mkdir -p src/utils src/extensions/codemode src/modes src/core
     echo 'import "../../dist/utils/image-resize-worker.js";' > src/utils/image-resize-worker.ts
+    echo 'import "../../../dist/extensions/codemode/worker.js";' > src/extensions/codemode/worker.ts
     ln -s ../../dist/modes/interactive src/modes/interactive
     ln -s ../../dist/core/export-html src/core/export-html
 
-    bun build --compile ./dist/bun/cli.js ./src/utils/image-resize-worker.ts --outfile dist/pi
+    workerEntrypoints=(./src/utils/image-resize-worker.ts ./src/extensions/codemode/worker.ts)
+    bun build --compile ./dist/bun/cli.js "''${workerEntrypoints[@]}" --outfile dist/pi
   '';
 
   postInstall =
@@ -148,6 +150,29 @@ buildNpmPackage {
   postInstallCheck = lib.optionalString useBun ''
     ${bun}/bin/bun --eval 'require(process.argv[1])' \
       "$out/libexec/pi/native/${nativePlatform}/prebuilds/${nativeTarget}/${nativeFile}"
+
+    # Exercise the compiled worker and embedded QuickJS wasm without an API
+    # key. Use the same worker entrypoints as the CLI so omissions fail here.
+    cat > dist/bun/codemode-check.js <<'EOF'
+    import assert from "node:assert/strict";
+    import wasmPath from "quickjs-wasi/quickjs.wasm";
+    import { setEmbeddedQuickJSWasmPath } from "../config.js";
+    import { executeCodemode } from "../extensions/codemode/execute.js";
+
+    setEmbeddedQuickJSWasmPath(wasmPath);
+    const result = await executeCodemode("install-check", {
+      code: '// @options: {"timeout_ms": 10000}\ntext(6 * 7); return "codemode-ok";',
+    });
+    assert.ok(!result.isError, JSON.stringify(result));
+    assert.deepEqual(result.content.slice(1), [
+      { type: "text", text: "42" },
+      { type: "text", text: "codemode-ok" },
+    ]);
+    console.log("Compiled codemode sandbox check passed");
+    EOF
+    bun build --compile ./dist/bun/codemode-check.js "''${workerEntrypoints[@]}" \
+      --outfile codemode-check
+    ./codemode-check
   '';
 
   passthru.category = "AI Coding Agents";
