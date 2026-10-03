@@ -1,0 +1,31 @@
+--- a/hindsight-control-plane/src/app/[locale]/layout.tsx
++++ b/hindsight-control-plane/src/app/[locale]/layout.tsx
+@@ -1,4 +1,4 @@
+-import { Inter, JetBrains_Mono } from "next/font/google";
++import localFont from "next/font/local";
+ import { NextIntlClientProvider, hasLocale } from "next-intl";
+ import { setRequestLocale } from "next-intl/server";
+ import { notFound } from "next/navigation";
+@@ -12,15 +12,15 @@
+ // before paint. The Google Fonts @import this replaces loaded weights lazily,
+ // which made semibold headings render in the system fallback until the weight
+ // arrived. --font-sans / --font-mono are consumed by globals.css.
+-const inter = Inter({
+-  subsets: ["latin"],
+-  weight: ["400", "500", "600", "700"],
++const inter = localFont({
++  src: "./fonts/InterVariable.ttf",
++  weight: "100 900",
+   variable: "--font-sans",
+   display: "swap",
+ });
+ 
+-const jetbrainsMono = JetBrains_Mono({
+-  subsets: ["latin"],
+-  weight: ["400", "500"],
++const jetbrainsMono = localFont({
++  src: "./fonts/JetBrainsMono-Variable.ttf",
++  weight: "100 800",
+   variable: "--font-mono",
+   display: "swap",
+ });
