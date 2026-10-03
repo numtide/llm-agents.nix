@@ -8,8 +8,10 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 from updater import http
+from updater.http import json_string_at_path
 from updater.run import _latest_git_tag, _version_getter, run
 
 PKG = Path("packages/example")
@@ -135,11 +137,48 @@ class TestRun(unittest.TestCase):
             {"type": "npm", "package": "@x/y", "tag": "next"},
             {"type": "text", "url": "https://x/v", "regex": r"v(\d+)"},
             {"type": "text", "url": "https://x/v"},  # no regex -> plain body
+            {"type": "json", "url": "https://x/latest.json", "path": "stable.version"},
             {"type": "git-tags", "url": "https://gitea/api/.../tags"},
         ):
             self.assertTrue(callable(_version_getter(source)))
         with self.assertRaises(ValueError):
             _version_getter({"type": "bogus"})
+
+    def test_json_version_uses_selected_channel(self) -> None:
+        original = http.fetch_json
+
+        def fake(_url: str) -> dict[str, Any]:
+            return {"version": "3.0.0", "stable": {"version": "2.0.0"}}
+
+        http.fetch_json = fake  # type: ignore[assignment]
+        try:
+            getter = _version_getter(
+                {
+                    "type": "json",
+                    "url": "https://x/latest.json",
+                    "path": "stable.version",
+                }
+            )
+            self.assertEqual(getter(), "2.0.0")
+        finally:
+            http.fetch_json = original
+
+    def test_json_field_rejects_missing_or_non_string_values(self) -> None:
+        with self.assertRaises(KeyError):
+            json_string_at_path({"stable": {}}, "stable.version")
+        with self.assertRaises(TypeError):
+            json_string_at_path({"stable": {"version": 2}}, "stable.version")
+        with self.assertRaises(TypeError):
+            json_string_at_path({"stable": []}, "stable.version")
+
+    def test_json_version_supports_another_field_layout(self) -> None:
+        with patch(
+            "updater.http.fetch_json", return_value={"release": {"tag": "1.2.3"}}
+        ):
+            getter = _version_getter(
+                {"type": "json", "url": "https://x/feed", "path": "release.tag"}
+            )
+            self.assertEqual(getter(), "1.2.3")
 
     def test_git_tags_picks_highest_stripping_v(self) -> None:
         # Patch fetch_json; the getter imports it lazily from updater.http.

@@ -361,6 +361,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>mirasim</strong> - One Agent IDE for Agentic Coding and Eval</summary>
+
+- **Source**: binary
+- **License**: unfree
+- **Homepage**: https://mirasim.ai
+- **Usage**: `nix run github:numtide/llm-agents.nix#mirasim -- --help`
+- **Nix**: [packages/mirasim/package.nix](packages/mirasim/package.nix)
+
+</details>
+<details>
 <summary><strong>mistral-vibe</strong> - Minimal CLI coding agent by Mistral AI - open-source command-line coding assistant powered by Devstral</summary>
 
 - **Source**: source

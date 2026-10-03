@@ -22,6 +22,7 @@ from .flows import (
     update_npm_package,
     update_platform_binaries,
 )
+from .http import json_string_at_path
 from .purl import Purl
 from .version import (
     compare_versions,
@@ -83,6 +84,10 @@ def _version_getter(source: dict[str, Any]) -> Callable[[], str]:
         if regex:
             return lambda: fetch_version_from_text(url, regex)
         return lambda: fetch_text(url).strip()
+    if source_type == "json":
+        from .http import fetch_json  # noqa: PLC0415
+
+        return lambda: json_string_at_path(fetch_json(source["url"]), source["path"])
     if source_type == "git-tags":
         url = source["url"]
         return lambda: _latest_git_tag(url)
@@ -143,6 +148,15 @@ def run(pkg_dir: Path, config: dict[str, Any], *, flows: FlowMap | None = None) 
             platform_map=platform_map,
         )
     elif kind == "manifest-checksums":
+        source = config["versionSource"]
+        # A moving JSON feed can contain both the version and its checksums.
+        # Read them from one response so a release between requests cannot
+        # pair one version with another version's hashes.
+        shared_version = (
+            {"version_path": source["path"]}
+            if source["type"] == "json" and source["url"] == config["manifestUrl"]
+            else {}
+        )
         flow["manifest-checksums"](
             pkg_dir,
             fetch_latest=_version_getter(config["versionSource"]),
@@ -150,6 +164,7 @@ def run(pkg_dir: Path, config: dict[str, Any], *, flows: FlowMap | None = None) 
             checksum_path=config["checksumPath"],
             platforms=config["platforms"],
             allow_downgrade=config.get("versionPolicy") == "follow_pointer",
+            **shared_version,
         )
     else:
         msg = f"unknown updater kind {kind!r}"

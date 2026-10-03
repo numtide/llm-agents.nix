@@ -34,6 +34,20 @@ def _github_request(url: str) -> urllib.request.Request:
 DEFAULT_USER_AGENT = "llm-agents-updater"
 
 
+def json_string_at_path(obj: object, dotted_path: str) -> str:
+    """Read a string field from nested JSON objects using a dotted key path."""
+    current = obj
+    for key in dotted_path.split("."):
+        if not isinstance(current, dict):
+            msg = f"JSON path {dotted_path!r} hit a non-object at {key!r}"
+            raise TypeError(msg)
+        current = current[key]
+    if not isinstance(current, str):
+        msg = f"JSON path {dotted_path!r} is not a string"
+        raise TypeError(msg)
+    return current
+
+
 def fetch_text(
     url: str, *, timeout: int = 30, user_agent: str = DEFAULT_USER_AGENT
 ) -> str:
