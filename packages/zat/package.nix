@@ -18,6 +18,12 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   cargoHash = "sha256-VSu68KPkoOLyva+A3+TtdTg48xZg0LNenMq+z9xoAVU=";
 
+  # The grammar crates vendor a tree-sitter array.h from before 0.26.4 whose
+  # (Array *) casts violate strict aliasing. gcc 16 turns that into heap
+  # corruption in the haskell scanner.
+  # https://github.com/tree-sitter/tree-sitter-haskell/issues/144
+  env.NIX_CFLAGS_COMPILE = "-fno-strict-aliasing";
+
   # Smoke test: zat has no --version flag, so run it against its own source.
   doInstallCheck = true;
   installCheckPhase = ''
