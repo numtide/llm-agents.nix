@@ -1,0 +1,300 @@
+Drop lance-linalg's AVX-512 VNNI kernels: they do not compile with this
+repo's rustc.
+
+nixpkgs builds rustc against an LLVM whose vpdpwssd.512 / vpdpbusd.512
+intrinsic signatures disagree with the declarations stdarch ships in this
+Rust release, so the three lance-linalg 11.0.0 kernels that call them fail
+with:
+
+  error: intrinsic signature mismatch for `llvm.x86.avx512.vpdpwssd.512`:
+  expected signature `<16 x i32> (<16 x i32>, <16 x i32>, <16 x i32>)`,
+  found `<16 x i32> (<16 x i32>, <32 x i16>, <32 x i16>)`
+
+Upstream's release binaries come from the rustup toolchain, which bundles the
+LLVM those declarations were written for and compiles them fine; this package
+takes the repo's rustPlatform, which pins no per-package toolchain.
+
+Only the kernels go: the AVX2 ones stay, the scalar reference and the tests
+that compare against it are untouched, so results do not change. What is lost
+is the 64-element-per-iteration AVX-512 kernel on CPUs that have VNNI.
+
+Applies to the vendored lance-linalg 11.0.0 (funes pins `lance-linalg
+= "=11.0.0"`). Regenerate when that pin moves.
+
+--- a/lance-linalg-11.0.0/src/distance/cosine_u8.rs
++++ b/lance-linalg-11.0.0/src/distance/cosine_u8.rs
+@@ -11,7 +11,6 @@
+ //! Backends (selected at runtime, best available wins):
+ //!   1. scalar     — portable reference, also used for tails
+ //!   2. avx2       — zero-extend u8→i16, triple VPMADDWD, 32 elements/iter
+-//!   3. avx512vnni — same with VPDPWSSD accumulation, 64 elements/iter
+ 
+ use std::sync::OnceLock;
+ 
+@@ -130,56 +129,6 @@
+         }
+     }
+ 
+-    /// AVX-512 VNNI fused cosine: VPDPWSSD for each product, 64 elements/iter.
+-    #[target_feature(enable = "avx512f,avx512bw,avx512vnni")]
+-    pub unsafe fn cosine_u8_accum_avx512_vnni(a: &[u8], b: &[u8]) -> CosineAccumulators {
+-        debug_assert_eq!(a.len(), b.len());
+-        let n = a.len();
+-        let zeros = _mm512_setzero_si512();
+-        let mut acc_dot = _mm512_setzero_si512();
+-        let mut acc_na = _mm512_setzero_si512();
+-        let mut acc_nb = _mm512_setzero_si512();
+-        let mut i = 0usize;
+-
+-        while i + 64 <= n {
+-            let av = _mm512_loadu_si512(a.as_ptr().add(i) as *const __m512i);
+-            let bv = _mm512_loadu_si512(b.as_ptr().add(i) as *const __m512i);
+-
+-            // Zero-extend u8→i16 via interleave with zeros.
+-            let a_lo = _mm512_unpacklo_epi8(av, zeros);
+-            let a_hi = _mm512_unpackhi_epi8(av, zeros);
+-            let b_lo = _mm512_unpacklo_epi8(bv, zeros);
+-            let b_hi = _mm512_unpackhi_epi8(bv, zeros);
+-
+-            // VPDPWSSD: signed i16 multiply-add into i32 accumulator.
+-            acc_dot = _mm512_dpwssd_epi32(acc_dot, a_lo, b_lo);
+-            acc_dot = _mm512_dpwssd_epi32(acc_dot, a_hi, b_hi);
+-            acc_na = _mm512_dpwssd_epi32(acc_na, a_lo, a_lo);
+-            acc_na = _mm512_dpwssd_epi32(acc_na, a_hi, a_hi);
+-            acc_nb = _mm512_dpwssd_epi32(acc_nb, b_lo, b_lo);
+-            acc_nb = _mm512_dpwssd_epi32(acc_nb, b_hi, b_hi);
+-            i += 64;
+-        }
+-
+-        let mut dot_ab = _mm512_reduce_add_epi32(acc_dot) as u32;
+-        let mut norm_a_sq = _mm512_reduce_add_epi32(acc_na) as u32;
+-        let mut norm_b_sq = _mm512_reduce_add_epi32(acc_nb) as u32;
+-
+-        // Scalar tail
+-        while i < n {
+-            let (xu, yu) = (a[i] as u32, b[i] as u32);
+-            dot_ab += xu * yu;
+-            norm_a_sq += xu * xu;
+-            norm_b_sq += yu * yu;
+-            i += 1;
+-        }
+-
+-        CosineAccumulators {
+-            dot_ab,
+-            norm_a_sq,
+-            norm_b_sq,
+-        }
+-    }
+ }
+ 
+ type CosineU8AccumFn = fn(&[u8], &[u8]) -> CosineAccumulators;
+@@ -189,13 +138,7 @@
+ fn select_backend() -> CosineU8AccumFn {
+     #[cfg(target_arch = "x86_64")]
+     {
+-        if is_x86_feature_detected!("avx512f")
+-            && is_x86_feature_detected!("avx512bw")
+-            && is_x86_feature_detected!("avx512vnni")
+-        {
+-            return |a, b| unsafe { x86::cosine_u8_accum_avx512_vnni(a, b) };
+-        }
+-
++        // avx512vnni dropped: VPDPWSSD does not compile with this toolchain.
+         if is_x86_feature_detected!("avx2") {
+             return |a, b| unsafe { x86::cosine_u8_accum_avx2(a, b) };
+         }
+@@ -247,14 +190,6 @@
+                 let got = unsafe { x86::cosine_u8_accum_avx2(a, b) };
+                 assert_eq!(got, reference, "avx2 [{case}] n={}", a.len());
+             }
+-
+-            if is_x86_feature_detected!("avx512f")
+-                && is_x86_feature_detected!("avx512bw")
+-                && is_x86_feature_detected!("avx512vnni")
+-            {
+-                let got = unsafe { x86::cosine_u8_accum_avx512_vnni(a, b) };
+-                assert_eq!(got, reference, "avx512_vnni [{case}] n={}", a.len());
+-            }
+         }
+ 
+         let dispatched = cosine_u8_accum(a, b);
+--- a/lance-linalg-11.0.0/src/distance/dot_u8.rs
++++ b/lance-linalg-11.0.0/src/distance/dot_u8.rs
+@@ -11,20 +11,6 @@
+ //! Backends (selected at runtime, best available wins):
+ //!   1. scalar     — portable reference, also used for tails
+ //!   2. avx2       — VPMADDWD on u16-widened halves, 32 elements/iter
+-//!   3. avx512vnni — VPDPBUSD with XOR-0x80 bias trick, 64 elements/iter
+-//!
+-//! ## The VNNI bias trick
+-//!
+-//! VPDPBUSD expects one unsigned and one signed operand, but SQ vectors
+-//! are u8 × u8. We bias `b` into the signed domain via XOR 0x80 (equivalent
+-//! to subtracting 128 when reinterpreted as i8), feed `a` directly as
+-//! unsigned, and correct by adding 128·Σa at the end:
+-//!
+-//!   DPBUSD(a, b ⊕ 0x80) = Σ a·(b − 128) = Σ a·b − 128·Σa
+-//!
+-//! The Σa term uses VPSADBW, which dispatches to port 5 while VPDPBUSD
+-//! runs on port 0 on Intel. The two instructions execute in parallel,
+-//! making the correction effectively free.
+ 
+ use std::sync::OnceLock;
+ 
+@@ -82,41 +68,6 @@
+         result
+     }
+ 
+-    /// AVX-512 VNNI path (Ice Lake+, Zen 4+). 64 elements/iter.
+-    ///
+-    /// VPDPBUSD expects (unsigned, signed) operands but SQ stores u8×u8.
+-    /// We XOR b with 0x80 to map it to i8, then correct: result + 128·Σa.
+-    /// The Σa term (VPSADBW, port 5) runs in parallel with VPDPBUSD (port 0).
+-    #[target_feature(enable = "avx512f,avx512bw,avx512vnni")]
+-    pub unsafe fn dot_u8_avx512_vnni(a: &[u8], b: &[u8]) -> u32 {
+-        debug_assert_eq!(a.len(), b.len());
+-        let n = a.len();
+-
+-        let mut acc_dot = _mm512_setzero_si512();
+-        let mut acc_suma = _mm512_setzero_si512();
+-        let sign_flip = _mm512_set1_epi8(0x80u8 as i8);
+-        let zeros = _mm512_setzero_si512();
+-        let mut i = 0usize;
+-
+-        while i + 64 <= n {
+-            let av = _mm512_loadu_si512(a.as_ptr().add(i) as *const __m512i);
+-            let bv = _mm512_loadu_si512(b.as_ptr().add(i) as *const __m512i);
+-            let b_biased = _mm512_xor_si512(bv, sign_flip);
+-            acc_dot = _mm512_dpbusd_epi32(acc_dot, av, b_biased);
+-            acc_suma = _mm512_add_epi64(acc_suma, _mm512_sad_epu8(av, zeros));
+-            i += 64;
+-        }
+-
+-        let biased_dot = _mm512_reduce_add_epi32(acc_dot);
+-        let sum_a = _mm512_reduce_add_epi64(acc_suma);
+-        let mut result = (biased_dot as i64 + 128 * sum_a) as u32;
+-
+-        while i < n {
+-            result += a[i] as u32 * b[i] as u32;
+-            i += 1;
+-        }
+-        result
+-    }
+ }
+ 
+ type DotU8Fn = fn(&[u8], &[u8]) -> u32;
+@@ -126,13 +77,7 @@
+ fn select_backend() -> DotU8Fn {
+     #[cfg(target_arch = "x86_64")]
+     {
+-        if is_x86_feature_detected!("avx512f")
+-            && is_x86_feature_detected!("avx512bw")
+-            && is_x86_feature_detected!("avx512vnni")
+-        {
+-            return |a, b| unsafe { x86::dot_u8_avx512_vnni(a, b) };
+-        }
+-
++        // avx512vnni dropped: VPDPBUSD does not compile with this toolchain.
+         if is_x86_feature_detected!("avx2") {
+             return |a, b| unsafe { x86::dot_u8_avx2(a, b) };
+         }
+@@ -182,14 +127,6 @@
+                 let got = unsafe { x86::dot_u8_avx2(a, b) };
+                 assert_eq!(got, reference, "avx2 [{case}] n={}", a.len());
+             }
+-
+-            if is_x86_feature_detected!("avx512f")
+-                && is_x86_feature_detected!("avx512bw")
+-                && is_x86_feature_detected!("avx512vnni")
+-            {
+-                let got = unsafe { x86::dot_u8_avx512_vnni(a, b) };
+-                assert_eq!(got, reference, "avx512_vnni [{case}] n={}", a.len());
+-            }
+         }
+ 
+         assert_eq!(dot_u8(a, b), reference, "dispatch [{case}] n={}", a.len());
+--- a/lance-linalg-11.0.0/src/distance/l2_u8.rs
++++ b/lance-linalg-11.0.0/src/distance/l2_u8.rs
+@@ -10,7 +10,6 @@
+ //! Backends (selected at runtime, best available wins):
+ //!   1. scalar     — portable reference, also used for tails
+ //!   2. avx2       — VPSADBW-style abs diff + VPMADDWD squaring, 32 elements/iter
+-//!   3. avx512vnni — same approach with VPDPWSSD accumulation, 64 elements/iter
+ //!
+ //! ## Algorithm
+ //!
+@@ -88,44 +87,6 @@
+         result
+     }
+ 
+-    /// AVX-512 VNNI path: abs diff + VPDPWSSD for fused square-accumulate.
+-    /// 64 elements/iter.
+-    #[target_feature(enable = "avx512f,avx512bw,avx512vnni")]
+-    pub unsafe fn l2_u8_avx512_vnni(a: &[u8], b: &[u8]) -> u32 {
+-        debug_assert_eq!(a.len(), b.len());
+-        let n = a.len();
+-        let zeros = _mm512_setzero_si512();
+-        let mut acc = _mm512_setzero_si512();
+-        let mut i = 0usize;
+-
+-        while i + 64 <= n {
+-            let av = _mm512_loadu_si512(a.as_ptr().add(i) as *const __m512i);
+-            let bv = _mm512_loadu_si512(b.as_ptr().add(i) as *const __m512i);
+-
+-            // |a - b| via saturating subtraction
+-            let abs_diff = _mm512_or_si512(_mm512_subs_epu8(av, bv), _mm512_subs_epu8(bv, av));
+-
+-            // Zero-extend u8→i16 via interleave with zeros
+-            let diff_lo = _mm512_unpacklo_epi8(abs_diff, zeros);
+-            let diff_hi = _mm512_unpackhi_epi8(abs_diff, zeros);
+-
+-            // VPDPWSSD: signed i16 pairwise multiply-add into i32 accumulator.
+-            // diff values are 0..255, fitting in i16 as positive, so signed is fine.
+-            acc = _mm512_dpwssd_epi32(acc, diff_lo, diff_lo);
+-            acc = _mm512_dpwssd_epi32(acc, diff_hi, diff_hi);
+-            i += 64;
+-        }
+-
+-        let mut result = _mm512_reduce_add_epi32(acc) as u32;
+-
+-        // Scalar tail
+-        while i < n {
+-            let d = a[i].abs_diff(b[i]) as u32;
+-            result += d * d;
+-            i += 1;
+-        }
+-        result
+-    }
+ }
+ 
+ type L2U8Fn = fn(&[u8], &[u8]) -> u32;
+@@ -135,13 +96,7 @@
+ fn select_backend() -> L2U8Fn {
+     #[cfg(target_arch = "x86_64")]
+     {
+-        if is_x86_feature_detected!("avx512f")
+-            && is_x86_feature_detected!("avx512bw")
+-            && is_x86_feature_detected!("avx512vnni")
+-        {
+-            return |a, b| unsafe { x86::l2_u8_avx512_vnni(a, b) };
+-        }
+-
++        // avx512vnni dropped: VPDPWSSD does not compile with this toolchain.
+         if is_x86_feature_detected!("avx2") {
+             return |a, b| unsafe { x86::l2_u8_avx2(a, b) };
+         }
+@@ -191,14 +146,6 @@
+                 let got = unsafe { x86::l2_u8_avx2(a, b) };
+                 assert_eq!(got, reference, "avx2 [{case}] n={}", a.len());
+             }
+-
+-            if is_x86_feature_detected!("avx512f")
+-                && is_x86_feature_detected!("avx512bw")
+-                && is_x86_feature_detected!("avx512vnni")
+-            {
+-                let got = unsafe { x86::l2_u8_avx512_vnni(a, b) };
+-                assert_eq!(got, reference, "avx512_vnni [{case}] n={}", a.len());
+-            }
+         }
+ 
+         assert_eq!(l2_u8(a, b), reference, "dispatch [{case}] n={}", a.len());

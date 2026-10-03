@@ -1456,6 +1456,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>funes</strong> - Searchable memory of past AI agent sessions, exposed over MCP</summary>
+
+- **Source**: source
+- **License**: Apache-2.0
+- **Homepage**: https://github.com/huggingface/funes
+- **Usage**: `nix run github:numtide/llm-agents.nix#funes -- --help`
+- **Nix**: [packages/funes/package.nix](packages/funes/package.nix)
+
+</details>
+<details>
 <summary><strong>gitnexus</strong> - Graph-powered code intelligence for AI agents</summary>
 
 - **Source**: source
