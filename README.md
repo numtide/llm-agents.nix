@@ -1786,6 +1786,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>magpie</strong> - Manage AI agents' models, providers and subscriptions from one app</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/yetone/magpie
+- **Usage**: `nix run github:numtide/llm-agents.nix#magpie -- --help`
+- **Nix**: [packages/magpie/package.nix](packages/magpie/package.nix)
+
+</details>
+<details>
 <summary><strong>mcporter</strong> - TypeScript runtime and CLI for the Model Context Protocol</summary>
 
 - **Source**: source

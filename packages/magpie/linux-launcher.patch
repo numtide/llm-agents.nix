@@ -1,0 +1,224 @@
+diff --git a/internal/gui/scheme_linux.go b/internal/gui/scheme_linux.go
+--- a/internal/gui/scheme_linux.go
++++ b/internal/gui/scheme_linux.go
+@@ -4,44 +4,30 @@ import (
+ 	"os"
+ 	"path/filepath"
+ 	"strings"
+-
+-	"github.com/yetone/magpie/internal/proc"
+ )
+ 
+-// registerScheme makes magpie:// links open this executable: a desktop
+-// entry that claims the scheme, then the desktop's default for it. An
+-// entry that already runs this executable and claims it is left alone.
++// Nix installs the desktop entry. Remove only the old generated entry
++// that bypassed its wrapper, so it no longer shadows the packaged one.
+ func registerScheme() error {
+-	exe, err := os.Executable()
+-	if err != nil {
+-		return err
+-	}
+ 	data := os.Getenv("XDG_DATA_HOME")
+ 	if data == "" {
+ 		home, _ := os.UserHomeDir()
+ 		data = filepath.Join(home, ".local", "share")
+ 	}
+-	dir := filepath.Join(data, "applications")
+-	path := filepath.Join(dir, "magpie.desktop")
+-	entry := `[Desktop Entry]
+-Type=Application
+-Name=magpie
+-Comment=Every agent's model. One place.
+-Exec=` + exe + ` %u
+-Icon=magpie
+-Categories=Development;Utility;
+-MimeType=x-scheme-handler/magpie;
+-Terminal=false
+-`
+-	if old, err := os.ReadFile(path); err == nil && strings.Contains(string(old), "Exec="+exe+" %u") && strings.Contains(string(old), "x-scheme-handler/magpie") {
++	path := filepath.Join(data, "applications", "magpie.desktop")
++	old, err := os.ReadFile(path)
++	if os.IsNotExist(err) {
+ 		return nil
+ 	}
+-	if err := os.MkdirAll(dir, 0o755); err != nil {
++	if err != nil {
+ 		return err
+ 	}
+-	if err := os.WriteFile(path, []byte(entry), 0o644); err != nil {
+-		return err
++	if strings.Contains(string(old), "MimeType=x-scheme-handler/magpie;") {
++		for _, line := range strings.Split(string(old), "\n") {
++			if strings.HasPrefix(line, "Exec=/nix/store/") && strings.HasSuffix(line, "/bin/.magpie-wrapped %u") {
++				return os.Remove(path)
++			}
++		}
+ 	}
+-	_ = proc.Command("update-desktop-database", dir).Run()
+-	return proc.Command("xdg-mime", "default", "magpie.desktop", "x-scheme-handler/magpie").Run()
++	return nil
+ }
+diff --git a/internal/autostart/autostart.go b/internal/autostart/autostart.go
+--- a/internal/autostart/autostart.go
++++ b/internal/autostart/autostart.go
+@@ -10,6 +10,7 @@ import (
+ 	"errors"
+ 	"os"
+ 	"path/filepath"
++	"runtime"
+ 	"strings"
+ )
+ 
+@@ -42,6 +43,9 @@ func self() (string, error) {
+ 	if p := os.Getenv("APPIMAGE"); p != "" {
+ 		return p, nil
+ 	}
++	if runtime.GOOS == "linux" {
++		return "@magpie@", nil
++	}
+ 	exe, err := os.Executable()
+ 	if err != nil {
+ 		return "", err
+diff --git a/internal/autostart/autostart_other.go b/internal/autostart/autostart_other.go
+--- a/internal/autostart/autostart_other.go
++++ b/internal/autostart/autostart_other.go
+@@ -42,5 +42,23 @@ func disable() error {
+ 	return nil
+ }
+ 
+-// refresh: nothing an older magpie wrote here needs writing again
+-func refresh() error { return nil }
++func refresh() error {
++	body, err := os.ReadFile(record())
++	if os.IsNotExist(err) {
++		return nil
++	}
++	if err != nil {
++		return err
++	}
++	for _, line := range strings.Split(string(body), "\n") {
++		key, value, ok := strings.Cut(line, "=")
++		if !ok {
++			continue
++		}
++		key, value = strings.TrimSpace(key), strings.TrimSpace(value)
++		if key == "Hidden" && value == "true" || key == "X-GNOME-Autostart-enabled" && value == "false" {
++			return nil
++		}
++	}
++	return Set(true)
++}
+diff --git a/internal/gui/scheme_linux_test.go b/internal/gui/scheme_linux_test.go
+new file mode 100644
+--- /dev/null
++++ b/internal/gui/scheme_linux_test.go
+@@ -0,0 +1,54 @@
++package gui
++
++import (
++	"os"
++	"path/filepath"
++	"testing"
++)
++
++func TestNixSchemeCleanup(t *testing.T) {
++	for _, xdg := range []bool{true, false} {
++		home := t.TempDir()
++		t.Setenv("HOME", home)
++		data := filepath.Join(home, ".local", "share")
++		t.Setenv("XDG_DATA_HOME", "")
++		if xdg {
++			data = t.TempDir()
++			t.Setenv("XDG_DATA_HOME", data)
++		}
++		t.Setenv("PATH", t.TempDir())
++		path := filepath.Join(data, "applications", "magpie.desktop")
++		if err := registerScheme(); err != nil {
++			t.Fatal(err)
++		}
++		if _, err := os.Stat(filepath.Dir(path)); !os.IsNotExist(err) {
++			t.Fatalf("created applications directory: %v", err)
++		}
++		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
++			t.Fatal(err)
++		}
++		for _, exe := range []string{"/nix/store/old-magpie/bin/.magpie-wrapped", "magpie", "/nix/store/current-magpie/bin/magpie", "/opt/bin/.magpie-wrapped"} {
++			old := "[Desktop Entry]\nExec=" + exe + " %u\nMimeType=x-scheme-handler/magpie;\n"
++			if err := os.WriteFile(path, []byte(old), 0o644); err != nil {
++				t.Fatal(err)
++			}
++			if err := registerScheme(); err != nil {
++				t.Fatal(err)
++			}
++			body, err := os.ReadFile(path)
++			if exe == "/nix/store/old-magpie/bin/.magpie-wrapped" {
++				if !os.IsNotExist(err) {
++					t.Fatalf("old entry not removed: %v", err)
++				}
++				if err := registerScheme(); err != nil {
++					t.Fatal(err)
++				}
++				if _, err := os.Stat(path); !os.IsNotExist(err) {
++					t.Fatalf("recreated entry: %v", err)
++				}
++			} else if err != nil || string(body) != old {
++				t.Fatalf("modified custom entry: %s, %v", body, err)
++			}
++		}
++	}
++}
+diff --git a/internal/autostart/launcher_linux_test.go b/internal/autostart/launcher_linux_test.go
+new file mode 100644
+--- /dev/null
++++ b/internal/autostart/launcher_linux_test.go
+@@ -0,0 +1,49 @@
++package autostart
++
++import (
++	"os"
++	"strings"
++	"testing"
++)
++
++func TestNixAutostartLauncher(t *testing.T) {
++	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
++	t.Setenv("APPIMAGE", "")
++	if err := Refresh(); err != nil || Enabled() {
++		t.Fatalf("refresh enabled missing entry: %v", err)
++	}
++	if err := Set(true); err != nil {
++		t.Fatal(err)
++	}
++	check := func() {
++		t.Helper()
++		body, err := os.ReadFile(record())
++		if err != nil {
++			t.Fatal(err)
++		}
++		if !strings.Contains(string(body), "\nExec=\"@magpie@\" tray\n") || strings.Contains(string(body), ".magpie-wrapped") {
++			t.Fatalf("incorrect autostart launcher:\n%s", body)
++		}
++	}
++	check()
++	old := "[Desktop Entry]\nExec=\"/nix/store/old-magpie/bin/.magpie-wrapped\" tray\n"
++	for _, disabled := range []string{"", "Hidden=true\n", "X-GNOME-Autostart-enabled=false\n"} {
++		if err := os.WriteFile(record(), []byte(old+disabled), 0o644); err != nil {
++			t.Fatal(err)
++		}
++		if err := Refresh(); err != nil {
++			t.Fatal(err)
++		}
++		if disabled == "" {
++			check()
++		} else if body, err := os.ReadFile(record()); err != nil || string(body) != old+disabled {
++			t.Fatalf("refresh changed disabled entry: %s, %v", body, err)
++		}
++	}
++	if err := Set(false); err != nil {
++		t.Fatal(err)
++	}
++	if err := Refresh(); err != nil || Enabled() {
++		t.Fatalf("refresh re-enabled removed entry: %v", err)
++	}
++}
