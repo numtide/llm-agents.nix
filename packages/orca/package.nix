@@ -190,6 +190,11 @@ in
       --prefix XDG_DATA_DIRS : "$XDG_ICON_DIRS:$GSETTINGS_SCHEMAS_PATH" \
       --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations --enable-wayland-ime=true}}"
 
+    # CLI launches bypass the GUI wrapper. Wrap the bundled shim itself so
+    # `orca open` and Orca's self-installed symlink also inherit native EGL.
+    wrapProgram "$out/lib/Orca/resources/bin/orca-ide" \
+      --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath [ libglvnd ]}"
+
     # The shim re-execs the Electron binary under ELECTRON_RUN_AS_NODE on the
     # CLI entrypoint in app.asar.unpacked. Upstream's deb symlinks it onto PATH
     # from after-install.sh; expose it as `orca`, the name the docs use.
