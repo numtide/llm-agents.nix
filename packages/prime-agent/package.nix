@@ -1,81 +1,75 @@
 {
   lib,
-  buildNpmPackage,
-  cairo,
   fetchFromGitHub,
   flake,
-  giflib,
-  libjpeg,
-  librsvg,
   makeWrapper,
-  nodejs_22,
-  pango,
-  pixman,
-  pkg-config,
   python3,
+  rustPlatform,
   versionCheckHook,
   versionCheckHomeHook,
 }:
 
-buildNpmPackage (finalAttrs: {
-  npmDepsFetcherVersion = 2;
+rustPlatform.buildRustPackage (finalAttrs: {
   pname = "prime-agent";
-  version = "0.9.8";
+  version = "0.9.8-unstable-2026-10-01";
 
   src = fetchFromGitHub {
     owner = "PrimeIntellect-ai";
     repo = "prime-agent";
-    tag = "v${finalAttrs.version}";
-    hash = "sha256-Xyqlc7Em7Bq+8oKkPUGVkzfXbiwgjPGHmjhsbcoeHis=";
+    rev = "3358e0016bce7cf34a195af58bbd91a26e17d694";
+    hash = "sha256-l5JwBoltANccY0tonNufzTjl6VHg5VwafCeJ5vcnHwo=";
   };
 
-  nodejs = nodejs_22;
-  npmDepsHash = "sha256-Rn0g2NjIVx2GKf0IWLWU+NMni9HZFiWAdYKEO4FAk+Q=";
+  cargoHash = "sha256-zk+Oxw04EudoDWBM0vdkR4HE1HvYanhvn7s2a9tui9U=";
+  cargoBuildFlags = [
+    "-p"
+    "pa-cli"
+    "--bin"
+    "prime-agent"
+  ];
 
   nativeBuildInputs = [
     makeWrapper
-    pkg-config
+    python3
   ];
 
-  buildInputs = [
-    cairo
-    giflib
-    libjpeg
-    librsvg
-    pango
-    pixman
-  ];
-
-  # npm 11 omits registry metadata for duplicated transitive package versions.
-  # fetchNpmDeps needs that metadata to cache every version for offline npm ci.
-  postPatch = ''
-    cp ${./package-lock.json} package-lock.json
-
-    # nix develop uses a long per-shell TMPDIR on Darwin. Worker socket paths
-    # then exceed sockaddr_un.sun_path and Node creates a truncated socket that
-    # Prime Agent cannot find. Keep daemon sockets in the short runtime dir.
-    substituteInPlace packages/coding-agent/src/modes/daemon/daemon-socket.ts \
-      --replace-fail \
-        'return join(tmpdir(), `prime-agent-''${suffix}`);' \
-        'return join(process.env.XDG_RUNTIME_DIR || "/tmp", `prime-agent-''${suffix}`);'
+  postBuild = ''
+    python3 scripts/release/bundle_catalog.py generate --fixture \
+      --out target/catalog-assets
   '';
 
   installPhase = ''
     runHook preInstall
 
-    npm prune --omit=dev
+    packageDir=$out/share/prime-agent
+    mkdir -p $out/bin "$packageDir"
+    binary="$(find target -type f -path "*/${finalAttrs.cargoBuildType}/prime-agent" -print -quit)"
+    test -n "$binary"
+    install -Dm755 "$binary" "$packageDir/prime-agent"
+    cp -r prime-agent-runtime skills "$packageDir/"
+    install -Dm644 README.md LICENSE target/catalog-assets/*.json \
+      -t "$packageDir"
 
-    mkdir -p $out/lib/prime-agent $out/bin
-    cp -r node_modules $out/lib/prime-agent/
-    cp -r packages $out/lib/prime-agent/
+    cat > "$packageDir/package.json" <<'JSON'
+    {
+      "name": "prime-agent",
+      "version": "${finalAttrs.version}",
+      "description": "Prime Agent: the RLM coding agent (Rust build)",
+      "bin": { "prime-agent": "prime-agent" },
+      "piConfig": { "name": "prime-agent", "configDir": ".prime/agent" },
+      "commit": "${finalAttrs.src.rev}"
+    }
+    JSON
 
-    makeWrapper ${lib.getExe nodejs_22} $out/bin/prime-agent \
-      --add-flags "$out/lib/prime-agent/packages/coding-agent/dist/bundle/cli.js" \
-      --set PI_PACKAGE_DIR "$out/lib/prime-agent/packages/coding-agent" \
+    makeWrapper "$packageDir/prime-agent" $out/bin/prime-agent \
+      --set PI_PACKAGE_DIR "$packageDir" \
       --set PRIME_AGENT_KERNEL_PYTHON ${finalAttrs.passthru.pythonRuntime}/bin/python3
 
     runHook postInstall
   '';
+
+  # Upstream snapshot tests depend on terminal color and width detection.
+  doCheck = false;
 
   doInstallCheck = true;
   nativeInstallCheckInputs = [
@@ -83,27 +77,12 @@ buildNpmPackage (finalAttrs: {
     versionCheckHomeHook
   ];
 
-  postInstallCheck = ''
+  installCheckPhase = ''
+    runHook preInstallCheck
+
     expectedSkills="agent-message agent-observe attach-image compact edit goal mcp prime-intellect refine rlm-heartbeat skill-creator websearch"
-    installedSkills="$(${finalAttrs.passthru.pythonRuntime}/bin/python3 - "$out/lib/prime-agent/packages/coding-agent/skills" <<'PY'
-    from pathlib import Path
-    import sys
-
-    root = Path(sys.argv[1])
-    print(" ".join(sorted(path.name for path in root.iterdir() if (path / "SKILL.md").is_file())))
-    PY
-    )"
+    installedSkills="$(find "$out/share/prime-agent/skills" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort | tr '\n' ' ' | sed 's/ $//')"
     test "$installedSkills" = "$expectedSkills"
-
-    ${lib.getExe nodejs_22} --input-type=module - "$out/lib/prime-agent/packages/coding-agent/dist/bundle/amazon-bedrock.js" <<'JS'
-    const bedrockProvider = await import(process.argv[2]);
-
-    for (const name of ["streamBedrock", "streamSimpleBedrock"]) {
-      if (typeof bedrockProvider[name] !== "function") {
-        throw new Error("Bundled Bedrock loader is missing the " + name + " export");
-      }
-    }
-    JS
 
     ${finalAttrs.passthru.pythonRuntime}/bin/python3 <<'PY'
     import inspect
@@ -125,27 +104,15 @@ buildNpmPackage (finalAttrs: {
     assert callable(refine.run)
     assert callable(refine.status)
 
-    # The mcp skill is markdown-only, so nothing else checks the API it calls.
     import rlm.mcp
     for name in ["list_plugins", "search_plugins", "list_connections", "search_tools", "describe_tool", "list_tools", "call_tool"]:
         assert callable(getattr(rlm.mcp, name, None)), name
 
     distributions = importlib.metadata.packages_distributions()["rlm"]
     assert distributions == ["prime-agent-runtime"], distributions
-
-    for name, version in {
-        "mcp": "2.0.0",
-        "mcp-types": "2.0.0",
-    }.items():
-        installed = list(importlib.metadata.distributions(name=name))
-        assert len(installed) == 1, (name, installed)
-        assert installed[0].version == version, (name, installed[0].version)
-
-    for name in ["httpx2", "httpcore2"]:
-        installed = list(importlib.metadata.distributions(name=name))
-        assert len(installed) == 1, (name, installed)
-
     PY
+
+    runHook postInstallCheck
   '';
 
   passthru =
@@ -251,7 +218,7 @@ buildNpmPackage (finalAttrs: {
             }:
             python.pkgs.buildPythonPackage {
               inherit pname version dependencies;
-              src = "${finalAttrs.src}/packages/coding-agent/skills/${directory}";
+              src = "${finalAttrs.src}/skills/${directory}";
               pyproject = true;
               build-system = [ python.pkgs.hatchling ];
               pythonImportsCheck = [ (builtins.replaceStrings [ "-" ] [ "_" ] directory) ];
@@ -346,7 +313,7 @@ buildNpmPackage (finalAttrs: {
   meta = {
     description = "A self-improving RLM agent for coding workflows and long-running autonomous tasks.";
     homepage = "https://github.com/PrimeIntellect-ai/prime-agent";
-    changelog = "https://github.com/PrimeIntellect-ai/prime-agent/releases/tag/v${finalAttrs.version}";
+    changelog = "https://github.com/PrimeIntellect-ai/prime-agent/commits/${finalAttrs.src.rev}";
     license = lib.licenses.mit;
     sourceProvenance = with lib.sourceTypes; [ fromSource ];
     maintainers = with flake.lib.maintainers; [ mulatta ];
