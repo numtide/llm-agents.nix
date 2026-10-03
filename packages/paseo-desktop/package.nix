@@ -109,8 +109,10 @@ buildNpmPackage (finalAttrs: {
     #  - upstream's tracer covers the daemon + CLI (spawned by the desktop
     #    app's daemon-manager via @getpaseo/server and @getpaseo/cli);
     #  - a supplemental @vercel/nft trace covers the Electron main/preload
-    #    entry points and the CLI passthrough module (dist/run.js) that the
-    #    desktop app imports at runtime.
+    #    entry points, the CLI passthrough module (dist/run.js) that the
+    #    desktop app imports at runtime, and the @getpaseo/server exports
+    #    barrel, which the CLI loads via require.resolve() where nft can't
+    #    follow it.
     node scripts/trace-daemon.mjs > runtime-files.txt
     node --input-type=module -e '
       import { nodeFileTrace } from "@vercel/nft";
@@ -118,6 +120,7 @@ buildNpmPackage (finalAttrs: {
         [
           "packages/desktop/dist/main.js",
           "packages/desktop/dist/preload.js",
+          "packages/server/dist/server/server/exports.js",
           "node_modules/@getpaseo/cli/dist/run.js",
         ],
         {
