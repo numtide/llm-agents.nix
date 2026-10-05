@@ -1330,6 +1330,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>no-mistakes</strong> - Agent-driven Git push gate and validation pipeline</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/kunchenguid/no-mistakes
+- **Usage**: `nix run github:numtide/llm-agents.nix#no-mistakes -- --help`
+- **Nix**: [packages/no-mistakes/package.nix](packages/no-mistakes/package.nix)
+
+</details>
+<details>
 <summary><strong>open-code-review</strong> - AI-powered code review CLI</summary>
 
 - **Source**: binary
