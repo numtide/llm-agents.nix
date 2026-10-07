@@ -15,7 +15,8 @@ let
     self = python;
     packageOverrides = _final: prev: {
       # Fails in the sandbox on torchcodec 0.16.0. Drop this override once
-      # nixpkgs includes NixOS/nixpkgs@6a3590bb67fd, which skips it too.
+      # nixpkgs includes NixOS/nixpkgs@6a3590bb67fd, which skips it too
+      # (tracked in #10453).
       torchcodec = prev.torchcodec.overridePythonAttrs (old: {
         disabledTests = (old.disabledTests or [ ]) ++ [ "test_audio_against_cli" ];
       });
