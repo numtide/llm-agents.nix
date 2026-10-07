@@ -11,8 +11,19 @@
 }:
 
 let
+  python = python3.override {
+    self = python;
+    packageOverrides = _final: prev: {
+      # Fails in the sandbox on torchcodec 0.16.0. Drop this override once
+      # nixpkgs includes NixOS/nixpkgs@6a3590bb67fd, which skips it too.
+      torchcodec = prev.torchcodec.overridePythonAttrs (old: {
+        disabledTests = (old.disabledTests or [ ]) ++ [ "test_audio_against_cli" ];
+      });
+    };
+  };
+
   # Not yet in nixpkgs. Packaged inline; all transitive deps are available.
-  faster-whisper = python3.pkgs.buildPythonPackage rec {
+  faster-whisper = python.pkgs.buildPythonPackage rec {
     pname = "faster-whisper";
     version = "1.2.1";
     pyproject = true;
@@ -24,9 +35,9 @@ let
       hash = "sha256-pWVYxC1h0kIhhBxAt9oT2USuvoarlcwwYmaLUJlZZwY=";
     };
 
-    build-system = with python3.pkgs; [ setuptools ];
+    build-system = with python.pkgs; [ setuptools ];
 
-    dependencies = with python3.pkgs; [
+    dependencies = with python.pkgs; [
       av
       ctranslate2
       huggingface-hub
@@ -51,7 +62,7 @@ let
   # Not yet in nixpkgs. VoxTerm only reads the bundled ONNX model via
   # onnxruntime (see audio/vad.py), but we keep torch in the deps to match
   # upstream metadata.
-  silero-vad = python3.pkgs.buildPythonPackage rec {
+  silero-vad = python.pkgs.buildPythonPackage rec {
     pname = "silero-vad";
     version = "6.2.1";
     pyproject = true;
@@ -62,9 +73,9 @@ let
       hash = "sha256-sjBisOOfrRexJm/CPB57QpAhnb6CzghRCInjL2gfSzs=";
     };
 
-    build-system = with python3.pkgs; [ hatchling ];
+    build-system = with python.pkgs; [ hatchling ];
 
-    dependencies = with python3.pkgs; [
+    dependencies = with python.pkgs; [
       onnxruntime
       packaging
       torch
@@ -82,7 +93,7 @@ let
     };
   };
 in
-python3.pkgs.buildPythonApplication rec {
+python.pkgs.buildPythonApplication rec {
   pname = "voxterm";
   version = "0.3.0";
   pyproject = true;
@@ -94,11 +105,11 @@ python3.pkgs.buildPythonApplication rec {
     hash = "sha256-yOmqc0EnK4UkIWfYZlae5yGnDH/xlj6nwPOR0oC/SCU=";
   };
 
-  build-system = with python3.pkgs; [ hatchling ];
+  build-system = with python.pkgs; [ hatchling ];
 
   nativeBuildInputs = [ makeWrapper ];
 
-  dependencies = with python3.pkgs; [
+  dependencies = with python.pkgs; [
     cryptography
     numpy
     onnxruntime
