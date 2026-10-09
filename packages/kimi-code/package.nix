@@ -1,6 +1,5 @@
 {
   lib,
-  flake,
   stdenv,
   fetchFromGitHub,
   fetchPnpmDeps,
@@ -115,7 +114,7 @@ stdenv.mkDerivation (finalAttrs: {
     changelog = "https://github.com/MoonshotAI/kimi-code/releases/tag/%40moonshot-ai%2Fkimi-code%40${finalAttrs.version}";
     license = lib.licenses.mit;
     sourceProvenance = with lib.sourceTypes; [ fromSource ];
-    maintainers = with flake.lib.maintainers; [ mnixry ];
+    maintainers = with lib.maintainers; [ mnixry ];
     mainProgram = "kimi";
     platforms = lib.platforms.unix;
   };

@@ -1796,6 +1796,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>mcp-remote</strong> - Connect an MCP Client that only supports local (stdio) servers to a Remote MCP Server.</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/punkpeye/mcp-remote
+- **Usage**: `nix run github:numtide/llm-agents.nix#mcp-remote -- --help`
+- **Nix**: [packages/mcp-remote/package.nix](packages/mcp-remote/package.nix)
+
+</details>
+<details>
 <summary><strong>mcporter</strong> - TypeScript runtime and CLI for the Model Context Protocol</summary>
 
 - **Source**: source
