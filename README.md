@@ -120,6 +120,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>codebuddy-code</strong> - Tencent's AI coding agent for the terminal</summary>
+
+- **Source**: binary
+- **License**: MIT
+- **Homepage**: https://www.codebuddy.ai/cli
+- **Usage**: `nix run github:numtide/llm-agents.nix#codebuddy-code -- --help`
+- **Nix**: [packages/codebuddy-code/package.nix](packages/codebuddy-code/package.nix)
+
+</details>
+<details>
 <summary><strong>codex</strong> - OpenAI Codex CLI - a coding agent that runs locally on your computer</summary>
 
 - **Source**: source
