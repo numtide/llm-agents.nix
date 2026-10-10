@@ -1,0 +1,31 @@
+diff --git a/bun.lock b/bun.lock
+index d4fce0d..70d2fac 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -114,7 +114,7 @@
+     },
+     "apps/opencode-plugin": {
+       "name": "@plannotator/opencode",
+-      "version": "0.28.10",
++      "version": "0.28.11",
+       "devDependencies": {
+         "@opencode-ai/plugin": "1.18.32",
+         "@opencode/plugin": "2.0.14",
+@@ -133,7 +133,7 @@
+     },
+     "apps/pi-extension": {
+       "name": "@plannotator/pi-extension",
+-      "version": "0.28.10",
++      "version": "0.28.11",
+       "dependencies": {
+         "@joplin/turndown-plugin-gfm": "^1.0.64",
+         "@pierre/diffs": "1.3.6",
+@@ -321,7 +321,7 @@
+     },
+     "packages/server": {
+       "name": "@plannotator/server",
+-      "version": "0.28.10",
++      "version": "0.28.11",
+       "dependencies": {
+         "@modelcontextprotocol/server": "2.2.0",
+         "@pierre/diffs": "1.3.6",
