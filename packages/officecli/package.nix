@@ -25,6 +25,15 @@ buildDotnetModule rec {
   executables = [ "officecli" ];
   nugetDeps = ./deps.json;
 
+  makeWrapperArgs = [
+    "--set"
+    "OFFICECLI_NO_AUTO_INSTALL"
+    "1"
+    "--set"
+    "OFFICECLI_SKIP_UPDATE"
+    "1"
+  ];
+
   nativeBuildInputs = [ installAgentSkills ];
   dontInstallAgentSkills = true;
 
