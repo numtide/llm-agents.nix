@@ -1686,6 +1686,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>asmgr-desktop</strong> - Desktop GUI to run and manage multiple AI coding-agent sessions (Claude, Codex, Gemini, Aider, ...) side by side</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/izll/agent-session-manager-desktop
+- **Usage**: `nix run github:numtide/llm-agents.nix#asmgr-desktop -- --help`
+- **Nix**: [packages/asmgr-desktop/package.nix](packages/asmgr-desktop/package.nix)
+
+</details>
+<details>
 <summary><strong>auv</strong> - Scriptable computer-use automation CLI that turns GUI operations into reusable commands</summary>
 
 - **Source**: binary
