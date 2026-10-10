@@ -81,10 +81,11 @@ stdenv.mkDerivation {
     find node_modules -xtype l -delete
 
     mkdir -p $out/lib/collie
-    cp -r bridge cli scripts systemd node_modules package.json herdr-plugin.toml \
+    cp -r bridge cli docs scripts systemd node_modules package.json herdr-plugin.toml \
       $out/lib/collie/
     mkdir -p $out/lib/collie/web
     cp -r web/dist $out/lib/collie/web/dist
+    cp -r web/src $out/lib/collie/web/src
 
     makeWrapper ${lib.getExe bun} $out/bin/collie \
       --add-flags "run $out/lib/collie/bridge/index.ts"
