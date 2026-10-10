@@ -5,7 +5,8 @@
 Grok Bot ships as prebuilt Electron packages on downloads.cursor.com. The
 Linux feed advertises an AppImage URL, but the product namespace and build id
 are shared across artifacts, so this script rebuilds the conventional .deb
-URLs and records them in hashes.json.
+URLs and records them in hashes.json. The macOS zip lives under a
+version-keyed path with no build id, so it is derived from the version alone.
 """
 
 from __future__ import annotations
@@ -96,6 +97,11 @@ def deb_url(
     )
 
 
+def darwin_zip_url(download_base: str, version: str) -> str:
+    """Return the notarized aarch64-darwin zip URL."""
+    return f"{download_base}/darwin-arm64/{version}/Grok_Bot_{version}.zip"
+
+
 def main() -> None:
     """Refresh hashes.json from the Cursor stable feed."""
     current = load_hashes(HASHES_FILE)
@@ -137,6 +143,11 @@ def main() -> None:
         print(f"prefetching {url}")
         urls[nix_system] = url
         hashes[nix_system] = calculate_url_hash(url)
+
+    url = darwin_zip_url(download_base, version)
+    print(f"prefetching {url}")
+    urls["aarch64-darwin"] = url
+    hashes["aarch64-darwin"] = calculate_url_hash(url)
 
     payload = {
         "version": version,
