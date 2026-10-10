@@ -21,7 +21,13 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   cargoHash = "sha256-0yPl4+UjPJjVoTrsthSGBruog1SXuZTr7vUHlAxPigg=";
 
-  env.OPENSSL_NO_VENDOR = 1;
+  env = {
+    OPENSSL_NO_VENDOR = 1;
+    # Upstream's fat LTO with codegen-units=1 is a single-threaded link that
+    # exceeds the aarch64 builder's 1200s timeout.
+    CARGO_PROFILE_RELEASE_LTO = "off";
+    CARGO_PROFILE_RELEASE_CODEGEN_UNITS = "16";
+  };
 
   nativeBuildInputs = [ pkg-config ];
   buildInputs = [ openssl ];

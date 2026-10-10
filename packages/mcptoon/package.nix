@@ -49,6 +49,9 @@ python3.pkgs.buildPythonApplication rec {
     "test_search_mcp_registry_returns_list"
     # Expects an editable install, we test the copy in $out.
     "test_packaged_path_resolves_to_the_copy_on_disk"
+    # The child exits at once, and the error can be built before the stderr
+    # pump thread has buffered anything; loses the race on loaded builders.
+    "test_the_node_warning_is_not_the_headline"
   ];
 
   passthru.category = "Utilities";
