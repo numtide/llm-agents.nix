@@ -14,6 +14,7 @@ from typing import Any
 from updater import http
 from updater.flows import manifest_checksums as mc
 from updater.hash import hex_to_sri
+from updater.run import run
 
 _MANIFEST = {
     "platforms": {
@@ -73,6 +74,69 @@ class TestManifestChecksums(unittest.TestCase):
     def test_semver_skips_downgrade(self) -> None:
         data = self._run(latest="0.9.0", allow_downgrade=False)
         self.assertEqual(data["version"], "1.0.0")  # unchanged
+
+    def test_json_feed_uses_one_stable_snapshot(self) -> None:
+        requests: list[str] = []
+
+        def fake(url: str) -> dict[str, Any]:
+            requests.append(url)
+            return {
+                "version": "3.0.0",
+                "stable": {
+                    "linux": {
+                        "version": "2.0.0",
+                        "deb": {
+                            "x64": {"sha256": "00" * 32},
+                            "arm64": {"sha256": "11" * 32},
+                        },
+                    }
+                },
+            }
+
+        http.fetch_json = fake  # type: ignore[assignment]
+        url = "https://h/latest.json"
+        run(
+            self.pkg,
+            {
+                "kind": "manifest-checksums",
+                "versionSource": {
+                    "type": "json",
+                    "url": url,
+                    "path": "stable.linux.version",
+                },
+                "manifestUrl": url,
+                "checksumPath": "stable.linux.deb.{platform}.sha256",
+                "platforms": {"x86_64-linux": "x64", "aarch64-linux": "arm64"},
+            },
+        )
+        data = json.loads((self.pkg / "hashes.json").read_text())
+        self.assertEqual(requests, [url])
+        self.assertEqual(data["version"], "2.0.0")
+        self.assertEqual(
+            data["hashes"],
+            {
+                "x86_64-linux": hex_to_sri("00" * 32),
+                "aarch64-linux": hex_to_sri("11" * 32),
+            },
+        )
+
+    def test_json_version_rejects_non_string_without_writing(self) -> None:
+        original = (self.pkg / "hashes.json").read_text()
+
+        def fake(_url: str) -> dict[str, Any]:
+            return {"stable": {"version": 2}}
+
+        http.fetch_json = fake  # type: ignore[assignment]
+        with self.assertRaises(TypeError):
+            mc.update_manifest_checksums(
+                self.pkg,
+                fetch_latest=lambda: "unused",
+                manifest_url_template="https://h/latest.json",
+                version_path="stable.version",
+                checksum_path="platforms.{platform}.checksum",
+                platforms=_PLATFORMS,
+            )
+        self.assertEqual((self.pkg / "hashes.json").read_text(), original)
 
 
 if __name__ == "__main__":

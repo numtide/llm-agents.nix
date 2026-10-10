@@ -10,26 +10,13 @@ from typing import TYPE_CHECKING
 
 from updater.hash import hex_to_sri
 from updater.hashes_file import load_hashes, save_hashes
+from updater.http import json_string_at_path
 from updater.interpolate import interpolate, version_vars
 from updater.version import should_update
 
 if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
-
-
-def _dig(obj: object, dotted_path: str) -> str:
-    """Follow a dotted key path into nested dicts and return a string leaf."""
-    current = obj
-    for key in dotted_path.split("."):
-        if not isinstance(current, dict):
-            msg = f"manifest path {dotted_path!r} hit a non-object at {key!r}"
-            raise TypeError(msg)
-        current = current[key]
-    if not isinstance(current, str):
-        msg = f"manifest path {dotted_path!r} is not a string checksum"
-        raise TypeError(msg)
-    return current
 
 
 def update_manifest_checksums(
@@ -40,18 +27,27 @@ def update_manifest_checksums(
     checksum_path: str,
     platforms: dict[str, str],
     allow_downgrade: bool = False,
+    version_path: str | None = None,
 ) -> None:
     """Bump version and per-platform hashes from a templated JSON manifest.
 
     ``checksum_path`` is a dotted path with a ``{platform}`` placeholder, e.g.
     ``platforms.{platform}.checksum``. ``platforms`` maps each nix system to its
     manifest token. ``allow_downgrade`` follows the pointer down too, for yanked
-    releases.
+    releases. When ``version_path`` is set, the version and checksums are read
+    from the same response at ``manifest_url_template``.
     """
     hashes_file = pkg_dir / "hashes.json"
     data = load_hashes(hashes_file)
     current = data["version"]
-    latest = fetch_latest()
+    from updater.http import fetch_json  # noqa: PLC0415 -- patched in tests
+
+    manifest = None
+    if version_path is not None:
+        manifest = fetch_json(manifest_url_template)
+        latest = json_string_at_path(manifest, version_path)
+    else:
+        latest = fetch_latest()
 
     print(f"Current: {current}, Latest: {latest}")
 
@@ -60,10 +56,9 @@ def update_manifest_checksums(
         print("Already up to date")
         return
 
-    from updater.http import fetch_json  # noqa: PLC0415 -- patched in tests
-
     manifest_url = interpolate(manifest_url_template, version_vars(latest))
-    manifest = fetch_json(manifest_url)
+    if manifest is None:
+        manifest = fetch_json(manifest_url)
     if not isinstance(manifest, dict):
         msg = f"expected a JSON object from {manifest_url}"
         raise TypeError(msg)
@@ -71,7 +66,7 @@ def update_manifest_checksums(
     hashes: dict[str, str] = {}
     for nix_platform, token in platforms.items():
         path = interpolate(checksum_path, {"platform": token})
-        hashes[nix_platform] = hex_to_sri(_dig(manifest, path))
+        hashes[nix_platform] = hex_to_sri(json_string_at_path(manifest, path))
         print(f"  {nix_platform}: {hashes[nix_platform]}")
 
     save_hashes(hashes_file, {"version": latest, "hashes": hashes})
