@@ -6,6 +6,8 @@
   fetchFromGitHub,
   makeWrapper,
   jq,
+  versionCheckHook,
+  versionCheckHomeHook,
 }:
 
 let
@@ -94,6 +96,10 @@ stdenv.mkDerivation {
   '';
 
   doInstallCheck = true;
+  nativeInstallCheckInputs = [
+    versionCheckHook
+    versionCheckHomeHook
+  ];
   installCheckPhase = ''
     runHook preInstallCheck
     test -f $out/lib/collie/web/dist/index.html
