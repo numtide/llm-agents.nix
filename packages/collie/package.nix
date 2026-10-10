@@ -88,7 +88,7 @@ stdenv.mkDerivation {
     cp -r web/src $out/lib/collie/web/src
 
     makeWrapper ${lib.getExe bun} $out/bin/collie \
-      --add-flags "run $out/lib/collie/bridge/index.ts"
+      --add-flags "run $out/lib/collie/cli/main.ts"
 
     runHook postInstall
   '';
