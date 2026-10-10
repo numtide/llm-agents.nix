@@ -10,16 +10,16 @@
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "clauth";
-  version = "0.16.0";
+  version = "0.17.0";
 
   src = fetchFromGitHub {
     owner = "uwuclxdy";
     repo = "clauth";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-823ImaVDcXsaQ13EitckW4vxiUWDwNDLB9InT/gn4f0=";
+    hash = "sha256-hbiBVUMZ0RO1+JqohtlwJ+NpBOl/jOZpkVDdEHShuNs=";
   };
 
-  cargoHash = "sha256-A9B6eA2Ws2PPBo/6jIAHfFkpAKwNGGACTYQzktnZDcY=";
+  cargoHash = "sha256-A897WAfqn5YP09b1IKo8wV4avzzjNm6wUJ2tL6hHLE0=";
 
   nativeBuildInputs = [ installShellFiles ];
 
@@ -60,6 +60,25 @@ rustPlatform.buildRustPackage (finalAttrs: {
     # the sandbox builds as root, so the "unwritable" memo path is writable
     "--skip=codex_auth::tests::an_unwritable_memo_sends_nothing_and_keeps_the_kick"
     "--skip=usage::scheduler::tests::oauth_and_provider_completions_clear_only_their_own_activity"
+    "--skip=update::tests::updates_enabled_follows_the_saved_toggle"
+    "--skip=herdr::tests::heal_detached_respects_the_saved_update_toggle"
+    "--skip=mcp::startup_tests::startup_herdr_heal_follows_the_saved_update_toggle"
+    "--skip=daemon::tests::tick_herdr_heal_follows_the_saved_update_toggle"
+    # spawn and signal real processes, which the sandbox does not allow
+    "--skip=daemon::gateway::tests::the_stub_teardown_never_signals_a_pid_that_no_longer_names_the_stub"
+    "--skip=daemon::probe::tests::a_stop_leaving_no_daemon_stops_the_gateway_it_left"
+    "--skip=daemon::probe::tests::stop_escalates_to_sigkill_past_the_wait"
+    "--skip=daemon::probe::tests::stop_names_a_standby_that_took_over"
+    "--skip=daemon::probe::tests::stop_terminates_the_daemon_and_leaves_the_singleton_free"
+    "--skip=daemon::tests::start_runs_the_daemon_detached_into_its_log"
+    "--skip=a_daemon_boot_runs_one_healthy_gateway_and_stops_it_on_sigterm"
+    "--skip=the_gateways_output_lands_in_its_own_owner_only_log"
+    "--skip=a_standby_daemon_spawns_nothing_until_it_takes_over"
+    "--skip=a_daemon_stops_its_gateway_on_sigint_and_sighup_too"
+    "--skip=a_daemon_that_inherited_sighup_ignored_keeps_running_on_hangup"
+    # reads the process-global color tier without TierSandbox, so parallel
+    # tests that pin the tier race with it
+    "--skip=tui::render::services::tests::the_shunt_dot_maps_each_state_to_its_class"
   ];
 
   doInstallCheck = true;
