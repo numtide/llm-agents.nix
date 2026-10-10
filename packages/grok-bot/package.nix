@@ -66,10 +66,16 @@ let
 
   platform = stdenvNoCC.hostPlatform.system;
 
-  src = fetchurl {
-    url = urls.${platform} or (throw "Unsupported system: ${platform}");
-    hash = hashes.${platform} or (throw "Unsupported system: ${platform}");
-  };
+  srcFor =
+    system:
+    fetchurl {
+      url = urls.${system} or (throw "Unsupported system: ${system}");
+      hash = hashes.${system} or (throw "Unsupported system: ${system}");
+    };
+
+  src = srcFor platform;
+
+  codesignTeamId = "DCNK4UB866";
 
   desktopItem = makeDesktopItem {
     name = "grok-bot";
@@ -119,11 +125,20 @@ let
     # Prebuilt Electron — stripping buys nothing and corrupts the binary.
     dontStrip = true;
 
+    # unzip: codesignCheckHook unpacks the darwin zip on Linux too.
     nativeBuildInputs = [
       formatelf
       copyDesktopItems
       makeWrapper
+      unzip
     ];
+
+    # Linux-only update CI never builds the darwin derivation, so pin the
+    # darwin zip's publisher here as well.
+    doInstallCheck = true;
+    nativeInstallCheckInputs = [ codesignCheckHook ];
+    inherit codesignTeamId;
+    codesignSources = [ (srcFor "aarch64-darwin") ];
 
     buildInputs = [
       adwaita-icon-theme
@@ -232,7 +247,7 @@ let
 
     doInstallCheck = true;
     nativeInstallCheckInputs = [ codesignCheckHook ];
-    codesignTeamId = "DCNK4UB866";
+    inherit codesignTeamId;
 
     installPhase = ''
       runHook preInstall
