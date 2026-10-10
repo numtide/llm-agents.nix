@@ -879,6 +879,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 - **Nix**: [packages/codex-acp/package.nix](packages/codex-acp/package.nix)
 
 </details>
+<details>
+<summary><strong>pi-acp</strong> - ACP adapter for the pi coding agent</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/svkozak/pi-acp
+- **Usage**: `nix run github:numtide/llm-agents.nix#pi-acp -- --help`
+- **Nix**: [packages/pi-acp/package.nix](packages/pi-acp/package.nix)
+
+</details>
 
 ### Usage Analytics
 
