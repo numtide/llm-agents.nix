@@ -170,6 +170,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>delta-editor</strong> - AI-native code editor from the makers of Zed (beta)</summary>
+
+- **Source**: binary
+- **License**: unfree
+- **Homepage**: https://delta.dev
+- **Usage**: `nix run github:numtide/llm-agents.nix#delta-editor -- --help`
+- **Nix**: [packages/delta-editor/package.nix](packages/delta-editor/package.nix)
+
+</details>
+<details>
 <summary><strong>droid</strong> - Factory AI's Droid - AI-powered development agent for your terminal</summary>
 
 - **Source**: binary
