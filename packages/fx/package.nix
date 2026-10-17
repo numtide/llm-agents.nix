@@ -3,23 +3,23 @@
   stdenv,
   flake,
   fetchFromGitHub,
-  zig,
+  zig_0_17,
   versionCheckHook,
   versionCheckHomeHook,
 }:
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "fx";
-  version = "0.0.13";
+  version = "0.0.14";
 
   src = fetchFromGitHub {
     owner = "vercel-labs";
     repo = "fx";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-f08KaZW/JUQVbIfi4eNfSm/aVFRZ2itigzGOvkEtmfM=";
+    hash = "sha256-jvQdj+0bpv8F0VCCUvjLkZCCiVX/bQuHIFxqd9OWACM=";
   };
 
-  nativeBuildInputs = [ zig.hook ];
+  nativeBuildInputs = [ zig_0_17.hook ];
 
   zigBuildFlags = [ "-Doptimize=ReleaseSafe" ];
 
