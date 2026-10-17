@@ -329,6 +329,11 @@ inputs."nixpkgs".lib.extend (
         githubId = 231052470;
         name = "wtf9880";
       };
+      cheerfulScumbag = {
+        github = "cheerfulScumbag";
+        githubId = 164391367;
+        name = "cheerfulScumbag";
+      };
     };
   }
 )

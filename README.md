@@ -1493,6 +1493,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>tonguetyped</strong> - Local Linux dictation controlled from the terminal or a desktop-wide keyboard shortcut</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/cheerfulScumbag/tonguetyped
+- **Usage**: `nix run github:numtide/llm-agents.nix#tonguetyped -- --help`
+- **Nix**: [packages/tonguetyped/package.nix](packages/tonguetyped/package.nix)
+
+</details>
+<details>
 <summary><strong>voxterm</strong> - Local real-time voice transcription TUI with speaker diarization</summary>
 
 - **Source**: source
