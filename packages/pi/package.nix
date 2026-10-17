@@ -79,10 +79,14 @@ buildNpmPackage {
     ln -s ../../dist/modes/interactive src/modes/interactive
     ln -s ../../dist/core/export-html src/core/export-html
 
+    # Match upstream's build:binary: without --no-compile-autoload-dotenv
+    # the binary reads .env from the directory pi starts in
+    # (earendil-works/pi#10473).
     # Unlike upstream, autoload package.json: extension dependencies that use
     # main/exports do not resolve otherwise (earendil-works/pi#9817).
     bun build --compile \
       --no-compile-autoload-bunfig \
+      --no-compile-autoload-dotenv \
       --compile-autoload-package-json \
       ./dist/bun/cli.js \
       ./src/utils/image-resize-worker.ts \
