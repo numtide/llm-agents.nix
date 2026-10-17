@@ -28,11 +28,12 @@ def _npm_purl(npm_package: str, *, fetchzip: bool) -> Purl:
     return purl.with_qualifiers(x_unpack="true") if fetchzip else purl
 
 
-def update_npm_package(
+def update_npm_package(  # noqa: PLR0913
     pkg_dir: Path,
     npm_package: str,
     flake_attr: str,
     *,
+    dist_tag: str = "latest",
     lockfile_env: dict[str, str] | None = None,
     strip_dev_dependencies: bool = False,
     require_lockfile: bool = True,
@@ -50,6 +51,7 @@ def update_npm_package(
 
     fetcher = PurlFetcher.default()
     purl = _npm_purl(npm_package, fetchzip=fetchzip)
+    purl = purl.with_qualifiers(x_dist_tag=dist_tag)
     resolved = fetcher.resolve(purl)
 
     print(f"Current: {current}, Latest: {resolved.version}")

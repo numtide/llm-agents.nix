@@ -76,7 +76,7 @@ buildNpmPackage {
   passthru.category = "AI Coding Agents";
   passthru.updater = mkUpdater {
     kind = "npm";
-    purl = "pkg:npm/%40deepseek-ai/dsh";
+    purl = "pkg:npm/%40deepseek-ai/dsh?x_dist_tag=next";
     # devDependencies reference an unpublished @deepseek-ai package (E404).
     stripDevDependencies = true;
   };
