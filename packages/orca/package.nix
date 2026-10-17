@@ -141,6 +141,8 @@ in
   # fixup, so without it Chromium falls back to SwiftShader and the WebGL
   # terminal renderer runs on the CPU.
   runtimeDependencies = [
+    # The Wayland clipboard helper dlopens GTK for its Xwayland fallback.
+    gtk3
     libayatana-appindicator
     libnotify
     libpulseaudio
