@@ -4,7 +4,6 @@
   fetchFromGitHub,
   git,
   installShellFiles,
-  makeBinaryWrapper,
   stdenv,
   versionCheckHook,
   versionCheckHomeHook,
@@ -33,7 +32,6 @@ buildGoModule rec {
 
   nativeBuildInputs = [
     installShellFiles
-    makeBinaryWrapper
   ];
 
   nativeCheckInputs = [ git ];
@@ -47,11 +45,7 @@ buildGoModule rec {
     runHook postCheck
   '';
 
-  postInstall = ''
-    # `treehouse update` cannot replace a binary in the store.
-    wrapProgram $out/bin/treehouse --set-default TREEHOUSE_NO_UPDATE_CHECK 1
-  ''
-  + lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
+  postInstall = lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
     installShellCompletion --cmd treehouse \
       --bash <($out/bin/treehouse completion bash) \
       --fish <($out/bin/treehouse completion fish) \
