@@ -27,7 +27,6 @@ GOLDEN = [
     "pkg:generic/qoder-cli-cn",
     "pkg:generic/swamp-club/swamp",
     "pkg:github/AltanS/collie",
-    "pkg:github/BloopAI/vibe-kanban",
     "pkg:github/Dicklesworthstone/beads_rust",
     "pkg:github/JetBrains/junie",
     "pkg:github/MrLesk/Backlog.md",
