@@ -1026,6 +1026,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>agent-manager</strong> - Terminal UI that runs coding-agent CLIs side by side, each in its own tmux session</summary>
+
+- **Source**: source
+- **License**: Apache-2.0
+- **Homepage**: https://agent-manager.dev
+- **Usage**: `nix run github:numtide/llm-agents.nix#agent-manager -- --help`
+- **Nix**: [packages/agent-manager/package.nix](packages/agent-manager/package.nix)
+
+</details>
+<details>
 <summary><strong>aven</strong> - Local-first task manager for power users and agents</summary>
 
 - **Source**: source
