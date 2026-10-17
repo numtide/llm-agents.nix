@@ -1722,16 +1722,6 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 - **Nix**: [packages/skills/package.nix](packages/skills/package.nix)
 
 </details>
-<details>
-<summary><strong>skills-installer</strong> - Install agent skills across multiple AI coding clients</summary>
-
-- **Source**: bytecode
-- **License**: MIT
-- **Homepage**: https://github.com/Kamalnrf/claude-plugins
-- **Usage**: `nix run github:numtide/llm-agents.nix#skills-installer -- --help`
-- **Nix**: [packages/skills-installer/package.nix](packages/skills-installer/package.nix)
-
-</details>
 
 ### Utilities
 
