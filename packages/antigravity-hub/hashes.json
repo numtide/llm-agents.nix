@@ -1,0 +1,18 @@
+{
+  "version": "2.23.0",
+  "buildId": "5238607586394112",
+  "platforms": {
+    "x86_64-linux": {
+      "platform": "linux-x64",
+      "hash": "sha256-ldbiZ1Ae4yur3YpkPpDaQil1LKNFR6FgcvxBpLrc3xA="
+    },
+    "aarch64-linux": {
+      "platform": "linux-arm",
+      "hash": "sha256-la/sqgFvG6yqIFftG0eB4ZgUXpu9pZLTc3h/6/dIR5U="
+    },
+    "aarch64-darwin": {
+      "platform": "darwin-arm",
+      "hash": "sha256-YmIad/zkf8OT2rIpRmNCHGTA8R6RMzD7gXKf/SEoS64="
+    }
+  }
+}

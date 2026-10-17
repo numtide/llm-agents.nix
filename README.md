@@ -684,6 +684,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>antigravity-hub</strong> - Desktop environment for managing multiple autonomous agents across independent projects</summary>
+
+- **Source**: binary
+- **License**: unfree
+- **Homepage**: https://antigravity.google
+- **Usage**: `nix run github:numtide/llm-agents.nix#antigravity-hub -- --help`
+- **Nix**: [packages/antigravity-hub/package.nix](packages/antigravity-hub/package.nix)
+
+</details>
+<details>
 <summary><strong>autolith</strong> - Live, self-modifying Common Lisp AI agent</summary>
 
 - **Source**: source
