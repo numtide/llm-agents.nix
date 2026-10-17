@@ -338,6 +338,11 @@ else
 
     runScript = "claude-desktop";
 
+    # buildFHSEnv only links a fixed set of host /etc entries, which leaves out
+    # /etc/gitconfig, so git in the app's Claude Code sessions lost the system
+    # identity and signing config.
+    extraBwrapArgs = [ "--ro-bind-try /etc/gitconfig /etc/gitconfig" ];
+
     extraInstallCommands = ''
       ln -s ${unwrapped}/share $out/share
     '';
