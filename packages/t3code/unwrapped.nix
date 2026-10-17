@@ -75,7 +75,7 @@ let
     "@t3tools/scripts..."
   ];
 
-  appName = "T3 Code (Alpha)";
+  appName = "T3 Code (Beta)";
   desktopIcon =
     if stdenv.hostPlatform.isDarwin then
       "assets/prod/black-macos-1024.png"
