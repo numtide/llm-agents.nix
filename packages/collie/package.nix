@@ -4,7 +4,6 @@
   bun2nixLib,
   bun,
   fetchFromGitHub,
-  makeWrapper,
   jq,
   versionCheckHook,
   versionCheckHomeHook,
@@ -28,7 +27,6 @@ stdenv.mkDerivation {
   nativeBuildInputs = [
     bun2nixLib.hook
     bun
-    makeWrapper
   ];
 
   # Two lockfiles: the root bridge (Bun server) and the Vite/React web UI.
@@ -40,6 +38,8 @@ stdenv.mkDerivation {
   dontUseBunBuild = true;
   dontUseBunInstall = true;
   dontRunLifecycleScripts = true;
+  # Bun's compiled executable carries its JavaScript payload after the ELF image.
+  dontStrip = true;
 
   # "@types/bun": "latest" makes bun hit the registry even with a full
   # cache.  Pin it to the version the lockfile already resolved.
@@ -69,6 +69,8 @@ stdenv.mkDerivation {
     bun run build
     popd
 
+    bun run build:cli
+
     runHook postBuild
   '';
 
@@ -83,14 +85,14 @@ stdenv.mkDerivation {
     find node_modules -xtype l -delete
 
     mkdir -p $out/lib/collie
-    cp -r bridge cli docs scripts systemd node_modules package.json herdr-plugin.toml \
+    cp -r bin bridge cli docs scripts systemd node_modules package.json herdr-plugin.toml \
       $out/lib/collie/
     mkdir -p $out/lib/collie/web
     cp -r web/dist $out/lib/collie/web/dist
     cp -r web/src $out/lib/collie/web/src
 
-    makeWrapper ${lib.getExe bun} $out/bin/collie \
-      --add-flags "run $out/lib/collie/cli/main.ts"
+    mkdir -p $out/bin
+    ln -s $out/lib/collie/bin/collie $out/bin/collie
 
     runHook postInstall
   '';
@@ -104,6 +106,9 @@ stdenv.mkDerivation {
     runHook preInstallCheck
     test -f $out/lib/collie/web/dist/index.html
     test -f $out/lib/collie/web/dist/build-info.json
+    # Lifecycle commands launch this path, not the public CLI entrypoint.
+    test -x $out/lib/collie/bin/collie
+    $out/lib/collie/bin/collie --version
     runHook postInstallCheck
   '';
 
