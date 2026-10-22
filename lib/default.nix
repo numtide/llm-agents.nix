@@ -334,6 +334,11 @@ inputs."nixpkgs".lib.extend (
         githubId = 106609173;
         name = "Yoan Wainmann";
       };
+      NorbertBodziony = {
+        github = "NorbertBodziony";
+        githubId = 38857779;
+        name = "Norbert Bodziony";
+      };
     };
   }
 )
