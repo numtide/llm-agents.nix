@@ -341,6 +341,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>kimi-code-desktop</strong> - Desktop interface for Kimi Code's agentic coding workflows</summary>
+
+- **Source**: binary
+- **License**: unfree
+- **Homepage**: https://www.kimi.com/code
+- **Usage**: `nix run github:numtide/llm-agents.nix#kimi-code-desktop -- --help`
+- **Nix**: [packages/kimi-code-desktop/package.nix](packages/kimi-code-desktop/package.nix)
+
+</details>
+<details>
 <summary><strong>letta-code</strong> - Memory-first coding agent that learns and evolves across sessions</summary>
 
 - **Source**: bytecode
