@@ -59,6 +59,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>chock</strong> - Sandbox-first AI coding harness</summary>
+
+- **Source**: source
+- **License**: Apache-2.0
+- **Homepage**: https://chock.ws
+- **Usage**: `nix run github:numtide/llm-agents.nix#chock -- --help`
+- **Nix**: [packages/chock/package.nix](packages/chock/package.nix)
+
+</details>
+<details>
 <summary><strong>claude-code</strong> - Agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster</summary>
 
 - **Source**: binary
