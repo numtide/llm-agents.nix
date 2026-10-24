@@ -11,29 +11,22 @@ import argparse
 import re
 import sys
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 
-# @parcel/watcher uses detect-libc in a named worker. Its process.report
-# fallback trips a CFI guard in the bundled Owl/Electron runtime on NixOS.
-# detect-libc falls back to its ELF/filesystem/ldd probes instead.
-SKIP_PROCESS_REPORT = (
-    re.compile(rb"isLinux\(\) && process\.report"),
-    lambda _m: b"false /* nix:skip report */",
-)
+
+@dataclass
+class Patch:
+    """Replace the single match of `pattern` in place."""
+
+    pattern: re.Pattern[bytes]
+    replace: Callable[[re.Match[bytes]], bytes]
+
 
 # The app copies bundled plugins to ~/.codex with fs.cp, which preserves the
 # store's read-only modes, and then fails to rewrite manifests there. `exec` is
 # the promisified execFile helper from the darwin `ditto` branch; hoisting
 # `platform` into a local buys the bytes to stay inside the byte budget.
-COPY_PLUGINS_WRITABLE = re.compile(
-    rb"(?P<fn>async function [\w$]+\(e,t\)\{)"
-    rb"if\((?P<plat>[\w$]+\.default\.platform)===`darwin`\)"
-    rb"(?P<ditto>\{await (?P<exec>[\w$]+)\(`/usr/bin/ditto`,\[`--noqtn`,e,t\]\);return\})"
-    rb"if\((?P=plat)!==`win32`\)\{"
-    rb"await [\w$]+\.default\.cp\(e,t,\{recursive:!0,verbatimSymlinks:!0\}\);return\}"
-)
-
-
 def _copy_writable(m: re.Match[bytes]) -> bytes:
     return (
         m["fn"]
@@ -49,9 +42,31 @@ def _copy_writable(m: re.Match[bytes]) -> bytes:
     )
 
 
-PATCHES: list[tuple[re.Pattern[bytes], Callable[[re.Match[bytes]], bytes]]] = [
-    SKIP_PROCESS_REPORT,
-    (COPY_PLUGINS_WRITABLE, _copy_writable),
+PATCHES = [
+    # detect-libc's process.report probe trips a CFI guard in the bundled
+    # Owl/Electron runtime and kills the process with SIGILL. Make its
+    # `isLinux() && process.report` guard false so detect-libc falls back to
+    # its ELF/filesystem/ldd probes. First the source copy in @parcel/watcher's
+    # worker ...
+    Patch(
+        re.compile(rb"isLinux\(\) && process\.report"),
+        lambda _m: b"isLinux() && false",
+    ),
+    # ... then the minified copy in the main process, loaded by LaTeX previews.
+    Patch(
+        re.compile(rb"if\([\w$]+\(\)&&process\.report\)\{let"),
+        lambda _m: b"if(false){let",
+    ),
+    Patch(
+        re.compile(
+            rb"(?P<fn>async function [\w$]+\(e,t\)\{)"
+            rb"if\((?P<plat>[\w$]+\.default\.platform)===`darwin`\)"
+            rb"(?P<ditto>\{await (?P<exec>[\w$]+)\(`/usr/bin/ditto`,\[`--noqtn`,e,t\]\);return\})"
+            rb"if\((?P=plat)!==`win32`\)\{"
+            rb"await [\w$]+\.default\.cp\(e,t,\{recursive:!0,verbatimSymlinks:!0\}\);return\}"
+        ),
+        _copy_writable,
+    ),
 ]
 
 
@@ -63,15 +78,15 @@ def main() -> None:
     asar: Path = args.asar
 
     data = asar.read_bytes()
-    for pattern, build in PATCHES:
-        matches = list(pattern.finditer(data))
+    for patch in PATCHES:
+        matches = list(patch.pattern.finditer(data))
         if len(matches) != 1:
             sys.exit(
-                f"expected 1 match for {pattern.pattern[:60]!r} in {asar}, got {len(matches)}"
+                f"expected 1 match for {patch.pattern.pattern[:60]!r} in {asar}, got {len(matches)}"
             )
         m = matches[0]
         original = m.group(0)
-        replacement = build(m)
+        replacement = patch.replace(m)
         if len(replacement) > len(original):
             sys.exit(f"replacement longer than original: {replacement[:60]!r}...")
         data = (
