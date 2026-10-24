@@ -3,7 +3,8 @@
   stdenv,
   flake,
   fetchFromGitHub,
-  zig,
+  # build.zig uses b.args, removed in Zig 0.17
+  zig_0_16,
   makeWrapper,
   nodejs,
   curl,
@@ -22,7 +23,7 @@ stdenv.mkDerivation (finalAttrs: {
   };
 
   nativeBuildInputs = [
-    zig.hook
+    zig_0_16.hook
     makeWrapper
   ];
 

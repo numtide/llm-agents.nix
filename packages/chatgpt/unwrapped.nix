@@ -40,6 +40,7 @@
   qt5,
   qt6,
   systemd,
+  tpm2-tss,
   wayland,
   xdg-utils,
   libx11,
@@ -108,6 +109,8 @@ stdenv.mkDerivation {
     pipewire
     stdenv.cc.cc.lib
     systemd
+    # remote-control-device-key.node keeps its device key in the TPM
+    tpm2-tss
     wayland
     libx11
     libxcomposite
