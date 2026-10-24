@@ -15,14 +15,24 @@
   alsa-lib,
 }:
 
+let
+  srcAttrs =
+    if stdenv.hostPlatform.isAarch64 then
+      {
+        url = "https://registry.npmjs.org/@memvid/cli-linux-arm64/-/cli-linux-arm64-2.0.160.tgz";
+        hash = "sha256-TSPIOC2tp+ZHdoUG7nn/hxEZaIL09hXEJAjYbFMlTgM=";
+      }
+    else
+      {
+        url = "https://registry.npmjs.org/@memvid/cli-linux-x64/-/cli-linux-x64-2.0.160.tgz";
+        hash = "sha256-we0KZzKrYRATJElP9OkR4hERQ5S+Zb9qFDCO3WJtV/I=";
+      };
+in
 stdenv.mkDerivation rec {
   pname = "memvid-cli";
   version = "2.0.160";
 
-  src = fetchzip {
-    url = "https://registry.npmjs.org/@memvid/cli-linux-x64/-/cli-linux-x64-${version}.tgz";
-    hash = "sha256-we0KZzKrYRATJElP9OkR4hERQ5S+Zb9qFDCO3WJtV/I=";
-  };
+  src = fetchzip srcAttrs;
 
   nativeBuildInputs = [
     formatelf
@@ -82,6 +92,9 @@ stdenv.mkDerivation rec {
     ];
     maintainers = with flake.lib.maintainers; [ smdex ];
     mainProgram = "memvid";
-    platforms = [ "x86_64-linux" ];
+    platforms = [
+      "x86_64-linux"
+      "aarch64-linux"
+    ];
   };
 }
