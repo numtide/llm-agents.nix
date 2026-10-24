@@ -32,18 +32,18 @@ let
 in
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "kandev-desktop";
-  version = "0.97.0";
+  version = "0.98.0";
 
   src = fetchFromGitHub {
     owner = "kdlbs";
     repo = "kandev";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-MRSDjcdE//vK6kOXs5d9pZmcosuhUcSoXu9W2XZrwfI=";
+    hash = "sha256-P5Xg0QhvOJyd7g0pjO7yk602S9xWcbzjxGORjl1r5BI=";
   };
 
   cargoRoot = "apps/desktop/src-tauri";
   buildAndTestSubdir = finalAttrs.cargoRoot;
-  cargoHash = "sha256-sB+KnwMjVcdjh3g0kAV7jQDb6m6up8YPWTUHsRCwBMQ=";
+  cargoHash = "sha256-XtR+TAyTOO0d6pswh9UxYlBvfOEwG45d7bbjGTbzgIQ=";
 
   pnpmRoot = "apps";
   pnpmDeps = fetchPnpmDeps {
@@ -51,7 +51,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
     sourceRoot = "${finalAttrs.src.name}/apps";
     inherit pnpm;
     fetcherVersion = 4;
-    hash = "sha256-40CjdyJSiev3NLUHVc90ZmtwzUBq3P6gQU0fPKc9LPM=";
+    hash = "sha256-6MH8sMO0XFh8DE++pREi2b/PfRgF14J0x0qxsVe4nSg=";
   };
 
   nativeBuildInputs = [
