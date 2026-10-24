@@ -461,6 +461,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>openbot</strong> - Local-first multi-agent desktop workspace for Codex, Claude, Grok and other coding agents</summary>
+
+- **Source**: binary
+- **License**: unfree
+- **Homepage**: https://github.com/nightly-labs/openbot
+- **Usage**: `nix run github:numtide/llm-agents.nix#openbot -- --help`
+- **Nix**: [packages/openbot/package.nix](packages/openbot/package.nix)
+
+</details>
+<details>
 <summary><strong>opencode</strong> - AI coding agent built for the terminal</summary>
 
 - **Source**: binary
