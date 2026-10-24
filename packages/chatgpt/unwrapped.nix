@@ -35,11 +35,13 @@
   libxkbcommon,
   nspr,
   nss,
+  openssl,
   pango,
   pipewire,
   qt5,
   qt6,
   systemd,
+  tpm2-tss,
   wayland,
   xdg-utils,
   libx11,
@@ -104,10 +106,12 @@ stdenv.mkDerivation {
     libxkbcommon
     nspr
     nss
+    openssl
     pango
     pipewire
     stdenv.cc.cc.lib
     systemd
+    tpm2-tss
     wayland
     libx11
     libxcomposite
