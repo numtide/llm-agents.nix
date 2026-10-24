@@ -17,7 +17,7 @@
 
 let
   srcAttrs =
-    if stdenv.hostPlatform.isAArch64 then
+    if pkgs.stdenv.hostPlatform.isAarch64 then
       {
         url = "https://registry.npmjs.org/@memvid/cli-linux-arm64/-/cli-linux-arm64-2.0.160.tgz";
         # FIXME: placeholder — replace with the real fetchzip (unpacked tree) hash
