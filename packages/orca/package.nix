@@ -254,7 +254,10 @@ in
 }).overrideAttrs
   (
     lib.optionalAttrs stdenvNoCC.hostPlatform.isDarwin {
-      nativeBuildInputs = [ unzip ];
+      nativeBuildInputs = [
+        unzip
+        makeWrapper
+      ];
       buildInputs = [ ];
       runtimeDependencies = [ ];
       desktopItems = [ ];
@@ -266,7 +269,7 @@ in
         runHook preInstall
         mkdir -p $out/Applications $out/bin
         cp -a Orca.app $out/Applications/
-        ln -s $out/Applications/Orca.app/Contents/MacOS/Orca $out/bin/orca-ide
+        makeWrapper $out/Applications/Orca.app/Contents/MacOS/Orca $out/bin/orca-ide
         ln -s $out/Applications/Orca.app/Contents/Resources/bin/orca $out/bin/orca
         runHook postInstall
       '';
