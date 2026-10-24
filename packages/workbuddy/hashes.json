@@ -1,0 +1,18 @@
+{
+  "version": "5.6.2.40046327",
+  "versions": {
+    "x86_64-linux": "5.6.2.40046327",
+    "aarch64-linux": "5.6.2.40046327",
+    "aarch64-darwin": "5.8.4.41366630"
+  },
+  "urls": {
+    "x86_64-linux": "https://download.codebuddy.cn/workbuddy/saas/linux-x64-deb/WorkBuddy-linux-x64-deb-5.6.2.40046327-c7b525f3.deb",
+    "aarch64-linux": "https://download.codebuddy.cn/workbuddy/saas/linux-arm64-deb/WorkBuddy-linux-arm64-deb-5.6.2.40046327-c7b525f3.deb",
+    "aarch64-darwin": "https://download.codebuddy.ai/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.8.4.41366630-73952edb.zip"
+  },
+  "hashes": {
+    "x86_64-linux": "sha256-EhSa2MDNdI/VBi2PYseCfWiNgJVCetqZsa6ecBmJdSM=",
+    "aarch64-linux": "sha256-VhgiV4Q104KgbQoLB5pLFX9otYjJ/nLVieKoiy/RVfo=",
+    "aarch64-darwin": "sha256-C4BXg6cyx8mBauvpctl+/+JNZ4yuiYIeBicM2GYQVsM="
+  }
+}
