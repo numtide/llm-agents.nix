@@ -78,6 +78,8 @@ rustPlatform.buildRustPackage (finalAttrs: {
   # child process is not reaped within the test's deadline in the darwin sandbox
   ++ lib.optionals stdenv.hostPlatform.isDarwin [
     "--skip=jobs::localbox::tests::local_job_lifecycle"
+    # does not see the job it just spawned as running in the darwin sandbox
+    "--skip=jobs::localbox::tests::orphaned_job_probe_distinguishes_an_abandoned_launch_from_a_missing_pid"
   ];
 
   dontUseCargoParallelTests = true; # ETXTBSY: tests write+exec scripts

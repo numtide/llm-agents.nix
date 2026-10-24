@@ -161,11 +161,11 @@ stdenvNoCC.mkDerivation {
 
         for size in 32 64 128; do
           install -Dm644 \
-            usr/share/icons/hicolor/''${size}x''${size}/apps/ai.opencode.desktop.png \
+            usr/share/icons/hicolor/''${size}x''${size}/apps/ai.opencode.png \
             $out/share/icons/hicolor/''${size}x''${size}/apps/opencode2-desktop.png
         done
 
-        makeWrapper $out/libexec/opencode2-desktop/ai.opencode.desktop \
+        makeWrapper $out/libexec/opencode2-desktop/ai.opencode \
           $out/bin/opencode2-desktop \
           --suffix PATH : ${lib.makeBinPath [ xdg-utils ]} \
           --prefix XDG_DATA_DIRS : "$XDG_ICON_DIRS:$GSETTINGS_SCHEMAS_PATH"

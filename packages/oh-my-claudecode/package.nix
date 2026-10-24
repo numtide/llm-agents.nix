@@ -9,16 +9,16 @@
 buildNpmPackage (finalAttrs: {
   npmDepsFetcherVersion = 2;
   pname = "oh-my-claudecode";
-  version = "5.7.7";
+  version = "5.7.12";
 
   src = fetchFromGitHub {
     owner = "yeachan-heo";
     repo = "oh-my-claudecode";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-V4/ZThF1VYeniERVCJdOp8GfGymSWxol8LFngWYfKQo=";
+    hash = "sha256-EnsZh0wQkLM7fnvBt362VUHWn3bksHjtJHPtuKCUPpE=";
   };
 
-  npmDepsHash = "sha256-sh4P2KXIA6q4EUhjmfi7qnVenz44WHAWm28uwUmNGg0=";
+  npmDepsHash = "sha256-GiXsyUqFNTE7uacIL+ykfde7qARlWj324h+ISzWkBSw=";
   makeCacheWritable = true;
 
   # Native deps (better-sqlite3, @ast-grep/napi) need rebuild skipped

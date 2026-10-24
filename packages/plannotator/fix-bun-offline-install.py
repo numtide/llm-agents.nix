@@ -82,7 +82,8 @@ def _remove_deps(data: dict, names: set[str]) -> bool:
 
 def _exactify_ranges(data: dict, resolved: dict[str, str]) -> bool:
     changed = False
-    for section in DEP_SECTIONS:
+    # patch_lockfile exactifies every range in bun.lock, overrides included.
+    for section in [*DEP_SECTIONS, "overrides"]:
         deps = data.get(section)
         if not isinstance(deps, dict):
             continue

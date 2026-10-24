@@ -4,7 +4,7 @@
   darwin,
   flake,
   buildNpmPackage,
-  electron_42,
+  electron_44,
   hermes-agent,
   makeWrapper,
   xcbuild,
@@ -22,11 +22,8 @@
 }:
 
 let
-  # Electron 40 is EOL in nixpkgs. Upstream pins 40.10.2 exactly because its
-  # npm installer changed in later 40.x releases; Nix skips that installer and
-  # supplies Electron separately. Keep the intentional major bump explicit and
-  # rebuild node-pty against the runtime we actually ship.
-  electron = electron_42;
+  # Must match the major version upstream pins; node-pty is rebuilt against it.
+  electron = electron_44;
 
   isLinux = stdenv.hostPlatform.isLinux;
   isDarwin = stdenv.hostPlatform.isDarwin;
@@ -101,8 +98,8 @@ buildNpmPackage {
 
     upstream_electron_manifest=$(node -p "require('./apps/desktop/package.json').devDependencies.electron")
     upstream_electron_lock=$(node -p "(p => (p['apps/desktop/node_modules/electron'] ?? p['node_modules/electron']).version)(require('./package-lock.json').packages)")
-    if [[ "$upstream_electron_manifest" != 40.10.2 || "$upstream_electron_lock" != 40.10.2 ]]; then
-      echo "error: upstream Electron pins changed from the reviewed 40.10.2" >&2
+    if [[ "''${upstream_electron_manifest%%.*}" != ${lib.versions.major electron.version} || "''${upstream_electron_lock%%.*}" != ${lib.versions.major electron.version} ]]; then
+      echo "error: upstream Electron major differs from electron_${lib.versions.major electron.version}" >&2
       echo "manifest=$upstream_electron_manifest lock=$upstream_electron_lock" >&2
       echo "Re-check Electron compatibility and update this package deliberately." >&2
       exit 1

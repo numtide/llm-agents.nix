@@ -24,13 +24,13 @@ let
 in
 rustPlatform.buildRustPackage rec {
   pname = "ccusage";
-  version = "20.0.40";
+  version = "20.0.42";
 
   src = fetchFromGitHub {
     owner = "ccusage";
     repo = "ccusage";
     tag = "v${version}";
-    hash = "sha256-5wfeearbadZJxGzn30lZ0Xj02C1YGIzrobvyTXrAiso=";
+    hash = "sha256-2rpV5D5DvsI/iJ1ZhSwv4urKSHQkT5oyZw9kLPLnSmM=";
   };
 
   sourceRoot = "${src.name}/rust";

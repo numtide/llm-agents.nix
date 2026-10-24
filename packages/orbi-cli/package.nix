@@ -24,13 +24,14 @@ python3.pkgs.buildPythonApplication rec {
 
   # Suffix, so that the user's own gh, git and pi win.
   makeWrapperArgs = [
-    "--suffix PATH : ${
-      lib.makeBinPath [
-        gh
-        git
-        pi
-      ]
-    }"
+    "--suffix"
+    "PATH"
+    ":"
+    (lib.makeBinPath [
+      gh
+      git
+      pi
+    ])
   ];
 
   # The sdist ships tests/ without its conftest.py and helper modules.
