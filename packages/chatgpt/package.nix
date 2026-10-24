@@ -12,7 +12,8 @@
   nspr,
   nss,
   zlib,
-  chatgpt-unwrapped ? callPackage ./unwrapped.nix { },
+  withQt ? false,
+  chatgpt-unwrapped ? callPackage ./unwrapped.nix { inherit withQt; },
   commandLineArgs ? "",
 }:
 
