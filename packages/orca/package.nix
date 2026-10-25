@@ -8,8 +8,15 @@
   unzip,
   formatelf,
   makeWrapper,
+  gobject-introspection,
+  wrapGAppsHook3,
   copyDesktopItems,
   makeDesktopItem,
+  python3,
+  versionCheckHook,
+  versionCheckHomeHook,
+  codesignCheckHook,
+  mkCodesignCheck,
 
   alsa-lib,
   at-spi2-atk,
@@ -50,6 +57,10 @@
   # `orca serve` and the computer-use surface shell out to these; the deb
   # declares them as Depends.
   git,
+  coreutils,
+  openssh,
+  which,
+  wl-clipboard,
   xclip,
   xdotool,
   xdg-utils,
@@ -62,6 +73,21 @@
 }:
 
 let
+  computerUsePython = python3.withPackages (ps: [ ps.pygobject3 ]);
+  teamId = "6CX3WHS9HZ";
+  runtimeTools = [
+    coreutils
+    git
+    openssh
+    python3
+    which
+    wl-clipboard
+    xclip
+    xdg-utils
+    xdotool
+    xvfb
+    xvfb-run
+  ];
   source = platformSource {
     hashesFile = ./hashes.json;
     platforms = {
@@ -92,7 +118,12 @@ let
     # Electron reports WM_CLASS=orca even though the executable is orca-ide,
     # so docks only group the window with this exact value.
     startupWMClass = "orca";
-    mimeTypes = [ "x-scheme-handler/orca" ];
+    mimeTypes = [
+      "text/markdown"
+      "text/csv"
+      "text/tab-separated-values"
+      "x-scheme-handler/orca"
+    ];
   };
 in
 (stdenvNoCC.mkDerivation {
@@ -103,6 +134,8 @@ in
     formatelf
     copyDesktopItems
     makeWrapper
+    gobject-introspection
+    wrapGAppsHook3
   ];
 
   buildInputs = [
@@ -177,43 +210,17 @@ in
 
     chmod +x $out/lib/Orca/orca-ide $out/lib/Orca/resources/bin/orca-ide
 
-    makeWrapper "$out/lib/Orca/orca-ide" "$out/bin/orca-ide" \
-      --suffix PATH : "${
-        lib.makeBinPath [
-          git
-          xclip
-          xdg-utils
-          xdotool
-          xvfb
-          xvfb-run
-        ]
-      }" \
-      --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath [ libglvnd ]}" \
-      --prefix XDG_DATA_DIRS : "$XDG_ICON_DIRS:$GSETTINGS_SCHEMAS_PATH"
-
-    # CLI launches bypass the GUI wrapper. Wrap the bundled shim itself so
-    # `orca open` and Orca's self-installed symlink also inherit native EGL.
-    wrapProgram "$out/lib/Orca/resources/bin/orca-ide" \
-      --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath [ libglvnd ]}"
-
-    # The shim re-execs the Electron binary under ELECTRON_RUN_AS_NODE on the
-    # CLI entrypoint in app.asar.unpacked. Upstream's deb symlinks it onto PATH
-    # from after-install.sh; expose it as `orca`, the name the docs use.
-    makeWrapper "$out/lib/Orca/resources/bin/orca-ide" "$out/bin/orca" \
-      --suffix PATH : "${
-        lib.makeBinPath [
-          git
-          xclip
-          xdg-utils
-          xdotool
-          xvfb
-          xvfb-run
-        ]
-      }"
+    mkdir -p "$out/libexec"
+    cat > "$out/libexec/orca-computer-use.py" <<EOF
+    import os
+    import sys
+    os.execv("$out/libexec/orca-computer-use-python", ["$out/libexec/orca-computer-use-python", *sys.argv[1:]])
+    EOF
 
     runHook postInstall
   '';
 
+  dontWrapGApps = true;
   # orcad-template/targets holds per-platform daemon builds that Orca uploads to
   # remote hosts and verifies by sha256, so they must stay unpatched and unstripped.
   dontStrip = true;
@@ -222,10 +229,50 @@ in
     autoPatchelf \
       $(find "$out/lib/Orca" -mindepth 1 -maxdepth 1 ! -name resources) \
       $(find "$out/lib/Orca/resources" -mindepth 1 -maxdepth 1 ! -name orcad-template)
+
+    makeWrapper "${lib.getExe computerUsePython}" "$out/libexec/orca-computer-use-python" \
+      "''${gappsWrapperArgs[@]}" \
+      --add-flags "$out/lib/Orca/resources/computer-use-linux/runtime.py"
+
+    # The provider override also reaches local daemon copies, without changing
+    # their remote-deployment hashes or the Python used by coding agents.
+    launcherArgs=(
+      "''${gappsWrapperArgs[@]}"
+      --prefix XDG_DATA_DIRS : "$XDG_ICON_DIRS"
+      --set-default ORCA_COMPUTER_DESKTOP_SCRIPT_PROVIDER_PATH "$out/libexec/orca-computer-use.py"
+      --suffix PATH : "${lib.makeBinPath runtimeTools}"
+      --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath [ libglvnd ]}"
+    )
+    makeWrapper "$out/lib/Orca/orca-ide" "$out/bin/orca-ide" "''${launcherArgs[@]}"
+    wrapProgram "$out/lib/Orca/resources/bin/orca-ide" "''${launcherArgs[@]}"
+    ln -s "$out/lib/Orca/resources/bin/orca-ide" "$out/bin/orca"
+  '';
+
+  doInstallCheck = true;
+  versionCheckProgram = "${placeholder "out"}/bin/orca";
+  nativeInstallCheckInputs = [
+    versionCheckHook
+    versionCheckHomeHook
+  ];
+  postInstallCheck = ''
+    makeWrapper "${lib.getExe computerUsePython}" "$TMPDIR/check-computer-use-python" \
+      "''${gappsWrapperArgs[@]}"
+    "$TMPDIR/check-computer-use-python" -c '
+    import gi
+    gi.require_version("Atspi", "2.0")
+    gi.require_version("Gdk", "3.0")
+    gi.require_version("GdkPixbuf", "2.0")
+    from gi.repository import Atspi, Gdk, GdkPixbuf
+    '
   '';
 
   passthru = {
     category = "AI Coding Agents";
+    tests.codesign = mkCodesignCheck {
+      name = "orca";
+      inherit teamId;
+      srcs = source.darwinSrcs;
+    };
 
     updater = mkUpdater (
       source.updater
@@ -264,6 +311,14 @@ in
       unpackPhase = null;
       sourceRoot = ".";
       dontFixup = true;
+      postFixup = "";
+      nativeInstallCheckInputs = [
+        versionCheckHook
+        versionCheckHomeHook
+        codesignCheckHook
+      ];
+      codesignTeamId = teamId;
+      postInstallCheck = "";
 
       installPhase = ''
         runHook preInstall
