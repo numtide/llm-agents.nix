@@ -2,7 +2,6 @@
   lib,
   stdenv,
   python3,
-  fetchFromGitHub,
   fetchPypi,
   fetchurl,
   callPackage,
@@ -90,24 +89,6 @@ let
     };
   };
 
-  # mistral-vibe >=2.6 needs opentelemetry-semantic-conventions>=0.60b1
-  # (GEN_AI_PROVIDER_NAME, issue #3668); nixpkgs ships 0.55b0. The otel stack is
-  # a lockstep monorepo, so bumping opentelemetry-api's src bumps everything.
-  otelVersion = "1.40.0";
-  otelContribVersion = "0.61b0";
-  otelSrc = fetchFromGitHub {
-    owner = "open-telemetry";
-    repo = "opentelemetry-python";
-    tag = "v${otelVersion}";
-    hash = "sha256-1KVy9s+zjlB4w7E45PMCWRxPus24bgBmmM3k2R9d+Jg=";
-  };
-  otelContribSrc = fetchFromGitHub {
-    owner = "open-telemetry";
-    repo = "opentelemetry-python-contrib";
-    tag = "v${otelContribVersion}";
-    hash = "sha256-DT13gcYPNYXBPnf622WsA16C+7sabJfOshDquHn06Ok=";
-  };
-
   python = python3.override {
     self = python;
     packageOverrides = _pyfinal: pyprev: {
@@ -139,35 +120,6 @@ let
       mistralai = callPackage ./mistralai.nix { python3 = python; };
       agent-client-protocol = callPackage ./agent-client-protocol.nix { python3 = python; };
 
-      opentelemetry-api = pyprev.opentelemetry-api.overridePythonAttrs (_: {
-        version = otelVersion;
-        src = otelSrc;
-        sourceRoot = "${otelSrc.name}/opentelemetry-api";
-      });
-
-      # 1.40.0 added timing-sensitive tests that flake on loaded builders.
-      opentelemetry-exporter-otlp-proto-http =
-        pyprev.opentelemetry-exporter-otlp-proto-http.overridePythonAttrs
-          (old: {
-            disabledTests = (old.disabledTests or [ ]) ++ [
-              "test_retry_timeout"
-              "test_shutdown_interrupts_retry_backoff"
-            ];
-          });
-
-      opentelemetry-instrumentation = pyprev.opentelemetry-instrumentation.overridePythonAttrs (_: {
-        version = otelContribVersion;
-        src = otelContribSrc;
-        sourceRoot = "${otelContribSrc.name}/opentelemetry-instrumentation";
-      });
-
-      # Set explicitly: nixpkgs inherits this from opentelemetry-instrumentation,
-      # but overridePythonAttrs won't re-evaluate that reference.
-      opentelemetry-semantic-conventions =
-        pyprev.opentelemetry-semantic-conventions.overridePythonAttrs
-          (_: {
-            version = otelContribVersion;
-          });
     };
   };
 
@@ -202,6 +154,7 @@ python.pkgs.buildPythonApplication {
     giturlparse
     google-auth
     httpx
+    httpx-sse
     humanize
     jsonpatch
     keyring
