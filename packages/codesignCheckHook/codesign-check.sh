@@ -3,6 +3,9 @@
 # carries a Developer ID signature from team $codesignTeamId whose certificate
 # chains to Apple's root CA. Runs on any host: rcodesign and openssl do not
 # need macOS.
+#
+# $codesignTeamId may name several teams separated by spaces, for an app that
+# bundles a helper signed by its own publisher.
 
 codesignIsMachO() {
   local magic
@@ -17,7 +20,7 @@ codesignIsMachO() {
 codesignCheckSlice() {
   local file=$1
   shift
-  local dir subject
+  local dir subject team
   dir=$(mktemp -d)
   rcodesign extract "$@" cms-pem "$file" >"$dir/cms.pem"
   rcodesign extract "$@" code-directory-raw "$file" >"$dir/cd.bin"
@@ -27,10 +30,13 @@ codesignCheckSlice() {
     -CAfile @appleRootCa@ -purpose any -ignore_critical -out /dev/null -signer "$dir/signer.pem"
   subject=$(openssl x509 -in "$dir/signer.pem" -noout -subject -nameopt RFC2253)
   rm -rf "$dir"
-  if [[ $subject != *"CN=Developer ID Application:"* || $subject != *"OU=$codesignTeamId,"* ]]; then
-    echo "codesignCheckHook: $file is signed by '$subject', expected team $codesignTeamId" >&2
-    return 1
+  if [[ $subject == *"CN=Developer ID Application:"* ]]; then
+    for team in $codesignTeamId; do
+      [[ $subject == *"OU=$team,"* ]] && return 0
+    done
   fi
+  echo "codesignCheckHook: $file is signed by '$subject', expected team $codesignTeamId" >&2
+  return 1
 }
 
 codesignCheckFile() {
