@@ -364,6 +364,11 @@ inputs."nixpkgs".lib.extend (
         githubId = 101867832;
         name = "Jan Rüggeberg";
       };
+      rucadi = {
+        github = "rucadi";
+        githubId = 6445619;
+        name = "Ruben Cano";
+      };
     };
   }
 )
