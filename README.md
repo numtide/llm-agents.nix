@@ -854,6 +854,17 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>workbuddy</strong> - Desktop AI assistant for working with local files and automating tasks</summary>
+
+- **Source**: binary
+- **License**: unfree
+- **Homepage**: https://www.workbuddy.ai/
+- **Usage**: `nix run github:numtide/llm-agents.nix#workbuddy -- --help`
+- **Nix**: [packages/workbuddy/package.nix](packages/workbuddy/package.nix)
+- **Documentation**: See [packages/workbuddy/README.md](packages/workbuddy/README.md) for detailed usage
+
+</details>
+<details>
 <summary><strong>zeroclaw</strong> - Fast, small, and fully autonomous AI assistant infrastructure</summary>
 
 - **Source**: source
