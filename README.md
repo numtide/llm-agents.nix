@@ -1866,6 +1866,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>dquickts</strong> - QuickJS with durable execution and native TypeScript</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/stencil-hq/dquickts
+- **Usage**: `nix run github:numtide/llm-agents.nix#dquickts -- --help`
+- **Nix**: [packages/dquickts/package.nix](packages/dquickts/package.nix)
+
+</details>
+<details>
 <summary><strong>executor</strong> - MCP gateway that gives coding agents one interface to many tools</summary>
 
 - **Source**: binary
