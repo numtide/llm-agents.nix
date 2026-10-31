@@ -13,13 +13,13 @@ let
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "mercat";
-  version = "0.3.4";
+  version = "0.3.5";
 
   src = fetchFromGitHub {
     owner = "tawago";
     repo = "mercat";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-R/cVvHcM3U+CTp2TxHjcEge8MRi57YDVSsCj3Du5BlI=";
+    hash = "sha256-SN3XGr08bKw2yNDFVku3pUOGh0Ww17LZ2GPEnJjv7JQ=";
   };
 
   # All of mercat's dependencies (koino, vaxis, uucode) are lazy, so fetch
