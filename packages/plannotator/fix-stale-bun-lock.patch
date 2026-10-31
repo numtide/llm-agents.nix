@@ -1,5 +1,5 @@
 diff --git a/bun.lock b/bun.lock
-index e104ea6..cbf7fde 100644
+index 8f0de2d..83aee66 100644
 --- a/bun.lock
 +++ b/bun.lock
 @@ -25,7 +25,7 @@
@@ -7,7 +7,7 @@ index e104ea6..cbf7fde 100644
      "apps/dsh-plugin": {
        "name": "@plannotator/dsh",
 -      "version": "0.28.35",
-+      "version": "0.28.40",
++      "version": "0.28.42",
      },
      "apps/feedback-service": {
        "name": "@plannotator/feedback-service",
@@ -16,7 +16,7 @@ index e104ea6..cbf7fde 100644
      "apps/opencode-plugin": {
        "name": "@plannotator/opencode",
 -      "version": "0.28.33",
-+      "version": "0.28.40",
++      "version": "0.28.42",
        "devDependencies": {
          "@opencode-ai/plugin": "1.19.3",
          "@opencode/plugin": "2.0.32",
@@ -25,7 +25,7 @@ index e104ea6..cbf7fde 100644
      "apps/pi-extension": {
        "name": "@plannotator/pi-extension",
 -      "version": "0.28.33",
-+      "version": "0.28.40",
++      "version": "0.28.42",
        "dependencies": {
          "@joplin/turndown-plugin-gfm": "^1.0.68",
          "@pierre/diffs": "1.5.2",
@@ -38,16 +38,16 @@ index e104ea6..cbf7fde 100644
        "dependencies": {
          "@agentclientprotocol/sdk": "1.9.0",
          "@plannotator/acp-client": "workspace:*",
-@@ -363,7 +363,7 @@
+@@ -373,7 +373,7 @@
      },
      "packages/server": {
        "name": "@plannotator/server",
 -      "version": "0.28.33",
-+      "version": "0.28.40",
++      "version": "0.28.42",
        "dependencies": {
          "@modelcontextprotocol/server": "2.3.1",
          "@pierre/diffs": "1.5.2",
-@@ -778,6 +778,12 @@
+@@ -789,6 +789,12 @@
  
      "@earendil-works/pi-tui": ["@earendil-works/pi-tui@0.84.4", "", { "dependencies": { "get-east-asian-width": "1.6.0", "marked": "18.0.5" } }, "sha512-nPUnwDkLtupPXnZQYrCwPFcuTydCDqTY6ZbFqhsL4S4kVq0AT418kPa/6uXwtaCD+MjBNBltb7ScTYX65yeE1w=="],
  
@@ -60,7 +60,7 @@ index e104ea6..cbf7fde 100644
      "@emnapi/core": ["@emnapi/core@1.11.3", "", { "dependencies": { "@emnapi/wasi-threads": "1.2.3", "tslib": "^2.4.0" } }, "sha512-zLpS5asjEb7lq8jYLq37N6XKaE41DIexlY1rF/z4/tIl3wo13Sqm28fRyfIsKZD+NZ8mM5RoKkpW/rBcuoSZSg=="],
  
      "@emnapi/runtime": ["@emnapi/runtime@1.11.3", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA=="],
-@@ -1104,6 +1110,8 @@
+@@ -1115,6 +1121,8 @@
  
      "@plannotator/core": ["@plannotator/core@workspace:packages/core"],
  
@@ -69,7 +69,7 @@ index e104ea6..cbf7fde 100644
      "@plannotator/editor": ["@plannotator/editor@workspace:packages/editor"],
  
      "@plannotator/feedback-service": ["@plannotator/feedback-service@workspace:apps/feedback-service"],
-@@ -2904,6 +2912,16 @@
+@@ -2917,6 +2925,16 @@
  
      "@earendil-works/pi-tui/marked": ["marked@18.0.5", "", { "bin": { "marked": "bin/marked.js" } }, "sha512-S6GcvALHg6K4ohtu4E7x0a1AqhAjp6cV8KhLSyN9qVapnzJkusVBxZRcIU9AeYsbe6P1hKDusSbEOzGyyuce6w=="],
  
@@ -86,7 +86,7 @@ index e104ea6..cbf7fde 100644
      "@isaacs/cliui/string-width": ["string-width@5.1.2", "", { "dependencies": { "eastasianwidth": "^0.2.0", "emoji-regex": "^9.2.2", "strip-ansi": "^7.0.1" } }, "sha512-HnLOCR3vjcY8beoNLtcjZ5/nxn2afmME6lhrDrebokqMap+XbeW8n9TXpPDOqdGK5qcI3oT0GKTW6wC7EMiVqA=="],
  
      "@jridgewell/gen-mapping/@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
-@@ -2940,12 +2958,6 @@
+@@ -2953,12 +2971,6 @@
  
      "@opencode/schema/effect": ["effect@4.0.1", "", {}, "sha512-b1VlQG9g8fwxE5QnIZuPoOP/0MsqHJSRKxUijjoM80E5q95FXrX5yWtY5XI8G+GJsBQAVSDbLS458z9a++uVvw=="],
  
@@ -99,7 +99,7 @@ index e104ea6..cbf7fde 100644
      "@opencode/util/effect": ["effect@4.0.1", "", {}, "sha512-b1VlQG9g8fwxE5QnIZuPoOP/0MsqHJSRKxUijjoM80E5q95FXrX5yWtY5XI8G+GJsBQAVSDbLS458z9a++uVvw=="],
  
      "@opencode/util/glob": ["glob@13.0.5", "", { "dependencies": { "minimatch": "^10.2.1", "minipass": "^7.1.2", "path-scurry": "^2.0.0" } }, "sha512-BzXxZg24Ibra1pbQ/zE7Kys4Ua1ks7Bn6pKLkVPZ9FZe4JQS6/Q7ef3LG1H+k7lUf5l4T3PLSyYyYJVYUvfgTw=="],
-@@ -3154,10 +3166,6 @@
+@@ -3167,10 +3179,6 @@
  
      "@npmcli/promise-spawn/which/isexe": ["isexe@4.0.0", "", {}, "sha512-FFUtZMpoZ8RqHS3XeXEmHWLA4thH+ZxCv2lOiPIn1Xc7CxrqhWzNSDzD+/chS/zbYezmiwWLdQC09JdQKmthOw=="],
  
