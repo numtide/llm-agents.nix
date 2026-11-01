@@ -704,6 +704,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>cindy</strong> - Open-source desktop client for Cindy</summary>
+
+- **Source**: source
+- **License**: Apache-2.0
+- **Homepage**: https://cindy.app
+- **Usage**: `nix run github:numtide/llm-agents.nix#cindy -- --help`
+- **Nix**: [packages/cindy/package.nix](packages/cindy/package.nix)
+
+</details>
+<details>
 <summary><strong>grok-bot</strong> - Grok Bot desktop agent — AI teammates that finish the work</summary>
 
 - **Source**: binary
