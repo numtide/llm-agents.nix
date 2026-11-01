@@ -471,6 +471,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>openchamber</strong> - Web and desktop UI for the OpenCode AI coding agent</summary>
+
+- **Source**: bytecode
+- **License**: MIT
+- **Homepage**: https://github.com/openchamber/openchamber
+- **Usage**: `nix run github:numtide/llm-agents.nix#openchamber -- --help`
+- **Nix**: [packages/openchamber/package.nix](packages/openchamber/package.nix)
+
+</details>
+<details>
 <summary><strong>opencode</strong> - AI coding agent built for the terminal</summary>
 
 - **Source**: binary
