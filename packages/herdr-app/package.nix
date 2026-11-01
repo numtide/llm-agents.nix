@@ -10,6 +10,7 @@
   clang,
   xcbuild,
   cctools,
+  herdr-core,
   fontconfig,
   freetype,
   libxkbcommon,
@@ -120,6 +121,10 @@ rustPlatform.buildRustPackage (finalAttrs: {
         ]
       }
     ''}
+
+    # Suffix: a core the user installed wins, since a newer one of the same
+    # generation only adds. Without any, the app would `curl | sh` one.
+    wrapProgram $out/bin/herdr-app --suffix PATH : ${lib.makeBinPath [ herdr-core ]}
   '';
 
   passthru.category = "Workflow & Project Management";
