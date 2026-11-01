@@ -14,26 +14,22 @@
   wayland,
   vulkan-loader,
 }:
-let
+rustPlatform.buildRustPackage (finalAttrs: {
   pname = "herdr-app";
-  version = "0.1.9";
+  version = "0.1.11";
 
   src = fetchFromGitHub {
     owner = "herdrdev";
     repo = "herdr-app";
-    tag = "v${version}";
+    tag = "v${finalAttrs.version}";
     # vendor/ghostty is a git submodule (ghostty-org/ghostty).
     fetchSubmodules = true;
-    # Verified with `nix-prefetch-git --fetch-submodules`.
-    hash = "sha256-XXAcJWwaaec/E941NkGAiCWgeHyT5jpYKcfz+8mbkvI=";
+    hash = "sha256-vuY2a3iGVJ8+oOXnQbWY5/hYNUdCov5yDuttCq9swr4=";
   };
-in
-rustPlatform.buildRustPackage (finalAttrs: {
-  inherit pname version src;
 
   __structuredAttrs = true;
 
-  cargoHash = "sha256-NOLcdtc9zLojjkEwGbjiTGTxDhX9w42hWtNrrE3kID4=";
+  cargoHash = "sha256-DX4+ELg1vtprKv8N6R8rW42wty+hKMo96/MxiiUmqu8=";
 
   # Build-platform Zig: passthru attrs are not spliced.
   zigDeps = buildPackages.zig_0_16.fetchDeps {
@@ -101,23 +97,18 @@ rustPlatform.buildRustPackage (finalAttrs: {
         ]
       }
     ''}
-    wrapProgram $out/bin/herdr-app --set-default HERDR_TELEMETRY 0
   '';
 
-  passthru.category = "Desktop Apps";
+  passthru.category = "Workflow & Project Management";
 
   meta = with lib; {
     description = "Herdr desktop app for terminals and coding agents";
     homepage = "https://github.com/herdrdev/herdr-app";
-    changelog = "https://github.com/herdrdev/herdr-app/releases/tag/v${version}";
+    changelog = "https://github.com/herdrdev/herdr-app/releases/tag/v${finalAttrs.version}";
     license = licenses.asl20;
-    maintainers = [ ];
+    maintainers = with flake.lib.maintainers; [ arthurk ];
     sourceProvenance = with sourceTypes; [ fromSource ];
-    platforms = [
-      "x86_64-linux"
-      "aarch64-linux"
-      "aarch64-darwin"
-    ];
+    platforms = lib.platforms.linux ++ lib.platforms.darwin;
     mainProgram = "herdr-app";
   };
 })
