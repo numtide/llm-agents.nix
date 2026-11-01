@@ -1206,6 +1206,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>herdr-core</strong> - Terminals for coding agents that keep running</summary>
+
+- **Source**: source
+- **License**: Apache-2.0
+- **Homepage**: https://github.com/herdrdev/herdr-core
+- **Usage**: `nix run github:numtide/llm-agents.nix#herdr-core -- --help`
+- **Nix**: [packages/herdr-core/package.nix](packages/herdr-core/package.nix)
+
+</details>
+<details>
 <summary><strong>kandev</strong> - Manage tasks, orchestrate agents, review changes, and ship value</summary>
 
 - **Source**: source
