@@ -1806,6 +1806,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>agent-desktop</strong> - Computer use for AI agents through the OS accessibility tree</summary>
+
+- **Source**: source
+- **License**: Apache-2.0
+- **Homepage**: https://github.com/vercel-labs/agent-desktop
+- **Usage**: `nix run github:numtide/llm-agents.nix#agent-desktop -- --help`
+- **Nix**: [packages/agent-desktop/package.nix](packages/agent-desktop/package.nix)
+
+</details>
+<details>
 <summary><strong>agent-slack</strong> - Slack automation CLI for AI agents</summary>
 
 - **Source**: source
