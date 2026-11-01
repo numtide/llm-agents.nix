@@ -1,12 +1,15 @@
 {
   lib,
   stdenv,
+  flake,
   rustPlatform,
   fetchFromGitHub,
   buildPackages,
   pkg-config,
   makeWrapper,
   clang,
+  xcbuild,
+  cctools,
   fontconfig,
   freetype,
   libxkbcommon,
@@ -47,6 +50,12 @@ rustPlatform.buildRustPackage (finalAttrs: {
     clang
     pkg-config
     makeWrapper
+  ]
+  ++ lib.optionals stdenv.hostPlatform.isDarwin [
+    # zig's macOS SDK detection shells out to xcode-select/xcrun.
+    xcbuild
+    # libghostty-vt's CombineArchivesStep runs `libtool` on Darwin.
+    cctools
   ];
 
   buildInputs = lib.optionals stdenv.hostPlatform.isLinux [
@@ -64,6 +73,20 @@ rustPlatform.buildRustPackage (finalAttrs: {
   dontUseZigBuild = true;
   dontUseZigCheck = true;
   dontUseZigInstall = true;
+
+  # xcbuild's xcodebuild stub makes ghostty enable the unneeded xcframework,
+  # which it cannot create. Tools with absolute paths are absent in the sandbox.
+  postPatch = lib.optionalString stdenv.hostPlatform.isDarwin ''
+    substituteInPlace crates/ghostty-sys/build.rs \
+      --replace-fail '"-Demit-lib-vt",' '"-Demit-lib-vt", "-Demit-xcframework=false",'
+    substituteInPlace vendor/ghostty/pkg/apple-sdk/native_link.zig \
+      --replace-fail '"/usr/bin/xcrun"' '"xcrun"'
+    substituteInPlace vendor/ghostty/src/build/GhosttyLibVt.zig \
+      --replace-fail '"/bin/ln"' '"ln"'
+    substituteInPlace vendor/ghostty/src/build/LibtoolStep.zig \
+      --replace-fail '/bin/cp ' 'cp ' \
+      --replace-fail '/usr/bin/ranlib ' 'ranlib '
+  '';
 
   postConfigure = ''
     export ZIG_GLOBAL_CACHE_DIR=$(mktemp -d)
