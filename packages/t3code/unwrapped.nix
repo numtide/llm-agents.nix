@@ -113,6 +113,7 @@ stdenv.mkDerivation {
   env = {
     T3CODE_RELAY_URL = "https://relay.t3.codes";
     T3CODE_CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsudDMuY29kZXMk";
+    T3CODE_CLERK_JWT_TEMPLATE = "t3-relay";
     T3CODE_CLERK_CLI_OAUTH_CLIENT_ID = "hzxSgY2cH10sDU2r";
   };
 
