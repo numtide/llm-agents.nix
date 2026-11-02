@@ -69,6 +69,7 @@ stdenv.mkDerivation {
     wrapProgram $out/bin/claude \
       --argv0 claude \
       --set DISABLE_AUTOUPDATER 1 \
+      --set-default FORCE_AUTOUPDATE_PLUGINS 1 \
       ${lib.optionalString stdenv.hostPlatform.isLinux "--set-default CLAUDE_CODE_CERT_STORE system"} \
       --set-default DISABLE_NON_ESSENTIAL_MODEL_CALLS 1 \
       ${lib.optionalString disableTelemetry "--set DISABLE_TELEMETRY 1 --set CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC 1"} \
