@@ -5,7 +5,7 @@
 - Root: `flake.nix`, `flake.lock`, `devshell.nix`, `README.md`.
 - Packages live under `packages/<tool>/` with `package.nix`, optional `update.py`, and lockfiles when needed.
 - Formatting config: `packages/formatter/treefmt.nix`.
-- Utilities and docs: `scripts/`, `docs/`, `.github/`.
+- Utilities: `scripts/`, `.github/`.
 
 ## Build, Test, and Development Commands
 
@@ -20,8 +20,8 @@
 
 - Indentation: 2 spaces; avoid tabs.
 - Nix: small, composable derivations; prefer `buildNpmPackage`/`rustPlatform.buildRustPackage`/`stdenv.mkDerivation` as in existing packages.
-- File layout per package: `package.nix` (definition), `update.py` (optional custom updater), `nix-update-args` (optional nix-update flags). `package.nix` is called from a scope that contains all in-repo packages and helpers (`buildNpmPackage`, `wrapBuddy`, `formatelf`, `versionCheckHomeHook`, `bun2nixLib`, `platformSource`, `flake`, ...), so declaring one of these names as a function argument is enough.
-- Tools via treefmt: nixfmt, deadnix, shfmt, shellcheck, mdformat, yamlfmt, taplo. Always run `nix fmt` before committing.
+- File layout per package: `package.nix` (definition, including any declarative `passthru.updater`), `update.py` (optional custom updater), `nix-update-args` (optional nix-update flags). `package.nix` is called from a scope that contains all in-repo packages and helpers (`buildNpmPackage`, `wrapBuddy`, `formatelf`, `versionCheckHomeHook`, `bun2nixLib`, `platformSource`, `flake`, ...), so declaring one of these names as a function argument is enough.
+- Tools via treefmt: nixfmt, deadnix, shfmt, shellcheck, mdformat, yamlfmt, taplo, ruff-format, ruff-check, mypy, nu-check, ast-grep. Always run `nix fmt` before committing.
 
 ### Updating Packages
 
@@ -41,7 +41,7 @@ buildGoModule rec {
   src = fetchFromGitHub {
     owner = "owner";
     repo = "repo";
-    rev = "v${version}";
+    tag = "v${version}";
     hash = "sha256-...";  # nix-update updates this
   };
 
@@ -107,12 +107,16 @@ Available categories (in display order):
 
 - **AI Coding Agents** - Main AI coding assistants (claude-code, codex, gemini-cli, etc.)
 - **AI Assistants** - General-purpose AI assistants not focused on coding (localgpt, openclaw, etc.)
-- **Claude Code Ecosystem** - Tools specifically for Claude Code (claudebox, catnip, etc.)
-- **ACP Ecosystem** - Agent Control Protocol implementations (claude-code-acp, codex-acp, agent-client-protocol)
+- **Claude Code Ecosystem** - Tools specifically for Claude Code (ccstatusline, claude-code-router, etc.)
+- **ACP Ecosystem** - Agent Control Protocol implementations (claude-agent-acp, codex-acp, pi-acp)
 - **Usage Analytics** - Usage tracking and analysis tools (ccusage and variants)
 - **Workflow & Project Management** - Project/spec management tools (backlog-md, beads, openspec, spec-kit)
 - **Code Review** - Code review tools (coderabbit-cli, tuicr)
-- **Utilities** - Other useful tools (coding-agent-search, handy, happy-coder)
+- **Voice & Transcription** - Speech input and transcription tools (handy, voxtype)
+- **Memory & Code Intelligence** - Agent memory and code search tools (ck, gitnexus, qmd)
+- **Sandboxing & Isolation** - Confined execution for agents (claudebox, fence, sandbox-runtime)
+- **Skills & Plugins** - Skill and plugin management (skills)
+- **Utilities** - Other useful tools (agent-browser, happy-coder, rtk)
 
 #### Custom Maintainers
 
@@ -259,7 +263,7 @@ fi
 1. **Binary packages**: When packaging pre-built binaries:
 
    - Use `dontUnpack = true` if the download is a single executable file
-   - Use `autoPatchelfHook` on Linux to handle dynamic library dependencies
+   - Use the in-repo `formatelf` hook on Linux to handle dynamic library dependencies
    - Common missing libraries: `gcc-unwrapped.lib` for libgcc_s.so.1
 
 1. **Bun-compiled binaries**: Single-file executables produced by `bun build --compile` embed the JS bytecode at the tail of the binary. Stripping corrupts that payload, so always set `dontStrip = true` for bun-compiled tools. Use `coderabbit-cli` as the reference example; other bun-compiled packages in this repo include `amp`, `claude-code`, `cubic`, `opencode`, and `qoder-cli`.
@@ -272,12 +276,10 @@ fi
 
    Note: `claude-code` is also bun-compiled, but Anthropic patches the runtime to disable `BUN_BE_BUN`, so this detection trick does not work for it. For every other tool the flag is a reliable indicator.
 
-1. **Update scripts**: Follow shellcheck recommendations - declare and assign variables separately to avoid masking return values.
-
 1. **Custom nix-update arguments**: For packages that need special nix-update flags (e.g., filtering out nightly releases), create a `nix-update-args` file with one argument per line:
 
    ```text
-   # packages/qwen-code/nix-update-args
+   # packages/gemini-cli/nix-update-args
    --use-github-releases
    --version-regex
    ^v([0-9]+\.[0-9]+\.[0-9]+)$
