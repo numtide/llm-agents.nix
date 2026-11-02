@@ -55,10 +55,11 @@ buildNpmPackage {
   dontNpmBuild = true;
 
   makeWrapperArgs = [
-    # OpenChamber drives an OpenCode 2.x server and refuses anything older than
-    # 2.2.0. It reads OPENCODE_BINARY before searching PATH for `opencode`, so
-    # bind it straight to the in-repo OpenCode 2 build. `--set-default` leaves
-    # the variable writable for people running their own checkout.
+    # OpenChamber drives an OpenCode 2.x server and refuses a build older than
+    # the floor it ships with (2.2.4 as of 2.6.0, no newer than the in-repo
+    # OpenCode 2 there). It reads OPENCODE_BINARY before searching PATH for
+    # `opencode`, so bind it straight to that build. `--set-default` leaves the
+    # variable writable for people running their own checkout.
     "--set-default OPENCODE_BINARY ${lib.getExe opencode2}"
     # The server shells out to git for worktrees and to ripgrep for search.
     "--prefix PATH : ${
