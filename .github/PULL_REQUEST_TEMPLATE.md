@@ -7,7 +7,7 @@
 <!-- How did you test this change? -->
 
 - [ ] `nix build .#<package>` succeeds
-- [ ] Package updates via `nix-update` or has a custom `update.py` if nix-update doesn't work
+- [ ] Package updates via `nix-update`, a declarative `passthru.updater`, or a custom `update.py` if neither works
 
 ______________________________________________________________________
 
