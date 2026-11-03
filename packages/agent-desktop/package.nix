@@ -10,16 +10,16 @@
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "agent-desktop";
-  version = "1.0.2";
+  version = "1.1.0";
 
   src = fetchFromGitHub {
     owner = "vercel-labs";
     repo = "agent-desktop";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-0r5bO5oQonq/B/gQYHrjdrQFVfyK3gAZudbaTVe89v0=";
+    hash = "sha256-7v0x74sFO1SVFS/aw7QalWkLmLDpGhY0v83x9JLlzUI=";
   };
 
-  cargoHash = "sha256-PYZ+PID4Kl3hckTf5RzPXl9JIr+P4lA7Tu2vXXfQ6QM=";
+  cargoHash = "sha256-ye/FmVkXY54eeLejXYHljJofJm8GsoUeDUDMrPx69ug=";
 
   nativeBuildInputs = [
     installAgentSkills
