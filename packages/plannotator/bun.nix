@@ -1411,9 +1411,9 @@
     url = "https://registry.npmjs.org/@plannotator/markdown-editor/-/markdown-editor-0.5.0.tgz";
     hash = "sha512-H6UO9h9ls7Q1FQCgDDOiltDYxi8GosM9BXuXkb4oBcBCAyap39RebeF/B3tAqvqZEmo9zsbOaqTy813AWiLSqQ==";
   };
-  "@plannotator/web-highlighter@0.8.1" = fetchurl {
-    url = "https://registry.npmjs.org/@plannotator/web-highlighter/-/web-highlighter-0.8.1.tgz";
-    hash = "sha512-FlteNOwRj9iNSY/AhFMtqOnVS4FvsACvTw6IiOM1y8iDyhiU/WeZOgjURENvIY+wuUaiS9DDFmg0PrHMyuMR1Q==";
+  "@plannotator/web-highlighter@0.8.2" = fetchurl {
+    url = "https://registry.npmjs.org/@plannotator/web-highlighter/-/web-highlighter-0.8.2.tgz";
+    hash = "sha512-zOEsgl+ECSwM5n4B3T5vBXzuqoTQffXEzfjEGCQCfnCvW8QVoclB39VmFsdiJ3eeLRiOsn/0sjogqJdHL4VYXw==";
   };
   "@plannotator/webtui@0.1.0" = fetchurl {
     url = "https://registry.npmjs.org/@plannotator/webtui/-/webtui-0.1.0.tgz";
