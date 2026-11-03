@@ -11,18 +11,18 @@ let
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "chock";
-  version = "0.1.0-unstable-20261101-09b9f86";
+  version = "0.1.0-unstable-20261103-3dadfc6";
 
   src = fetchFromGitHub {
     owner = "LilithSemi";
     repo = "chock";
     tag = finalAttrs.version;
-    hash = "sha256-n/fim0HAZxRXOt/dSpkV9QH4w5/PmAZQONZnxQuNQfc=";
+    hash = "sha256-yjsvitTCus9wSX7lh5uIM/CDrPoYMghdn8XTDsuGA2Q=";
   };
 
   zigDeps = zig.fetchDeps {
     inherit (finalAttrs) src pname version;
-    hash = "sha256-CU73qpYm9XgdssGtZXQLqLxxdtf7ZLLQg60OQYtJoZ8=";
+    hash = "sha256-jiK/WsLCx+mje3MsNkRqrJIqj64nGN6Y7fxykJLrU1k=";
   };
 
   nativeBuildInputs = [
