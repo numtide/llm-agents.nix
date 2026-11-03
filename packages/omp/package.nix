@@ -206,10 +206,12 @@ stdenv.mkDerivation {
     bun ${./normalize-embedded-client.ts} \
       packages/stats/src/embedded-client.generated.txt
 
-    # export/html/index.ts text-imports ./tool-views.generated.js, which must
-    # exist before bun compile.
-    echo "Generating embedded HTML-export tool-views..."
-    bun --cwd packages/collab-web scripts/build-tool-views.ts
+    # export/html/index.ts imports ./viewer.generated.json (and needs the
+    # matching export-assets from build-export-viewer). Upstream renamed the
+    # old build-tool-views.ts step in v18.16.0. Pass --write because CI=true
+    # otherwise makes the script check-only (isExportViewerCheck).
+    echo "Generating embedded HTML-export viewer..."
+    bun --cwd packages/collab-web scripts/build-export-viewer.ts --write
 
     # compile-standalone.ts drives upstream's compile-binary.ts helper because
     # `bun build --compile` cannot load the required virtual-module plugin.
