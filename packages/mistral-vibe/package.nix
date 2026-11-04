@@ -99,9 +99,13 @@ let
       mistralai = callPackage ./mistralai.nix { python3 = python; };
       agent-client-protocol = callPackage ./agent-client-protocol.nix { python3 = python; };
 
-      # vibe unpacks the 3-tuple yielded by mcp 1.x streamable_http_client;
-      # mcp 2.x yields 2 values and breaks every connector/HTTP MCP call.
-      mcp = pyprev.mcp_1;
+      # Not in nixpkgs yet.
+      opentelemetry-exporter-http-transport = callPackage ./opentelemetry-exporter-http-transport.nix {
+        python3 = python;
+      };
+      opentelemetry-exporter-otlp-common = callPackage ./opentelemetry-exporter-otlp-common.nix {
+        python3 = python;
+      };
 
       # 1.40.0 added timing-sensitive tests that flake on loaded builders.
       opentelemetry-exporter-otlp-proto-http =
@@ -139,22 +143,27 @@ python.pkgs.buildPythonApplication {
   dependencies = with python.pkgs; [
     agent-client-protocol
     anyio
+    authlib
     cachetools
     croniter
     cryptography
     gitpython
     giturlparse
     google-auth
-    httpx
-    httpx-sse
+    httpcore2
+    httpx2
     humanize
     jsonpatch
+    joserfc
     keyring
     markdownify
     mcp
+    mcp-types
     miniaudio
     mistralai
     opentelemetry-api
+    opentelemetry-exporter-http-transport
+    opentelemetry-exporter-otlp-common
     opentelemetry-exporter-otlp-proto-http
     opentelemetry-sdk
     opentelemetry-semantic-conventions
@@ -171,12 +180,14 @@ python.pkgs.buildPythonApplication {
     sentry-sdk
     setproctitle
     sounddevice
+    socksio
     textual
     textual-speedups
     tomli-w
     tree-sitter
     tree-sitter-bash
     truststore
+    uuid-utils
     watchfiles
     websockets
     zstandard
@@ -195,7 +206,7 @@ python.pkgs.buildPythonApplication {
     "vibe.acp.entrypoint"
     "vibe.app_server.stdio"
     "vibe.app_server.local"
-    "vibe.core.llm.backend.mistral"
+    "mistralai_vibe_local_harness.vibe.adapters.mistral"
     "vibe.cli.transcribe.mistral_transcribe_client"
   ];
 
