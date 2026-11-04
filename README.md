@@ -1707,6 +1707,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>tilth</strong> - Tree-sitter-powered code reading CLI and MCP server for AI agents</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/jahala/tilth
+- **Usage**: `nix run github:numtide/llm-agents.nix#tilth -- --help`
+- **Nix**: [packages/tilth/package.nix](packages/tilth/package.nix)
+
+</details>
+<details>
 <summary><strong>trellis</strong> - An out-of-the-box engineering framework for AI coding.</summary>
 
 - **Source**: source
