@@ -1,7 +1,6 @@
 {
   lib,
   flake,
-  hindsight-client,
   python3,
   fetchFromGitHub,
   fetchPypi,
@@ -173,8 +172,6 @@ python3Packages.buildPythonApplication rec {
     einops
     safetensors
   ];
-
-  optional-dependencies.client = [ hindsight-client ];
 
   # nixpkgs lags slightly behind these floors.
   pythonRelaxDeps = [
