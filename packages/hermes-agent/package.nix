@@ -558,9 +558,6 @@ python3.pkgs.buildPythonApplication {
   postPatch = ''
     # Fail an update rather than silently keeping an SDK that upstream replaced.
     ${python3.interpreter} -c 'import tomllib; p = tomllib.load(open("pyproject.toml", "rb")); expected = "anthropic==${anthropic.version}"; actual = p["project"]["optional-dependencies"]["anthropic"]; assert actual == [expected], f"Anthropic pin changed: {actual}; review the private SDK override"'
-    substituteInPlace tui_gateway/server.py \
-      --replace-fail 'argv = [sys.executable, "-m", "tui_gateway.slash_worker"' \
-        'argv = [os.environ.get("HERMES_PYTHON", sys.executable), "-m", "tui_gateway.slash_worker"'
     substituteInPlace tools/browser_use_cli.py \
       --replace-fail 'return [sys.executable, "-m", "browser_harness.run"]' \
         'return [os.environ.get("HERMES_PYTHON", sys.executable), "-m", "browser_harness.run"]'
