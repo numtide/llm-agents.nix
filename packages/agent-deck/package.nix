@@ -34,6 +34,9 @@ buildGo127Module rec {
   postPatch = ''
     substituteInPlace cmd/agent-deck/fanout_hint_docs_test.go \
       --replace-fail '#!/bin/bash' '#!${lib.getExe bash}'
+    # darwin's /bin/sh keeps escaped quotes inside a parameter default, so
+    # the fake provider would print invalid JSON
+    patchShebangs internal/provider/testdata/fake-provider.sh
   '';
 
   nativeInstallCheckInputs = [
@@ -57,6 +60,7 @@ buildGo127Module rec {
           "TestRecallSearch_FederatedMergesAndLabels" # sqlite "database is locked" under parallel tests
           "TestIssue2388_CapabilitiesCarryProbe" # resets PATH to /usr/bin:/bin, losing cat
           "TestIssue1576_WorktreeFinishSweepsNotifierState" # async event-bus flush races TempDir cleanup
+          "TestIssue2921ClaudeLikeFakeIsGoneWhenItsCleanupReturns" # fails when its fixture skips for lack of python3
         ]
         ++ lib.optionals stdenv.hostPlatform.isDarwin [
           # lsof on live processes is denied by the sandbox
