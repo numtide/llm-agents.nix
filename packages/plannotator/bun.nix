@@ -1411,9 +1411,9 @@
     url = "https://registry.npmjs.org/@plannotator/markdown-editor/-/markdown-editor-0.5.0.tgz";
     hash = "sha512-H6UO9h9ls7Q1FQCgDDOiltDYxi8GosM9BXuXkb4oBcBCAyap39RebeF/B3tAqvqZEmo9zsbOaqTy813AWiLSqQ==";
   };
-  "@plannotator/web-highlighter@0.8.1" = fetchurl {
-    url = "https://registry.npmjs.org/@plannotator/web-highlighter/-/web-highlighter-0.8.1.tgz";
-    hash = "sha512-FlteNOwRj9iNSY/AhFMtqOnVS4FvsACvTw6IiOM1y8iDyhiU/WeZOgjURENvIY+wuUaiS9DDFmg0PrHMyuMR1Q==";
+  "@plannotator/web-highlighter@0.8.2" = fetchurl {
+    url = "https://registry.npmjs.org/@plannotator/web-highlighter/-/web-highlighter-0.8.2.tgz";
+    hash = "sha512-zOEsgl+ECSwM5n4B3T5vBXzuqoTQffXEzfjEGCQCfnCvW8QVoclB39VmFsdiJ3eeLRiOsn/0sjogqJdHL4VYXw==";
   };
   "@plannotator/webtui@0.1.0" = fetchurl {
     url = "https://registry.npmjs.org/@plannotator/webtui/-/webtui-0.1.0.tgz";
@@ -3635,9 +3635,9 @@
     url = "https://registry.npmjs.org/jws/-/jws-4.0.1.tgz";
     hash = "sha512-EKI/M/yqPncGUUh44xz0PxSidXFr/+r0pA70+gIYhjv+et7yxM+s29Y+VGDkovRofQem0fs7Uvf4+YmAdyRduA==";
   };
-  "katex@0.18.11" = fetchurl {
-    url = "https://registry.npmjs.org/katex/-/katex-0.18.11.tgz";
-    hash = "sha512-yvyz/2VMKqoho/35Hat5w37wIEdWJ5ElVMidTAlWrxr5uW4aBGsEpveTmKh18/zw08v/7lGswCPon4OhqmqrTA==";
+  "katex@0.19.0" = fetchurl {
+    url = "https://registry.npmjs.org/katex/-/katex-0.19.0.tgz";
+    hash = "sha512-v6Tznz3zJ7u3niRCoDTsumM2+HA2XXcCu+WAacCeHD2z3p9A9Ks987o5FzfTGBN0e8A0vjEgIDvLbICrXpdw/Q==";
   };
   "keytar@7.9.0" = fetchurl {
     url = "https://registry.npmjs.org/keytar/-/keytar-7.9.0.tgz";

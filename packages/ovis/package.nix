@@ -79,8 +79,7 @@ stdenv.mkDerivation {
   # Both programs are updated through Nix, never through the web UI.
   postPatch = ''
     substituteInPlace server/index.ts \
-      --replace-fail 'herdrUpdate: new HerdrUpdater(), ' "" \
-      --replace-fail 'handleHerdrUpdateRequest, HerdrUpdater' 'handleHerdrUpdateRequest, type HerdrUpdater'
+      --replace-fail 'herdrUpdate: new HerdrUpdater(), ' ""
   '';
 
   buildPhase = ''

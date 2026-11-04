@@ -5,9 +5,7 @@
   fetchPnpmDeps,
   fd,
   makeWrapper,
-  node-gyp,
   nodejs,
-  python3,
   pnpm_10,
   pnpmConfigHook,
   ripgrep,
@@ -21,20 +19,20 @@ let
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "kimi-code";
-  version = "2.3.3";
+  version = "2.4.1";
 
   src = fetchFromGitHub {
     owner = "MoonshotAI";
     repo = "kimi-code";
     tag = "@moonshot-ai/kimi-code@${finalAttrs.version}";
-    hash = "sha256-6uykin8KhAsoUkjUcXrfrRUXdWyr9GgIqhogmtPLh+8=";
+    hash = "sha256-UkA/UG9qY9L/kTM+oDPsgQ/EzTwtFt9yDBXsz530xOI=";
   };
 
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
     inherit pnpm;
     fetcherVersion = 3;
-    hash = "sha256-XLjspHl3+xErXYH5fMW8J8fDB5m1ZF8MkATKh11odo0=";
+    hash = "sha256-fvtkW8HSacFek+jT0t7v3WcYsSTfI22+4kDEyEYHFlY=";
   };
 
   nativeBuildInputs = [
@@ -42,11 +40,6 @@ stdenv.mkDerivation (finalAttrs: {
     nodejs
     pnpm
     (pnpmConfigHook.override { inherit pnpm; })
-  ]
-  ++ lib.optionals stdenv.hostPlatform.isLinux [
-    # to compile node-pty (see installPhase)
-    node-gyp
-    python3
   ];
 
   buildPhase = ''
@@ -62,17 +55,6 @@ stdenv.mkDerivation (finalAttrs: {
 
     pnpm config set inject-workspace-packages true
     pnpm --filter @moonshot-ai/kimi-code --prod --ignore-scripts deploy $out/lib/kimi-code
-
-    ${lib.optionalString stdenv.hostPlatform.isLinux ''
-      # node-pty ships prebuilds only for darwin/win32 and the deploy above
-      # skips install scripts, so compile the Linux addon here.
-      pushd $out/lib/kimi-code/node_modules/.pnpm/node-pty@*/node_modules/node-pty
-      node-gyp rebuild --nodedir=${nodejs}
-      # keep only the compiled addon
-      find build -mindepth 1 -maxdepth 1 ! -name Release -exec rm -rf {} +
-      find build/Release -mindepth 1 ! -name '*.node' -exec rm -rf {} +
-      popd
-    ''}
 
     mkdir -p $out/bin
     makeWrapper ${nodejs}/bin/node $out/bin/kimi \

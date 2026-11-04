@@ -17,7 +17,7 @@
   nodejs,
   openssl,
   pkg-config,
-  # Lockfile predates pnpm 11's stricter overrides validation
+  # pnpm 11+ needs fetcherVersion >= 4 and a different pnpmDeps hash
   pnpm_10,
   pnpmConfigHook,
   rust,
@@ -29,23 +29,45 @@
 }:
 let
   pnpm = pnpm_10;
+
+  # pnpm stores only the fetching host's node for `devEngines.runtime`, which
+  # makes the pnpmDeps hash platform-dependent. We build with nixpkgs' nodejs.
+  # Replace with pnpm's `runtime: false` once nixpkgs ships pnpm >= 12.16.
+  stripNodeRuntime = ''
+    ${lib.getExe jq} -e '.devEngines.runtime' package.json >/dev/null
+    grep -q '^  node@runtime:' pnpm-lock.yaml
+    ${lib.getExe jq} 'del(.devEngines.runtime)' package.json > package.json.tmp
+    mv package.json.tmp package.json
+    sed -i -e '/^  node@runtime:/,/^$/d' \
+      -e '/^      node:$/{N;/specifier: runtime:/{N;d}}' pnpm-lock.yaml
+    if grep -Eq 'node@runtime|specifier: runtime:' pnpm-lock.yaml; then
+      echo "node runtime still referenced after stripping" >&2
+      exit 1
+    fi
+  '';
 in
 
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "gitbutler";
-  version = "0.22.3";
+  version = "0.23.2";
 
   src = fetchFromGitHub {
     owner = "gitbutlerapp";
     repo = "gitbutler";
     tag = "release/${finalAttrs.version}";
-    hash = "sha256-nW3yCbpbIhawLQVV+DptzGYiFBSKcyAP89NtDWHJM+0=";
+    hash = "sha256-JLsIlkbNRqjCgidgI33djWcseGkwsEBzw6g9q6eYoDg=";
   };
 
   # Pin the user-facing version into the Tauri release config and disable the
   # built-in updater so the packaged app doesn't try to self-update. The
   # `externalBin` rewrite keeps only the git helper shims that we actually ship.
   postPatch = ''
+    ${stripNodeRuntime}
+
+    # nixpkgs' rustc uses LLVM 21, whose vpdpbusd.256 signature does not match
+    # core::arch's; drop adler32furious' VNNI kernels until rustc uses LLVM 22.
+    patch -p1 -d "$cargoDepsCopy/source-registry-0/adler32furious-0.1.1" < ${./adler32furious-llvm21.patch}
+
     tauriConfRelease="crates/gitbutler-tauri/tauri.conf.release.json"
     jq '.
         | (.version = "${finalAttrs.version}")
@@ -58,13 +80,14 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   '';
 
-  cargoHash = "sha256-XRc2yok9K7f/vRAqgO78JUq/U36XSiUeOINupfOOSjw=";
+  cargoHash = "sha256-Q+or42ppjjkt4OEc+cC2knTCkB7XloePpt2beHYG4q4=";
 
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
     inherit pnpm;
     fetcherVersion = 3;
-    hash = "sha256-CZZOZ+ox4kE5hq/W82UrpJ4I9al9TFBiN+K4XUhxnDE=";
+    postPatch = stripNodeRuntime;
+    hash = "sha256-waNmBkrMFkp/Wtai8OGFqX8d0b8N542bOCJ0HLUHPRk=";
   };
 
   nativeBuildInputs = [

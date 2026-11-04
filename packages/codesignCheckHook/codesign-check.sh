@@ -1,14 +1,22 @@
 # shellcheck shell=bash
-# Fails the build unless every Mach-O in the outputs and in $codesignSources
+# Fails the build unless every loadable Mach-O in the outputs and in $codesignSources
 # carries a Developer ID signature from team $codesignTeamId whose certificate
 # chains to Apple's root CA. Runs on any host: rcodesign and openssl do not
 # need macOS.
 
 codesignIsMachO() {
-  local magic
+  local magic filetype
   magic=$(head -c 4 "$1" | od -An -tx1 | tr -d ' \n')
   case $magic in
-  cffaedfe | feedfacf | cafebabe | bebafeca) return 0 ;;
+  cffaedfe | feedfacf)
+    # Signed app bundles can retain unsigned compiler objects as sealed resources.
+    filetype=$(head -c 16 "$1" | tail -c 4 | od -An -tx1 | tr -d ' \n')
+    case "$magic:$filetype" in
+    cffaedfe:01000000 | feedfacf:00000001) return 1 ;;
+    *) return 0 ;;
+    esac
+    ;;
+  cafebabe | bebafeca) return 0 ;;
   *) return 1 ;;
   esac
 }

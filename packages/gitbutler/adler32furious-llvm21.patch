@@ -1,0 +1,118 @@
+diff --git a/src/x86.rs b/src/x86.rs
+index bcb4ba6..da78f34 100644
+--- a/src/x86.rs
++++ b/src/x86.rs
+@@ -13,15 +13,6 @@ use super::{Adler32Fn, DIVISOR, MAX_CHUNK_LEN};
+ #[inline]
+ pub(super) fn available(push: &mut impl FnMut((&'static str, Adler32Fn))) {
+     let f = features();
+-    if f.avx512 && f.zmm {
+-        push(("avx512_vl512_vnni", avx512_vl512_vnni));
+-    }
+-    if f.avx512 {
+-        push(("avx512_vl256_vnni", avx512_vl256_vnni));
+-    }
+-    if f.avx2 && f.avxvnni {
+-        push(("avx2_vnni", avx2_vnni));
+-    }
+     if f.avx2 {
+         push(("avx2", avx2));
+     }
+@@ -571,97 +562,3 @@ mod avx2_impl {
+ }
+ use avx2_impl::avx2;
+ 
+-mod avx2_vnni_impl {
+-    use super::*;
+-    // Used on CPUs with AVX-VNNI but no AVX-512, e.g. Alder Lake.
+-    adler32_vnni!(
+-        avx2_vnni,
+-        "avx2,avxvnni",
+-        32,
+-        __m256i,
+-        _mm256_loadu_si256,
+-        _mm256_setzero_si256,
+-        _mm256_add_epi8,
+-        _mm256_add_epi32,
+-        _mm256_dpbusd_avx_epi32,
+-        _mm256_set1_epi8,
+-        _mm256_set1_epi32,
+-        _mm256_mullo_epi32,
+-        _mm256_slli_epi32,
+-        [5, 6, 7],
+-        // Short inputs are faster without VNNI. This also leaves 32 bytes
+-        // before the end of every chunk for the last vector.
+-        below 32: avx2,
+-        // There is no masked load: load the 32 bytes that end with the last
+-        // n, and zero the others. Their weights are then the unshifted ones.
+-        |_c, n, upto, _mults, base| {
+-            let last: &[u8; 32] = upto[upto.len() - 32..].try_into().unwrap();
+-            // SAFETY: last and the mask are 32 bytes.
+-            let (last, mask) = unsafe {
+-                (
+-                    _mm256_loadu_si256(last.as_ptr().cast()),
+-                    _mm256_loadu_si256(tail_mask::<32>(n).as_ptr().cast()),
+-                )
+-            };
+-            (_mm256_and_si256(last, mask), base)
+-        },
+-        |v1, v2, s1, s2| reduce256(v1, v2, true, s1, s2)
+-    );
+-}
+-use avx2_vnni_impl::avx2_vnni;
+-
+-mod avx512_vl256_vnni_impl {
+-    use super::*;
+-    // 256-bit vectors with AVX-512 masking; for Ice Lake and Tiger Lake,
+-    // which downclock too eagerly with ZMM registers.
+-    adler32_vnni!(
+-        avx512_vl256_vnni,
+-        "avx512bw,avx512vl,avx512vnni,avx2",
+-        32,
+-        __m256i,
+-        _mm256_loadu_si256,
+-        _mm256_setzero_si256,
+-        _mm256_add_epi8,
+-        _mm256_add_epi32,
+-        _mm256_dpbusd_epi32,
+-        _mm256_set1_epi8,
+-        _mm256_set1_epi32,
+-        _mm256_mullo_epi32,
+-        _mm256_slli_epi32,
+-        [5, 6, 7],
+-        |c, n, _upto, mults, _base| {
+-            // SAFETY: the masked load reads only the first n bytes.
+-            let data = unsafe { _mm256_maskz_loadu_epi8(u32::MAX >> (32 - n), c.as_ptr().cast()) };
+-            (data, mults)
+-        },
+-        |v1, v2, s1, s2| reduce256(v1, v2, true, s1, s2)
+-    );
+-}
+-use avx512_vl256_vnni_impl::avx512_vl256_vnni;
+-
+-mod avx512_vl512_vnni_impl {
+-    use super::*;
+-    adler32_vnni!(
+-        avx512_vl512_vnni,
+-        "avx512bw,avx512vnni,avx512f,avx2",
+-        64,
+-        __m512i,
+-        _mm512_loadu_si512,
+-        _mm512_setzero_si512,
+-        _mm512_add_epi8,
+-        _mm512_add_epi32,
+-        _mm512_dpbusd_epi32,
+-        _mm512_set1_epi8,
+-        _mm512_set1_epi32,
+-        _mm512_mullo_epi32,
+-        _mm512_slli_epi32,
+-        [6, 7, 8],
+-        |c, n, _upto, mults, _base| {
+-            // SAFETY: the masked load reads only the first n bytes.
+-            let data = unsafe { _mm512_maskz_loadu_epi8(u64::MAX >> (64 - n), c.as_ptr().cast()) };
+-            (data, mults)
+-        },
+-        |v1, v2, s1, s2| reduce512(v1, v2, s1, s2)
+-    );
+-}
+-use avx512_vl512_vnni_impl::avx512_vl512_vnni;

@@ -82,6 +82,18 @@
     url = "https://registry.npmjs.org/@mermaid-js/parser/-/parser-2.0.1.tgz";
     hash = "sha512-j37dj/h6p6pots1L7pLPPNuABEEu9WP4OYg9pW1g+nYG331j0+3canE9OagtYdytYvdSAMG+2fKU5cxep6LgjA==";
   };
+  "@noble/ciphers@2.4.0" = fetchurl {
+    url = "https://registry.npmjs.org/@noble/ciphers/-/ciphers-2.4.0.tgz";
+    hash = "sha512-AnjFn0Jv92laAkvMrghlFZq4qQCIN/4DxFV/eooqtC2YTjB7kBeLMS2T9KJX4Dn+ZVXLOwK0lSgqDtx9gvxtiw==";
+  };
+  "@noble/curves@2.4.0" = fetchurl {
+    url = "https://registry.npmjs.org/@noble/curves/-/curves-2.4.0.tgz";
+    hash = "sha512-P4/62zrgfH33CneE3Dn4WhJVA22YUU0eR51wKIan4NVRvwsA0YnPTwWGpNbpuacSujmSFLvyzpyuR30+fbq2Ew==";
+  };
+  "@noble/hashes@2.4.0" = fetchurl {
+    url = "https://registry.npmjs.org/@noble/hashes/-/hashes-2.4.0.tgz";
+    hash = "sha512-X5XaVWZIBCT7HHZGm5I7ZQXDwLG+bGXuSrMQAW+7Zvl87h1kmc1ZB1VSRJcpUfoUrGQp4Fkoxm5kZ+Ms+aW+eA==";
+  };
   "@oxc-project/types@0.153.0" = fetchurl {
     url = "https://registry.npmjs.org/@oxc-project/types/-/types-0.153.0.tgz";
     hash = "sha512-jSNrRIyvPVLL5E1z/tS5zLAprosGz/FuI1PWwEOz59j3E4TTTzSpqKb/RDGqJhhW0QHYISGXxq582wGx6T11Tw==";
@@ -489,6 +501,10 @@
   "asn1.js@5.4.1" = fetchurl {
     url = "https://registry.npmjs.org/asn1.js/-/asn1.js-5.4.1.tgz";
     hash = "sha512-+I//4cYPccV8LdmBLiX8CYvf9Sp3vQsrqu2QNXRcrbiWvcx/UdlFiqUJJzxRQxgsZmvhXhn4cSKeSmoFjVdupA==";
+  };
+  "base64-js@1.5.1" = fetchurl {
+    url = "https://registry.npmjs.org/base64-js/-/base64-js-1.5.1.tgz";
+    hash = "sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==";
   };
   "bn.js@4.12.5" = fetchurl {
     url = "https://registry.npmjs.org/bn.js/-/bn.js-4.12.5.tgz";
@@ -1069,6 +1085,10 @@
   "ts-dedent@2.3.0" = fetchurl {
     url = "https://registry.npmjs.org/ts-dedent/-/ts-dedent-2.3.0.tgz";
     hash = "sha512-JfJeIHke7y2egdGGgRAvpCwYFUsHlM2gPcrVOxFkznt/4uzQ7HFmvE63iFHVLBJNDuyDOQgijDK/tXH/f6Msjg==";
+  };
+  "tweetnacl@1.0.3" = fetchurl {
+    url = "https://registry.npmjs.org/tweetnacl/-/tweetnacl-1.0.3.tgz";
+    hash = "sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==";
   };
   "typescript@6.0.3" = fetchurl {
     url = "https://registry.npmjs.org/typescript/-/typescript-6.0.3.tgz";

@@ -1,0 +1,3 @@
+# Upstream also has a rolling `nightly` tag and plugin tags. Only track semver releases.
+--version-regex
+^v([0-9]+\.[0-9]+\.[0-9]+)$

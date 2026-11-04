@@ -70,6 +70,11 @@ stdenv.mkDerivation {
     export BUN_TMPDIR=$PWD/.bun-tmp
     export BUN_INSTALL=$PWD/.bun-install
 
+    # Normally upstream's postinstall, which dontRunLifecycleScripts skips. A
+    # viewer built here could differ from the bytes published on guides.show,
+    # so keep the fallback pin instead of `build:viewer-pin`.
+    bun apps/guides-show/build/sync-manifest.ts --if-missing
+
     bun run build:review
     bun run build:hook
     bun build apps/hook/server/index.ts \

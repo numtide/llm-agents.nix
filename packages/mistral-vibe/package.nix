@@ -99,6 +99,10 @@ let
       mistralai = callPackage ./mistralai.nix { python3 = python; };
       agent-client-protocol = callPackage ./agent-client-protocol.nix { python3 = python; };
 
+      # vibe unpacks the 3-tuple yielded by mcp 1.x streamable_http_client;
+      # mcp 2.x yields 2 values and breaks every connector/HTTP MCP call.
+      mcp = pyprev.mcp_1;
+
       # 1.40.0 added timing-sensitive tests that flake on loaded builders.
       opentelemetry-exporter-otlp-proto-http =
         pyprev.opentelemetry-exporter-otlp-proto-http.overridePythonAttrs

@@ -528,6 +528,7 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 - **Homepage**: https://onorca.dev
 - **Usage**: `nix run github:numtide/llm-agents.nix#orca -- --help`
 - **Nix**: [packages/orca/package.nix](packages/orca/package.nix)
+- **Documentation**: See [packages/orca/README.md](packages/orca/README.md) for detailed usage
 
 </details>
 <details>
@@ -1196,6 +1197,26 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>herdr-app</strong> - Herdr desktop app for terminals and coding agents</summary>
+
+- **Source**: source
+- **License**: Apache-2.0
+- **Homepage**: https://github.com/herdrdev/herdr-app
+- **Usage**: `nix run github:numtide/llm-agents.nix#herdr-app -- --help`
+- **Nix**: [packages/herdr-app/package.nix](packages/herdr-app/package.nix)
+
+</details>
+<details>
+<summary><strong>herdr-core</strong> - Terminals for coding agents that keep running</summary>
+
+- **Source**: source
+- **License**: Apache-2.0
+- **Homepage**: https://github.com/herdrdev/herdr-core
+- **Usage**: `nix run github:numtide/llm-agents.nix#herdr-core -- --help`
+- **Nix**: [packages/herdr-core/package.nix](packages/herdr-core/package.nix)
+
+</details>
+<details>
 <summary><strong>kandev</strong> - Manage tasks, orchestrate agents, review changes, and ship value</summary>
 
 - **Source**: source
@@ -1284,6 +1305,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 - **Homepage**: https://github.com/devswha/ovis
 - **Usage**: `nix run github:numtide/llm-agents.nix#ovis -- --help`
 - **Nix**: [packages/ovis/package.nix](packages/ovis/package.nix)
+
+</details>
+<details>
+<summary><strong>paseo</strong> - Self-hosted daemon and CLI for orchestrating coding agents</summary>
+
+- **Source**: source
+- **License**: Apache-2.0
+- **Homepage**: https://paseo.sh
+- **Usage**: `nix run github:numtide/llm-agents.nix#paseo -- --help`
+- **Nix**: [packages/paseo/package.nix](packages/paseo/package.nix)
 
 </details>
 <details>
@@ -1586,6 +1617,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>deja-vu</strong> - Local search and recall over the session history coding agents already write to disk</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/vshulcz/deja-vu
+- **Usage**: `nix run github:numtide/llm-agents.nix#deja-vu -- --help`
+- **Nix**: [packages/deja-vu/package.nix](packages/deja-vu/package.nix)
+
+</details>
+<details>
 <summary><strong>funes</strong> - Searchable memory of past AI agent sessions, exposed over MCP</summary>
 
 - **Source**: source
@@ -1664,6 +1705,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 - **Homepage**: https://github.com/MinishLab/semble
 - **Usage**: `nix run github:numtide/llm-agents.nix#semble -- --help`
 - **Nix**: [packages/semble/package.nix](packages/semble/package.nix)
+
+</details>
+<details>
+<summary><strong>tilth</strong> - Tree-sitter-powered code reading CLI and MCP server for AI agents</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/jahala/tilth
+- **Usage**: `nix run github:numtide/llm-agents.nix#tilth -- --help`
+- **Nix**: [packages/tilth/package.nix](packages/tilth/package.nix)
 
 </details>
 <details>
@@ -1763,6 +1814,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 - **Homepage**: https://github.com/vercel-labs/agent-browser
 - **Usage**: `nix run github:numtide/llm-agents.nix#agent-browser -- --help`
 - **Nix**: [packages/agent-browser/package.nix](packages/agent-browser/package.nix)
+
+</details>
+<details>
+<summary><strong>agent-desktop</strong> - Computer use for AI agents through the OS accessibility tree</summary>
+
+- **Source**: source
+- **License**: Apache-2.0
+- **Homepage**: https://github.com/vercel-labs/agent-desktop
+- **Usage**: `nix run github:numtide/llm-agents.nix#agent-desktop -- --help`
+- **Nix**: [packages/agent-desktop/package.nix](packages/agent-desktop/package.nix)
 
 </details>
 <details>
