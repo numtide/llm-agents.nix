@@ -9,18 +9,18 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "claw-code";
-  version = "0.1.10-unstable-2026-11-02";
+  version = "0.1.11-unstable-2026-11-04";
 
   src = fetchFromGitHub {
     owner = "ultraworkers";
     repo = "claw-code";
-    rev = "51cfca114cf506a5d7a53ab1bffa8e1bbd3c780d";
-    hash = "sha256-cwJ/5b32val37rWrcrH8jTp1kRVnqZW3yKwWZQBQUoA=";
+    rev = "ab8561dc378150e9e65868233dd872937aa68299";
+    hash = "sha256-SCSUhbf8AcplSJgWgQTXItKZa4oDae6zj60RJ/5IBv8=";
   };
 
   sourceRoot = "source/rust";
 
-  cargoHash = "sha256-D3FLpIdld7CoyzqCV846HyGWVYiU/vYtRynniqM6hTE=";
+  cargoHash = "sha256-QEFosu5y2WJbRvYwpC4v35Yol7h8ZUdSA8iXlygZiGQ=";
 
   cargoBuildFlags = [
     "--package"
