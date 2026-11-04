@@ -4,14 +4,13 @@
   stdenv,
   rustPlatform,
   fetchFromGitHub,
-  fetchpatch,
   fetchurl,
   runCommand,
   makeWrapper,
   installAgentSkills,
   fetchPnpmDeps,
   nodejs,
-  pnpm_10,
+  pnpm_11,
   pnpmConfigHook,
   bash,
   coreutils,
@@ -45,24 +44,16 @@ let
 in
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "openresearch";
-  version = "0.2.22";
+  version = "0.2.24";
 
   src = fetchFromGitHub {
     owner = "alphaXiv";
     repo = "OpenResearch";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-B5XCBOf2cvbOehL7GV9eW/CVyI6ag1B/L8pzbkEUCHg=";
+    hash = "sha256-XpRfSLoHOvxSYuSp/k2OOs6BbaFI3/QNzQ0PUty8x3c=";
   };
 
-  cargoHash = "sha256-8WEU0pJ77SFiiiPhVa5s5FfpXk5dsuQvhIdYy3rKP+g=";
-
-  patches = [
-    # Pending upstream #698; remove once a release includes the readiness EINTR fix.
-    (fetchpatch {
-      url = "https://github.com/alphaXiv/OpenResearch/commit/f53d9b0e8956ab14cbc85314c7780d697e8f2009.patch";
-      hash = "sha256-MrfzGMAj6Gw4JMajr18wytL/J9WJrTRTvHZbUTtT6zc=";
-    })
-  ];
+  cargoHash = "sha256-kjQbNCcofkB8vpKGhKA4tYvpbTTmQdAZ3aXrE13CR+g=";
 
   nativeBuildInputs = [
     makeWrapper
@@ -97,8 +88,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
   '';
 
   checkFlags = [
-    # 2s wall-clock assertion on SIGTERM handling; flaky on loaded builders
-    "--skip=jobs::ssh::tests::host_wrapper_finishes_cooperative_term_promptly"
     # needs live ssh control sockets under /tmp, which the sandbox lacks
     "--skip=jobs::ssh::sharing::tests::native_config_shares_only_matching_live_sockets_and_preserves_user_settings"
     # runs /bin/sh, which the Linux sandbox lacks
@@ -178,14 +167,14 @@ rustPlatform.buildRustPackage (finalAttrs: {
           src
           sourceRoot
           ;
-        pnpm = pnpm_10;
-        fetcherVersion = 3;
-        hash = "sha256-SylFpv2bkneoZgmgAGDgkUTIEmTlQSc2Q+476Tzl6z4=";
+        pnpm = pnpm_11;
+        fetcherVersion = 4;
+        hash = "sha256-umrx7ElpSzWsfW2pTgGWY6eKQ1/xGrrQ07iORW7sAHk=";
       };
 
       nativeBuildInputs = [
         nodejs
-        pnpm_10
+        pnpm_11
         pnpmConfigHook
       ];
 
