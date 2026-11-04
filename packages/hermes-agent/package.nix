@@ -52,20 +52,20 @@ let
   # Version is kept in range of hermes' pyproject constraint by update.py.
   nemo-relay = python3.pkgs.buildPythonPackage rec {
     pname = "nemo-relay";
-    version = "0.11.0";
+    version = "0.11.1";
     pyproject = true;
 
     src = fetchFromGitHub {
       owner = "NVIDIA";
       repo = "NeMo-Relay";
       tag = version;
-      hash = "sha256-0U5Mcm/vHrk8bnH/VmpUG7Cl3CbAhGlpKQyYbrCL++U=";
+      hash = "sha256-BwoeCwHbvVNtx4fkR1uIRh95T63UBMbvrJtiE6+/BWY=";
     };
 
     cargoDeps = rustPlatform.fetchCargoVendor {
       inherit src;
       name = "nemo-relay-${version}";
-      hash = "sha256-cRHjFwGY2hjctwMiaDCZ/qEUGw2gGt3G0C9TH2Ju6so=";
+      hash = "sha256-xjImAQmLLOzSuO0LMRnoIZ5SoYMv7WBFSkJxgL+AOX4=";
     };
 
     nativeBuildInputs =
