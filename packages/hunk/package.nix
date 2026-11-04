@@ -45,18 +45,6 @@ stdenv.mkDerivation {
   # stripping corrupts it.
   dontStrip = true;
 
-  # Pin every dependency to the exact version vendored in bun.nix.
-  # bun's offline resolver refuses semver ranges (^/~) when only one
-  # version is present in the store, so collapse them to exact pins.
-  postPatch = ''
-    for f in package.json packages/*/package.json; do
-      if [ -f "$f" ]; then
-        sed -i 's/: "\^/: "/g; s/: "~/: "/g' "$f"
-      fi
-    done
-    sed -i 's/: "\^/: "/g; s/: "~/: "/g' bun.lock
-  '';
-
   buildPhase = ''
     runHook preBuild
 

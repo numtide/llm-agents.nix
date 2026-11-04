@@ -140,16 +140,6 @@ stdenv.mkDerivation {
   dontStrip = true;
 
   postPatch = ''
-    # Strip ^ and ~ prefixes: bun resolves range specifiers via the npm
-    # registry, which is unreachable in the sandbox.
-    for f in package.json packages/*/package.json; do
-      if [ -f "$f" ]; then
-        sed -i 's/: "\^/: "/g; s/: "~/: "/g' "$f"
-      fi
-    done
-    sed -i 's/: "\^/: "/g; s/: "~/: "/g' bun.lock
-
-
     # Placeholder client bundle avoids building the full React dashboard.
     cat > packages/stats/src/embedded-client.generated.txt <<'PLACEHOLDER'
     export const EMBEDDED_CLIENT_ARCHIVE_TAR_GZ_BASE64 = "";
