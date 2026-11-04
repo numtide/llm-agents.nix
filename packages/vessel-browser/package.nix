@@ -33,13 +33,14 @@ buildNpmPackage rec {
   npmFlags = [ "--ignore-scripts" ];
 
   preBuild = ''
-    # Ensure our electron major version matches what upstream expects.
-    # This will fail loudly on version bumps instead of silently diverging.
+    # Upstream pins electron 42, but electron_42 is EOL/insecure in nixpkgs.
+    # Electron majors are backwards compatible enough for this app; fail
+    # loudly the day upstream jumps ahead of what we ship.
     upstream_electron=$(node -p "require('./package.json').devDependencies.electron")
     upstream_major=''${upstream_electron#^}
     upstream_major=''${upstream_major%%.*}
     nix_major=${lib.versions.major electron_43.version}
-    if [[ "$upstream_major" != "$nix_major" ]]; then
+    if (( upstream_major > nix_major )); then
       echo "error: upstream expects electron $upstream_electron (major $upstream_major), but we provide electron ${electron_43.version} (major $nix_major)"
       echo "Update the electron_43 input in package.nix to match."
       exit 1
