@@ -37,8 +37,12 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   buildInputs = [ openssl ] ++ lib.optionals stdenv.hostPlatform.isLinux [ dbus ];
 
-  # isahc's native-tls-static would otherwise build OpenSSL from source.
-  env.OPENSSL_NO_VENDOR = "1";
+  env = {
+    # isahc's native-tls-static would otherwise build OpenSSL from source.
+    OPENSSL_NO_VENDOR = "1";
+    # Upstream's fat LTO alone outlasts the CI build timeout.
+    CARGO_PROFILE_RELEASE_LTO = "thin";
+  };
 
   cargoBuildFlags = [
     "--package"
