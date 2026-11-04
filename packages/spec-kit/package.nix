@@ -32,6 +32,7 @@ python3.pkgs.buildPythonApplication rec {
     packaging
     pathspec
     json5
+    lark
     mcp
     pydantic
   ];
