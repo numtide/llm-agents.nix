@@ -29,7 +29,7 @@
   makeWrapper,
   copyDesktopItems,
   makeDesktopItem,
-  electron_42,
+  electron_43,
   libuv,
   formatelf,
   gcc-unwrapped,
@@ -172,7 +172,7 @@ buildNpmPackage (finalAttrs: {
     # (defaults to http://localhost:8081 — the Expo dev server, which doesn't
     # exist here). Point it at the `paseo://` protocol handler instead, which
     # serves from `__dirname/../../app/dist` (our install layout matches).
-    makeWrapper ${electron_42}/bin/electron $out/bin/paseo-desktop \
+    makeWrapper ${electron_43}/bin/electron $out/bin/paseo-desktop \
       --add-flags "$out/share/paseo-desktop/packages/desktop/dist/main.js" \
       --add-flags "--no-sandbox" \
       --set EXPO_DEV_URL "paseo://app/"

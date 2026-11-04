@@ -2,7 +2,7 @@
   formatelf,
   bun,
   copyDesktopItems,
-  electron_42,
+  electron_43,
   fetchFromGitHub,
   flake,
   lib,
@@ -17,7 +17,7 @@
 }:
 
 let
-  electron = electron_42;
+  electron = electron_43;
   versionData = builtins.fromJSON (builtins.readFile ./hashes.json);
   inherit (versionData) version hash nodeModulesHash;
   nodePlatform = "${stdenvNoCC.hostPlatform.node.platform}-${stdenvNoCC.hostPlatform.node.arch}";

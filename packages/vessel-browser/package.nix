@@ -3,7 +3,7 @@
   flake,
   buildNpmPackage,
   fetchFromGitHub,
-  electron_42,
+  electron_43,
   copyDesktopItems,
   makeDesktopItem,
   makeWrapper,
@@ -38,10 +38,10 @@ buildNpmPackage rec {
     upstream_electron=$(node -p "require('./package.json').devDependencies.electron")
     upstream_major=''${upstream_electron#^}
     upstream_major=''${upstream_major%%.*}
-    nix_major=${lib.versions.major electron_42.version}
+    nix_major=${lib.versions.major electron_43.version}
     if [[ "$upstream_major" != "$nix_major" ]]; then
-      echo "error: upstream expects electron $upstream_electron (major $upstream_major), but we provide electron ${electron_42.version} (major $nix_major)"
-      echo "Update the electron_42 input in package.nix to match."
+      echo "error: upstream expects electron $upstream_electron (major $upstream_major), but we provide electron ${electron_43.version} (major $nix_major)"
+      echo "Update the electron_43 input in package.nix to match."
       exit 1
     fi
 
@@ -68,7 +68,7 @@ buildNpmPackage rec {
     find node_modules -type d -empty -delete
     cp -r node_modules $out/share/vessel-browser/
 
-    makeWrapper ${lib.getExe electron_42} $out/bin/vessel-browser \
+    makeWrapper ${lib.getExe electron_43} $out/bin/vessel-browser \
       --add-flags $out/share/vessel-browser \
       --set-default ELECTRON_FORCE_IS_PACKAGED 1
 

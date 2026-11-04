@@ -6,7 +6,7 @@
   bun,
   nodejs,
   python3,
-  electron_42,
+  electron_43,
   fetchFromGitHub,
   fetchpatch,
   runCommand,
@@ -16,7 +16,7 @@
 }:
 
 let
-  electron = electron_42;
+  electron = electron_43;
   versionData = builtins.fromJSON (builtins.readFile ./hashes.json);
   inherit (versionData) version hash;
 
