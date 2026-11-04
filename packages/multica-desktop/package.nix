@@ -9,12 +9,12 @@
   nodejs,
   pnpm_10,
   pnpmConfigHook,
-  electron_42,
+  electron_44,
   multica,
 }:
 
 let
-  electron = electron_42;
+  electron = electron_44;
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "multica-desktop";

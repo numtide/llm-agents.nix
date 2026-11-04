@@ -141,6 +141,19 @@ stdenv.mkDerivation {
   };
 
   # No build step needed - we'll run directly with bun
+  # bun >= 1.4.4 names remote-tarball cache entries after the lockfile's
+  # integrity; bun2nix still names them after the URL, so link the new name.
+  postBunSetInstallCacheDirPhase = ''
+    old=("$BUN_INSTALL_CACHE_DIR"/@T@*@@@1)
+    if [ ''${#old[@]} -ne 1 ]; then
+      echo "expected exactly one tarball cache entry (xlsx), got: ''${old[*]}" >&2
+      exit 1
+    fi
+    sri=$(sed -n 's/.*"xlsx@https:.*"sha512-\([^"]*\)".*/\1/p' bun.lock)
+    hex=$(printf '%s' "$sri" | base64 -d | head -c 16 | od -An -tx1 | tr -d ' \n')
+    ln -s "$old" "$BUN_INSTALL_CACHE_DIR/@T@sha512-$hex@@@1"
+  '';
+
   dontUseBunBuild = true;
   dontUseBunInstall = true;
   # Skip lifecycle scripts (lefthook install requires git which isn't needed at build time)
