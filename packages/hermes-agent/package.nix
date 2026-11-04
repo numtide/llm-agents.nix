@@ -635,27 +635,28 @@ python3.pkgs.buildPythonApplication {
   '';
 
   pythonRelaxDeps = [
-    "openai"
-    "python-dotenv"
-    "tenacity"
-    "ruamel.yaml"
-    "requests"
-    "pydantic"
-    "pathspec"
-    "firecrawl-py"
-    "pyjwt"
-    "cryptography"
     "certifi"
+    "cryptography"
+    "firecrawl-py"
+    "openai"
     "packaging"
+    "pathspec"
+    "pydantic"
+    "pyjwt"
+    "python-dotenv"
+    "requests"
+    "ruamel.yaml"
+    "tenacity"
+    "truststore"
     "urllib3"
     "websockets"
     # nixpkgs moved past upstream's == pins
-    "prompt_toolkit"
-    "markdown"
-    "rich"
-    "pillow"
     "croniter"
     "exa-py"
+    "markdown"
+    "pillow"
+    "prompt_toolkit"
+    "rich"
   ];
 
   # Only used by upstream's icon generator, which is not installed.
