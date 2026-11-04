@@ -25,6 +25,5 @@ base.overrideAttrs (old: rec {
   vendorHash = "sha256-h6VkTCgBLx780ahpDN9V3d7GqJaZIOh8pCe/SRvr5zw=";
   passthru = (old.passthru or { }) // {
     hideFromDocs = true;
-    updateEvenIfHidden = true;
   };
 })

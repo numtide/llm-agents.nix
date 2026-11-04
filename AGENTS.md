@@ -63,6 +63,8 @@ buildGoModule rec {
 `platform`, `manifest`, `manifest-checksums`. See migrated packages such as
 `packages/claude-code/package.nix` for examples.
 
+Packages without upstream releases set `passthru.skipUpdate = true`.
+
 Only fall back to a custom `update.py` script when no declarative kind fits
 (special hash calculation, unusual upstream APIs). Custom updaters should use
 the `scripts/updater/` library.

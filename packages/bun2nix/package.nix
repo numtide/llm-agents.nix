@@ -12,5 +12,7 @@ bun2nix
 // {
   passthru = (bun2nix.passthru or { }) // {
     hideFromDocs = true;
+    # updated with the bun2nix flake input
+    skipUpdate = true;
   };
 }

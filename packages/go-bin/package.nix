@@ -37,7 +37,6 @@ stdenv.mkDerivation {
 
   passthru = {
     hideFromDocs = true;
-    updateEvenIfHidden = true;
   };
 
   meta = {

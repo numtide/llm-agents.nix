@@ -17,6 +17,7 @@ makeSetupHook {
     appleRootCa = ./apple-root-ca.pem;
   };
   passthru.hideFromDocs = true;
+  passthru.skipUpdate = true;
   meta = {
     description = "Setup hook that verifies Developer ID code signatures on Mach-O binaries";
     license = lib.licenses.mit;

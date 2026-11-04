@@ -21,9 +21,7 @@ let
   config = builtins.fromJSON (builtins.getEnv "DISCOVERY_CONFIG");
   flake = builtins.getFlake (toString ./.);
   pkgs = flake.packages.${config.system};
-  isHidden = pkg: pkg.passthru.hideFromDocs or false;
-  updateEvenIfHidden = pkg: pkg.passthru.updateEvenIfHidden or false;
-  shouldDiscover = pkg: !(isHidden pkg) || updateEvenIfHidden pkg;
+  shouldDiscover = pkg: !(pkg.passthru.skipUpdate or false);
   getVersion = name:
     if pkgs ? ${name} && pkgs.${name} ? version && shouldDiscover pkgs.${name}
     then { inherit name; value = pkgs.${name}.version; }
