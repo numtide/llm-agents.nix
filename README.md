@@ -528,6 +528,7 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 - **Homepage**: https://onorca.dev
 - **Usage**: `nix run github:numtide/llm-agents.nix#orca -- --help`
 - **Nix**: [packages/orca/package.nix](packages/orca/package.nix)
+- **Documentation**: See [packages/orca/README.md](packages/orca/README.md) for detailed usage
 
 </details>
 <details>
