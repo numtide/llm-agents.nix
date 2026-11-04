@@ -12,13 +12,13 @@
 
 buildGoModule.override { go = go-bin; } rec {
   pname = "beads";
-  version = "1.3.3";
+  version = "1.3.4";
 
   src = fetchFromGitHub {
     owner = "gastownhall";
     repo = "beads";
     tag = "v${version}";
-    hash = "sha256-OVR0SJ+CG7aGyRdu+fDxfCtrS2lABeoHfBZRec5dDE4=";
+    hash = "sha256-nfPAhOrqmEMHHmkrLzxFHbldeUrRRyJiPYtwOVoC6ao=";
   };
 
   vendorHash = "sha256-nSOmq+SQ5d2rtS1XwetSN8i9rxlqlECgeofPKf0PjW0=";
