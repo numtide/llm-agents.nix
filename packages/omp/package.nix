@@ -4,6 +4,7 @@
   fetchFromGitHub,
   bun2nixLib,
   bun,
+  bun-bin,
   rustc,
   cargo,
   rustPlatform,
@@ -206,15 +207,12 @@ stdenv.mkDerivation {
     bun ${./normalize-embedded-client.ts} \
       packages/stats/src/embedded-client.generated.txt
 
-    # export/html/index.ts text-imports ./tool-views.generated.js, which must
-    # exist before bun compile.
-    echo "Generating embedded HTML-export tool-views..."
-    bun --cwd packages/collab-web scripts/build-tool-views.ts
-
     # compile-standalone.ts drives upstream's compile-binary.ts helper because
     # `bun build --compile` cannot load the required virtual-module plugin.
+    # omp needs bun >= 1.4.4, which nixpkgs may lag behind.
+    cp ${bun-bin}/share/bun-bin/* "$BUN_INSTALL_CACHE_DIR"/
     echo "Compiling standalone binary..."
-    (cd packages/coding-agent && bun ${./compile-standalone.ts})
+    (cd packages/coding-agent && bun ${./compile-standalone.ts} ${bun-bin.target})
 
     runHook postBuild
   '';
@@ -255,7 +253,7 @@ stdenv.mkDerivation {
     runHook preInstallCheck
     HOME=$TMPDIR $out/bin/omp --smoke-test | grep -q "smoke-test: ok"
     BUN_BE_BUN=1 $out/lib/omp/omp -e \
-      'if (Bun.version !== "${bun.version}" || typeof Bun.Image !== "function") process.exit(1)'
+      'if (Bun.version !== "${bun-bin.version}" || typeof Bun.Image !== "function") process.exit(1)'
     runHook postInstallCheck
   '';
 

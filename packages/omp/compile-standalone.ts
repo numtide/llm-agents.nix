@@ -3,7 +3,7 @@
 // plugin `bun build --compile` cannot load.
 //
 // Usage (from packages/coding-agent, so bare package imports resolve like
-// upstream's build-binary.ts): bun compile-standalone.ts
+// upstream's build-binary.ts): bun compile-standalone.ts [target]
 
 import { createRequire } from "node:module";
 import * as path from "node:path";
@@ -26,4 +26,5 @@ await compileCodingAgent({
 	entrypoint: path.join(codingAgentDir, "src", "cli.ts"),
 	outfile: path.join(repoRoot, "dist", "omp"),
 	transformersVersion: transformersManifest.version,
+	target: process.argv[2],
 });
