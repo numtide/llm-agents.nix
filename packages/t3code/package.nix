@@ -23,6 +23,9 @@ let
   pathPrefixFlag = lib.optionalString (
     providerBinPath != ""
   ) "--prefix PATH : ${lib.escapeShellArg providerBinPath}";
+  # Without this the desktop app falls back to process.execPath (bare electron)
+  # for `Exec=` in the t3code:// URL handler entry it writes on Linux.
+  launcherPathFlag = lib.optionalString stdenvNoCC.hostPlatform.isLinux ''--set-default T3CODE_DESKTOP_LAUNCHER_PATH "$desktop/bin/t3code-desktop"'';
 in
 stdenvNoCC.mkDerivation {
   pname = "t3code";
@@ -50,6 +53,7 @@ stdenvNoCC.mkDerivation {
     makeWrapper ${t3code-unwrapped.desktop}/bin/t3code-desktop \
       "$desktop/bin/t3code-desktop" \
       ${pathPrefixFlag} \
+      ${launcherPathFlag} \
       --inherit-argv0
     ln -s ${t3code-unwrapped.desktop}/share "$desktop/share"
 
