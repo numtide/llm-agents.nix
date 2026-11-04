@@ -32,12 +32,12 @@ let
   # Hermes' Anthropic adapter passes httpx objects; SDK 1.x requires httpx2.
   # Keep this private dependency aligned with the upstream extra, not nixpkgs.
   anthropic = python3.pkgs.anthropic.overridePythonAttrs (old: {
-    version = "0.87.0";
+    version = "0.125.0";
     src = fetchFromGitHub {
       owner = "anthropics";
       repo = "anthropic-sdk-python";
-      tag = "v0.87.0";
-      hash = "sha256-T9DMOwtCd63BNR3V21Y2s1BbUg5X4N5W/RjtmG8+aWs=";
+      tag = "v0.125.0";
+      hash = "sha256-bNB8tVjFegfRARy8BNLHvBjkpO8YC3Z+DPirADrwyl4=";
     };
     dependencies =
       builtins.filter (dependency: dependency.pname or "" != "httpx2") old.dependencies
