@@ -312,11 +312,9 @@ in
       sourceRoot = ".";
       dontFixup = true;
       postFixup = "";
-      nativeInstallCheckInputs = [
-        versionCheckHook
-        versionCheckHomeHook
-        codesignCheckHook
-      ];
+      # No versionCheckHook: launching the bundle attaches a protected
+      # com.apple.macl xattr that nix-daemon cannot clear from the output.
+      nativeInstallCheckInputs = [ codesignCheckHook ];
       codesignTeamId = teamId;
       postInstallCheck = "";
 
