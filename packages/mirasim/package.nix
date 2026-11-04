@@ -117,13 +117,9 @@ stdenvNoCC.mkDerivation {
   installPhase = ''
     runHook preInstall
 
-    mkdir -p $out/lib $out/bin $out/share/icons $out/share/pixmaps
+    mkdir -p $out/lib $out/bin $out/share/icons
     cp -a opt/Mirasim $out/lib/Mirasim
     cp -a usr/share/icons/hicolor $out/share/icons/
-    # hicolor does not register upstream's only icon size (1024x1024).
-    # Provide the unthemed fallback for desktop icon lookup.
-    ln -s ../icons/hicolor/1024x1024/apps/mirasim-desktop.png \
-      $out/share/pixmaps/mirasim-desktop.png
 
     makeWrapper "$out/lib/Mirasim/mirasim-desktop" "$out/bin/mirasim-desktop" \
       --suffix PATH : "${
