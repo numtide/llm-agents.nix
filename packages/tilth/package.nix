@@ -9,14 +9,14 @@
   versionCheckHomeHook,
 }:
 
-rustPlatform.buildRustPackage rec {
+rustPlatform.buildRustPackage (finalAttrs: {
   pname = "tilth";
   version = "0.12.0";
 
   src = fetchFromGitHub {
     owner = "jahala";
     repo = "tilth";
-    tag = "v${version}";
+    tag = "v${finalAttrs.version}";
     hash = "sha256-m+salgDSzVMZEEuHAg+/BXqT3rSHfOCVTBzM+1rRki4=";
   };
 
@@ -40,11 +40,11 @@ rustPlatform.buildRustPackage rec {
   meta = with lib; {
     description = "Tree-sitter-powered code reading CLI and MCP server for AI agents";
     homepage = "https://github.com/jahala/tilth";
-    changelog = "https://github.com/jahala/tilth/releases/tag/v${version}";
+    changelog = "https://github.com/jahala/tilth/releases/tag/v${finalAttrs.version}";
     license = licenses.mit;
     sourceProvenance = with sourceTypes; [ fromSource ];
     maintainers = with flake.lib.maintainers; [ smdex ];
     mainProgram = "tilth";
     platforms = platforms.unix;
   };
-}
+})
