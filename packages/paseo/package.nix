@@ -16,18 +16,18 @@
 
 buildNpmPackage (finalAttrs: {
   pname = "paseo";
-  version = "0.15.1";
+  version = "0.15.2";
 
   src = fetchFromGitHub {
     owner = "getpaseo";
     repo = "paseo";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-KXjhXsX7++RHxsysleMf0uPlwiVgXxLkNM39SOjq9HY=";
+    hash = "sha256-wcV2Wv/mLqjtl4+DfyM/yjOyApJbtEs6OgcvoE65mkA=";
   };
 
   nodejs = nodejs_22;
 
-  npmDepsHash = "sha256-8FXtG9Y+TXe1EZA8MG2sjGBQESHQ0I4SofPtJ8hOUXM=";
+  npmDepsHash = "sha256-3qI79nfKHgqRbeUjomK1f8Qae7a4vZaNh4xtUDYAs40=";
   npmDepsFetcherVersion = 2;
 
   # Skip dependency install scripts that download binaries outside the sandbox.
