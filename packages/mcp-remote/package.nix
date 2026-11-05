@@ -10,13 +10,13 @@
 
 buildNpmPackage (finalAttrs: {
   pname = "mcp-remote";
-  version = "0.16.0";
+  version = "0.16.1";
 
   src = fetchFromGitHub {
     owner = "punkpeye";
     repo = "mcp-remote";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-hXelewj2m455ZyLaWKmppUvJKazjBgdYn6NuPSOV534=";
+    hash = "sha256-CRQlrIjHvzkVe67c4pen76S5ayt23OZki1qgTIRXiPU=";
   };
 
   npmDeps = null;
@@ -24,7 +24,7 @@ buildNpmPackage (finalAttrs: {
     inherit (finalAttrs) pname version src;
     pnpm = pnpm_10;
     fetcherVersion = 4;
-    hash = "sha256-VwqBGUQ94La42/OdLj5U8z8vblKcMzpFqFTz+mVdEME=";
+    hash = "sha256-qRuYzbqL8efehefisdRgHZbMuWBi7OjRae0gX+lKbpc=";
   };
 
   nativeBuildInputs = [ pnpm_10 ];
