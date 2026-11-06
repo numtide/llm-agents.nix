@@ -85,7 +85,9 @@ let
     exec = "zcode %U";
     icon = "zcode";
     categories = [ "Development" ];
-    startupWMClass = "ZCode";
+    # Electron/Chromium on Linux sets WM_CLASS and Wayland app_id to the lowercase
+    # binary name ("zcode"), so window managers match only against this exact value.
+    startupWMClass = "zcode";
     mimeTypes = [ "x-scheme-handler/zcode" ];
   };
   inherit (stdenvNoCC.hostPlatform) isLinux;
@@ -175,15 +177,16 @@ stdenvNoCC.mkDerivation {
 
         # Keep the upstream opt/ZCode layout so bundled libs (e.g. libffmpeg.so)
         # resolve next to the main binary.
-        mkdir -p $out/lib $out/bin $out/share
+        mkdir -p $out/lib $out/bin $out/share/pixmaps
         cp -a opt/ZCode $out/lib/ZCode
         cp -a usr/share/icons $out/share/icons
+        ln -s $out/share/icons/hicolor/512x512/apps/zcode.png $out/share/pixmaps/zcode.png
 
         chmod +x $out/lib/ZCode/zcode
 
         makeWrapper "$out/lib/ZCode/zcode" "$out/bin/zcode" \
           --suffix PATH : "${lib.makeBinPath [ xdg-utils ]}" \
-          --prefix XDG_DATA_DIRS : "$XDG_ICON_DIRS:$GSETTINGS_SCHEMAS_PATH"
+          --prefix XDG_DATA_DIRS : "$out/share:$XDG_ICON_DIRS:$GSETTINGS_SCHEMAS_PATH"
 
         runHook postInstall
       ''
