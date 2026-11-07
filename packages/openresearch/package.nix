@@ -81,6 +81,9 @@ rustPlatform.buildRustPackage (finalAttrs: {
         ]
       }"' \
       --replace-fail 'exec /usr/bin/ssh' 'exec ${openssh}/bin/ssh'
+    # the nested orx-host build must not inherit CARGO_BUILD_TARGET
+    substituteInPlace tests/support/src/lib.rs \
+      --replace-fail '.env("CARGO_PROFILE_DEV_DEBUG", "0")' '.env_remove("CARGO_BUILD_TARGET").env("CARGO_PROFILE_DEV_DEBUG", "0")'
   '';
 
   preCheck = ''
@@ -95,11 +98,23 @@ rustPlatform.buildRustPackage (finalAttrs: {
     # the compacted sqlite file is not smaller than before in our build
     "--skip=local::native_store::tests::opencode_sweep_purges_settled_unreferenced_roots_and_compacts"
   ]
+  # need a real sshd login, kubectl or same-device renames
+  ++ map (t: "--skip=${t}") (
+    lib.filter (t: t != "") (lib.splitString "\n" (builtins.readFile ./sandbox-skips.txt))
+  )
   # child process is not reaped within the test's deadline in the darwin sandbox
   ++ lib.optionals stdenv.hostPlatform.isDarwin [
     "--skip=jobs::localbox::tests::local_job_lifecycle"
     # does not see the job it just spawned as running in the darwin sandbox
     "--skip=jobs::localbox::tests::orphaned_job_probe_distinguishes_an_abandoned_launch_from_a_missing_pid"
+    "--skip=engine_cli::cancellation_labels_agree_in_runs_status_and_wait"
+    "--skip=engine_cli::local_logs_stream_while_the_run_is_live"
+  ];
+
+  # orx-host's own suite drives real processes and sshd
+  cargoTestFlags = [
+    "-p"
+    "openresearch-cli"
   ];
 
   dontUseCargoParallelTests = true; # ETXTBSY: tests write+exec scripts
