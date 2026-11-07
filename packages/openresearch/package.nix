@@ -44,16 +44,16 @@ let
 in
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "openresearch";
-  version = "0.2.24";
+  version = "0.2.25";
 
   src = fetchFromGitHub {
     owner = "alphaXiv";
     repo = "OpenResearch";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-XpRfSLoHOvxSYuSp/k2OOs6BbaFI3/QNzQ0PUty8x3c=";
+    hash = "sha256-/wBl0D92vi3/U1oXXzCn5ov/2aigUrCuhAi7IQ/QcQI=";
   };
 
-  cargoHash = "sha256-kjQbNCcofkB8vpKGhKA4tYvpbTTmQdAZ3aXrE13CR+g=";
+  cargoHash = "sha256-5A0WeuUKeszjgEisIHvtZfR7IpTOMjr9wRGVl6PAP1E=";
 
   nativeBuildInputs = [
     makeWrapper
@@ -81,6 +81,9 @@ rustPlatform.buildRustPackage (finalAttrs: {
         ]
       }"' \
       --replace-fail 'exec /usr/bin/ssh' 'exec ${openssh}/bin/ssh'
+    # the nested orx-host build must not inherit CARGO_BUILD_TARGET
+    substituteInPlace tests/support/src/lib.rs \
+      --replace-fail '.env("CARGO_PROFILE_DEV_DEBUG", "0")' '.env_remove("CARGO_BUILD_TARGET").env("CARGO_PROFILE_DEV_DEBUG", "0")'
   '';
 
   preCheck = ''
@@ -95,11 +98,23 @@ rustPlatform.buildRustPackage (finalAttrs: {
     # the compacted sqlite file is not smaller than before in our build
     "--skip=local::native_store::tests::opencode_sweep_purges_settled_unreferenced_roots_and_compacts"
   ]
+  # need a real sshd login, kubectl or same-device renames
+  ++ map (t: "--skip=${t}") (
+    lib.filter (t: t != "") (lib.splitString "\n" (builtins.readFile ./sandbox-skips.txt))
+  )
   # child process is not reaped within the test's deadline in the darwin sandbox
   ++ lib.optionals stdenv.hostPlatform.isDarwin [
     "--skip=jobs::localbox::tests::local_job_lifecycle"
     # does not see the job it just spawned as running in the darwin sandbox
     "--skip=jobs::localbox::tests::orphaned_job_probe_distinguishes_an_abandoned_launch_from_a_missing_pid"
+    "--skip=engine_cli::cancellation_labels_agree_in_runs_status_and_wait"
+    "--skip=engine_cli::local_logs_stream_while_the_run_is_live"
+  ];
+
+  # orx-host's own suite drives real processes and sshd
+  cargoTestFlags = [
+    "-p"
+    "openresearch-cli"
   ];
 
   dontUseCargoParallelTests = true; # ETXTBSY: tests write+exec scripts
@@ -169,7 +184,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
           ;
         pnpm = pnpm_11;
         fetcherVersion = 4;
-        hash = "sha256-umrx7ElpSzWsfW2pTgGWY6eKQ1/xGrrQ07iORW7sAHk=";
+        hash = "sha256-2dtywPWAWp21DBfEzqG9/3NeidLZR4h1GY4Zebc4W/4=";
       };
 
       nativeBuildInputs = [
