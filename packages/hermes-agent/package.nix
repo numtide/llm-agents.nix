@@ -298,15 +298,15 @@ let
     };
   };
 
-  version = "0.22.7";
+  version = "0.23.0";
   # The commit of the tag. Hermes ignores an install stamp without one.
-  rev = "b200f5bc60e31588ba2cb60e288029c4a54ba5fa";
+  rev = "2bd378ed1b8d6bf2192cb26e0a55ff3091e6bd19";
 
   src = fetchFromGitHub {
     owner = "NousResearch";
     repo = "hermes-agent";
     tag = "v${version}";
-    hash = "sha256-dE56klC4H3s2Is6lP9wZQRCbjw9RklAB9luCd7Xzxic=";
+    hash = "sha256-hOXPsbYUF1r0XglIJErGLnM9m2P85ImJiHfcxnxK8os=";
     # contributors/emails/ holds paths differing only in case; they collapse
     # on case-insensitive stores (APFS) so the NAR hash diverges between
     # Linux and darwin. Unused at build/runtime. Upstream:
@@ -324,7 +324,7 @@ let
   hermes-frontend = buildNpmPackage {
     pname = "hermes-frontend";
     inherit version src;
-    npmDepsHash = "sha256-S+wEg5voD8xi4sIKCZJrxAAW5AetjD1zpcNLkN+CCQ4=";
+    npmDepsHash = "sha256-rHYnr0DOs8cigEGAK0PU74WnbJsFWpCWF0lhx64jTNo=";
 
     # The apps/desktop workspace pulls in electron; skip its binary download
     # and all install scripts — the esbuild/vite builds below don't need them.
@@ -552,6 +552,9 @@ python3.pkgs.buildPythonApplication {
   build-system = with python3.pkgs; [
     setuptools
   ];
+
+  # Upstream pins an exact setuptools in build-system.requires.
+  pypaBuildFlags = [ "--skip-dependency-check" ];
 
   # These re-exec sys.executable, which is the bare interpreter without Hermes'
   # dependencies under Nix. Use the wrapper-provided env.
