@@ -66,8 +66,8 @@ stdenvNoCC.mkDerivation {
   ''
   + lib.optionalString isLinux ''
     install -Dm755 -t $out/bin sbx
-    install -Dm755 -t $out/libexec containerd-shim-nerdbox-* mkfs.erofs
-    install -Dm644 -t $out/libexec nerdbox-kernel-* nerdbox-rootfs-*.erofs
+    install -Dm755 -t $out/libexec containerd-shim-nerdbox-* docker-docklet mkfs.erofs
+    install -Dm644 -t $out/libexec nerdbox-kernel-* nerdbox-rootfs-*.erofs sailor-rootfs-*.erofs
     install -Dm755 -t $out/libexec/lib libsailor.so
     wrapProgram $out/bin/sbx --prefix PATH : ${lib.makeBinPath [ e2fsprogs ]}
   ''
