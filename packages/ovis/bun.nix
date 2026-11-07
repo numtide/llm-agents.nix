@@ -482,6 +482,10 @@
     url = "https://registry.npmjs.org/@xterm/addon-fit/-/addon-fit-0.11.0.tgz";
     hash = "sha512-jYcgT6xtVYhnhgxh3QgYDnnNMYTcf8ElbxxFzX0IZo+vabQqSPAjC3c1wJrKB5E19VwQei89QCiZZP86DCPF7g==";
   };
+  "@xterm/addon-image@0.9.0" = fetchurl {
+    url = "https://registry.npmjs.org/@xterm/addon-image/-/addon-image-0.9.0.tgz";
+    hash = "sha512-oYWA8/QAr5/Emwl1xL7WCoOqeG3IZfpzEz/OVq1j4Oi9934TQmHiyubClikRf0D/jL3JNiNuz/Lsqx0kXQ02BA==";
+  };
   "@xterm/addon-unicode-graphemes@0.4.0" = fetchurl {
     url = "https://registry.npmjs.org/@xterm/addon-unicode-graphemes/-/addon-unicode-graphemes-0.4.0.tgz";
     hash = "sha512-9+/CqwbKcnlkJU4d3wIgO+wjsL8f6vyz+UwUWLu6nADQz8Gr8ONqGCJfdDjIdI+yYZLABQqQy47FzEM6AWELjw==";
