@@ -553,6 +553,9 @@ python3.pkgs.buildPythonApplication {
     setuptools
   ];
 
+  # Upstream pins an exact setuptools in build-system.requires.
+  pypaBuildFlags = [ "--skip-dependency-check" ];
+
   # These re-exec sys.executable, which is the bare interpreter without Hermes'
   # dependencies under Nix. Use the wrapper-provided env.
   postPatch = ''
