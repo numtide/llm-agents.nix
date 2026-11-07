@@ -10,16 +10,16 @@
 
 buildGo127Module rec {
   pname = "agent-manager";
-  version = "0.47.1";
+  version = "0.48.0";
 
   src = fetchFromGitHub {
     owner = "YoanWai";
     repo = "agent-manager";
     tag = "v${version}";
-    hash = "sha256-NZ1TCwF8wRJ0/9J7J1rZPq0/mcvvKI9xxW1oyVYzJGE=";
+    hash = "sha256-OofKc9vH9wy5osEXFqZ5DcskesvwoTyPWn+CNmdbxMs=";
   };
 
-  vendorHash = "sha256-5wkFrMibi83C92k3KVgAb+R0hOyXQXAwpewkb1zbYfE=";
+  vendorHash = "sha256-90wZZEXjRqzZzyCGsu6/2cs6STDIFb031L1TbM1zekw=";
 
   subPackages = [ "." ];
 
