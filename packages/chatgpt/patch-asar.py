@@ -28,7 +28,7 @@ SKIP_PROCESS_REPORT = (
 # `platform` into a local and GNU `cp -T` stay inside the byte budget. The local
 # must not shadow `r` or `n`, which the rest of the function uses.
 COPY_PLUGINS_WRITABLE = re.compile(
-    rb"(?P<fn>async function [\w$]+\(e,t\)\{)"
+    rb"(?P<fn>async function(?: [\w$]+)?\(e,t\)\{)"
     rb'if\("darwin"===(?P<plat>[\w$]+\(\)\.platform)\)'
     rb'(?P<ditto>return void await (?P<exec>[\w$]+)\("/usr/bin/ditto",\["--noqtn",e,t\]\);)'
     rb'if\("win32"!==(?P=plat)\)'
@@ -52,22 +52,15 @@ def _copy_writable(m: re.Match[bytes]) -> bytes:
 
 
 # The Local Work executor copies codex-app-tools to executor-plugins with
-# fs.cp and then cannot rewrite or re-copy the read-only result. `dirs` is the
-# bundle's recursive u+w helper for directories, which lets fs.cp replace a
-# tree left read-only by earlier builds. The command path is under cwd, so a
-# prefix replace stands in for path.relative, and `+w` for `u+w`, to stay inside
-# the byte budget. The replace callback keeps `$` in the destination literal.
+# fs.cp and then cannot write .mcp.json into the read-only result. `exec` is
+# the promisified execFile from the plugin copy above, in scope here too. The
+# command path is under cwd, so a prefix replace stands in for path.relative,
+# and `+w` for `u+w`, to stay inside the byte budget. The replace callback
+# keeps `$` in the destination literal.
 COPY_EXECUTOR_PLUGIN_WRITABLE = re.compile(
     rb"(?P<cp>await [\w$]+\(\)\.cp\((?P<server>[\w$]+)\.cwd,(?P<dst>[\w$]+),\{recursive:!0\}\)),"
     rb'"win32"!==process\.platform&&\((?P=server)\.command=(?P<path>[\w$]+\(\))\.join\('
     rb"(?P=dst),(?P=path)\.relative\((?P=server)\.cwd,(?P=server)\.command\)\)\),"
-)
-MAKE_DIRS_WRITABLE = re.compile(
-    rb"async function (?P<dirs>[\w$]+)\(e\)\{let t=await (?P<fs>[\w$]+\(\))\.lstat\(e\)"
-    rb'\.catch\(e=>\{if\("ENOENT"===e\.code\)return null;throw e\}\);'
-    rb"if\(null==t\|\|!t\.isDirectory\(\)\)return;await (?P=fs)\.chmod\(e,128\|t\.mode\);"
-    rb"let r=await (?P=fs)\.readdir\(e,\{withFileTypes:!0\}\);"
-    rb"await Promise\.all\(r\.filter\(e=>e\.isDirectory\(\)\)\.map\(t=>(?P=dirs)\("
 )
 
 
@@ -80,15 +73,9 @@ def _find_one(pattern: re.Pattern[bytes], data: bytes) -> re.Match[bytes]:
 
 def _copy_executor_plugin_writable(m: re.Match[bytes]) -> bytes:
     exec_ = _find_one(COPY_PLUGINS_WRITABLE, m.string)["exec"]
-    dirs = _find_one(MAKE_DIRS_WRITABLE, m.string)["dirs"]
     server, dst = m["server"], m["dst"]
     return (
-        b"await "
-        + dirs
-        + b"("
-        + dst
-        + b"),"
-        + m["cp"]
+        m["cp"]
         + b",await "
         + exec_
         + b'("chmod",["-R","+w",'
