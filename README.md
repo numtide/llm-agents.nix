@@ -815,6 +815,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>nodecode</strong> - A self-modifying agent organism in SBCL</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/nodecode-ai/nodecode
+- **Usage**: `nix run github:numtide/llm-agents.nix#nodecode -- --help`
+- **Nix**: [packages/nodecode/package.nix](packages/nodecode/package.nix)
+
+</details>
+<details>
 <summary><strong>openclaw</strong> - Your own personal AI assistant. Any OS. Any Platform. The lobster way</summary>
 
 - **Source**: source
