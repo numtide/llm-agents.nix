@@ -30,15 +30,6 @@ let
     lispLibs = clDeps;
   };
 
-  # Build nodecode/bin for the standalone executable
-  nodecodeBinSystem = pkgs.sbcl.buildASDFSystem {
-    pname = "nodecode-bin";
-    version = "0.0.1";
-    inherit src;
-    systems = [ "nodecode/bin" ];
-    lispLibs = clDeps;
-  };
-
   runtime = pkgs.sbcl.withPackages (_: [ nodecodeSystem ]);
 
 in
