@@ -8,6 +8,7 @@
   rustc,
   cargo,
   rustPlatform,
+  unpinCargoMsrvHook,
   pkg-config,
   cmake,
   ninja,
@@ -63,6 +64,7 @@ stdenv.mkDerivation {
   nativeBuildInputs = [
     bun2nixLib.hook
     bun
+    unpinCargoMsrvHook
     rustc
     cargo
     rustPlatform.cargoSetupHook
