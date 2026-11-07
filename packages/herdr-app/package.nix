@@ -75,11 +75,8 @@ rustPlatform.buildRustPackage (finalAttrs: {
   dontUseZigCheck = true;
   dontUseZigInstall = true;
 
-  # xcbuild's xcodebuild stub makes ghostty enable the unneeded xcframework,
-  # which it cannot create. Tools with absolute paths are absent in the sandbox.
+  # Tools with absolute paths are absent in the sandbox.
   postPatch = lib.optionalString stdenv.hostPlatform.isDarwin ''
-    substituteInPlace crates/ghostty-sys/build.rs \
-      --replace-fail '"-Demit-lib-vt",' '"-Demit-lib-vt", "-Demit-xcframework=false",'
     substituteInPlace vendor/ghostty/pkg/apple-sdk/native_link.zig \
       --replace-fail '"/usr/bin/xcrun"' '"xcrun"'
     substituteInPlace vendor/ghostty/src/build/GhosttyLibVt.zig \
