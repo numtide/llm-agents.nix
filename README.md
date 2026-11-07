@@ -1957,6 +1957,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>magpie</strong> - Manage models, providers, and accounts for AI coding agents in one place</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/yetone/magpie
+- **Usage**: `nix run github:numtide/llm-agents.nix#magpie -- --help`
+- **Nix**: [packages/magpie/package.nix](packages/magpie/package.nix)
+
+</details>
+<details>
 <summary><strong>mcp-remote</strong> - Connect MCP clients that only support local (stdio) servers to a remote MCP server</summary>
 
 - **Source**: source
