@@ -2037,6 +2037,17 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>rea</strong> - Reverse engineering CLI and MCP server for agents</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/morluto/rea
+- **Usage**: `nix run github:numtide/llm-agents.nix#rea -- --help`
+- **Nix**: [packages/rea/package.nix](packages/rea/package.nix)
+- **Documentation**: See [packages/rea/README.md](packages/rea/README.md) for detailed usage
+
+</details>
+<details>
 <summary><strong>rtk</strong> - CLI proxy that reduces LLM token consumption by 60-90% on common dev commands</summary>
 
 - **Source**: source

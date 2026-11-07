@@ -1,0 +1,8 @@
+{
+  "version": "17.23.2",
+  "napiVersion": 8,
+  "hashes": {
+    "x86_64-linux": "sha256-n6j2aM6R6wNxPoVk3k+PveIyIz7pHXKcFnc/3hHbrpU=",
+    "aarch64-linux": "sha256-EQg/AWpCnodQbNaBZr0URdqP69UGok7fP2xKmno+qf4="
+  }
+}
