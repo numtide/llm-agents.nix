@@ -35,10 +35,10 @@ buildNpmPackage rec {
 
   dontNpmPrune = true; # hangs forever on both Linux/darwin
 
-  # pnpm links the plugins/vscode workspace package into node_modules, but
-  # npm pack does not ship plugins/, leaving a dangling symlink in $out.
+  # pnpm links the plugins/* workspace packages into node_modules, but
+  # npm pack does not ship plugins/, leaving dangling symlinks in $out.
   preFixup = ''
-    rm -f $out/lib/node_modules/@nanocollective/nanocoder/node_modules/.pnpm/node_modules/nanocoder-vscode
+    find $out/lib/node_modules/@nanocollective/nanocoder/node_modules -xtype l -delete
   '';
 
   passthru.category = "AI Coding Agents";
