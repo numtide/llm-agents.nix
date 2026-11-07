@@ -10,13 +10,13 @@
 
 buildNpmPackage rec {
   pname = "nanocoder";
-  version = "1.31.0";
+  version = "1.32.0";
 
   src = fetchFromGitHub {
     owner = "Nano-Collective";
     repo = "nanocoder";
     tag = "v${version}";
-    hash = "sha256-yiQyv53kj6ng60CaBgMrorxyETeEgH+xL6vbJIk98+Q=";
+    hash = "sha256-cq+GC+obqPcvKewMY4ZeMQT1Ir51Wlmk281yxLUd/fE=";
   };
 
   npmDeps = null;
@@ -24,7 +24,7 @@ buildNpmPackage rec {
     inherit pname version src;
     pnpm = pnpm_11;
     fetcherVersion = 4;
-    hash = "sha256-rbexn42rVI5xkr7NLzfRv+1NqpIpUNnTMqX2+el3ovk=";
+    hash = "sha256-vKLdWxKe++cLZAG+TrMBxM0WM0KkIhUl+kLq4G/Xx4o=";
   };
 
   nativeBuildInputs = [ pnpm_11 ];
