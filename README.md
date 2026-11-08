@@ -173,7 +173,7 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 <summary><strong>crush</strong> - The glamourous AI coding agent for your favourite terminal</summary>
 
 - **Source**: source
-- **License**: MIT
+- **License**: FSL-1.1-MIT
 - **Homepage**: https://github.com/charmbracelet/crush
 - **Usage**: `nix run github:numtide/llm-agents.nix#crush -- --help`
 - **Nix**: [packages/crush/package.nix](packages/crush/package.nix)
