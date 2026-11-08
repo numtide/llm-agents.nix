@@ -725,7 +725,7 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
-<summary><strong>cindy</strong> - Open-source desktop client for Cindy</summary>
+<summary><strong>cindy</strong> - Open-source AI agent desktop client</summary>
 
 - **Source**: source
 - **License**: Apache-2.0

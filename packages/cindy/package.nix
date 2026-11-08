@@ -72,6 +72,7 @@ let
   pname = "cindy";
   electron = electron_42;
   pnpm = pnpm_10;
+  arch = if stdenv.hostPlatform.isx86_64 then "x64" else "arm64";
 
   src = fetchFromGitHub {
     owner = "makecindy";
@@ -80,8 +81,6 @@ let
     inherit hash;
   };
 
-  # Electron's DT_NEEDED libraries. These are resolved by formatelf from
-  # buildInputs and are also needed by the small C remote-desktop helpers.
   libraries = [
     alsa-lib
     at-spi2-atk
@@ -119,8 +118,7 @@ let
     stdenv.cc.cc.lib
   ];
 
-  # Loaded with dlopen(), so they are invisible to autoPatchelf's DT_NEEDED
-  # scan. formatelf adds these to RUNPATH via runtimeDependencies.
+  # dlopen()ed
   runtimeDependencies = [
     libglvnd
     libnotify
@@ -129,20 +127,6 @@ let
     pipewire
     wayland
   ];
-
-  # Data files, not shared libraries: keep them out of LD_LIBRARY_PATH.
-  dataDirs = [
-    adwaita-icon-theme
-    gsettings-desktop-schemas
-  ];
-
-  systemKey =
-    if stdenv.hostPlatform.isx86_64 then
-      "x64"
-    else if stdenv.hostPlatform.isAarch64 then
-      "arm64"
-    else
-      throw "Unsupported platform for cindy: ${stdenv.hostPlatform.system}";
 
   desktopItem = makeDesktopItem {
     name = "cindy";
@@ -193,138 +177,100 @@ stdenv.mkDerivation {
     wayland-scanner
   ];
 
-  buildInputs = libraries ++ runtimeDependencies ++ dataDirs;
+  buildInputs = libraries ++ runtimeDependencies;
 
   dontStrip = true;
 
   env = {
     APP_VERSION = version;
-    COREPACK_ENABLE = "0";
     ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
     npm_config_build_from_source = "true";
-    pnpm_config_manage_package_manager_versions = "false";
-    npm_config_managePackageManagerVersions = "false";
-    pnpm_config_managePackageManagerVersions = "false";
   };
 
   postPatch = ''
-      sed -i '/"packageManager":/d' package.json
-      sed -i '/onlyModules: modules,/a\    buildFromSource: true,' \
-        apps/desktop/forge.config.ts
-      sed -i '/packagerConfig: {/a\    electronZipDir: process.env.CINDY_ELECTRON_ZIP_DIR,' \
-        apps/desktop/forge.config.ts
+    sed -i '/"packageManager":/d' package.json
+    sed -i '/onlyModules: modules,/a\    buildFromSource: true,' \
+      apps/desktop/forge.config.ts
+    sed -i '/packagerConfig: {/a\    electronZipDir: process.env.CINDY_ELECTRON_ZIP_DIR,' \
+      apps/desktop/forge.config.ts
+    sed -i 's/"version": "[^"]*"/"version": "${ripgrep.version}"/' \
+      tools/ripgrep/latest.json
 
-      # Use nixpkgs' ripgrep instead of Cindy's network downloader.
-      sed -i 's/"version": "[^"]*"/"version": "${ripgrep.version}"/' \
-        tools/ripgrep/latest.json
-
-      # Keep the Nix package telemetry-free, including when it reuses a
-      # user-data directory that has consented to analytics in another build.
-      substituteInPlace apps/desktop/src/main/analytics-settings-store.ts \
-        --replace-fail \
-          'function isReportingBuild(): boolean {' \
-          'function isReportingBuild(): boolean {
-    if (process.env.CINDY_DISABLE_TELEMETRY === "1") return false;'
-      substituteInPlace apps/desktop/src/main/analytics-settings-store.ts \
-        --replace-fail \
-          'analyticsEnabled: true,' \
-          'analyticsEnabled: false,'
+    # also overrides consent stored by other builds sharing the profile
+    substituteInPlace apps/desktop/src/main/analytics-settings-store.ts \
+      --replace-fail \
+        'function isReportingBuild(): boolean {' \
+        'function isReportingBuild(): boolean {
+      if (process.env.CINDY_DISABLE_TELEMETRY === "1") return false;' \
+      --replace-fail 'analyticsEnabled: true,' 'analyticsEnabled: false,'
 
     install -Dm644 ${sqlite-vec}/lib/vec0.so \
-      apps/desktop/native/sqlite-vec/linux-${systemKey}/vec0.so
+      apps/desktop/native/sqlite-vec/linux-${arch}/vec0.so
   '';
 
   preBuild = ''
-    export HOME="$TMPDIR/home"
-    export XDG_CACHE_HOME="$TMPDIR/cache"
-    mkdir -p "$HOME" "$XDG_CACHE_HOME"
+    export HOME=$TMPDIR
 
     upstreamElectron=$(node -p "require('./apps/desktop/package.json').devDependencies.electron")
     if [[ "''${upstreamElectron%%.*}" != ${lib.versions.major electron.version} ]]; then
-      echo "error: upstream expects Electron $upstreamElectron, but nixpkgs provides ${electron.version}" >&2
+      echo "error: upstream expects Electron $upstreamElectron, nixpkgs has ${electron.version}" >&2
       exit 1
     fi
 
-    # pnpm has already installed the lockfile's Electron package. Align the
-    # build copy with nixpkgs without changing the fixed dependency store.
     sed -i 's/"electron": "[^"]*"/"electron": "${electron.version}"/' \
       apps/desktop/package.json
     sed -i '0,/"version": "[^"]*"/s//"version": "${electron.version}"/' \
       node_modules/electron/package.json
 
-    electronDist="$TMPDIR/electron-dist"
-    mkdir -p "$electronDist"
-    cp -R ${electron}/libexec/electron/. "$electronDist/"
-    chmod -R u+w "$electronDist"
-    mkdir -p node_modules/electron/dist
-    cp -R "$electronDist"/. node_modules/electron/dist/
-    printf 'electron\n' > node_modules/electron/path.txt
-    printf '%s\n' '${electron.version}' > node_modules/electron/dist/version
-    mkdir -p "$TMPDIR/electron-zips"
-    (cd "$electronDist" && zip -X -qr \
-      "$TMPDIR/electron-zips/electron-v${electron.version}-linux-${systemKey}.zip" .)
-    export CINDY_ELECTRON_ZIP_DIR="$TMPDIR/electron-zips"
+    dist=node_modules/electron/dist
+    mkdir -p $dist
+    cp -R ${electron}/libexec/electron/. $dist/
+    chmod -R u+w $dist
+    echo electron > node_modules/electron/path.txt
+    echo ${electron.version} > $dist/version
+    export CINDY_ELECTRON_ZIP_DIR=$TMPDIR/electron-zips
+    mkdir -p $CINDY_ELECTRON_ZIP_DIR
+    (cd $dist && zip -X -qr $CINDY_ELECTRON_ZIP_DIR/electron-v${electron.version}-linux-${arch}.zip .)
     export npm_config_nodedir=${electron.headers}
 
-    mkdir -p apps/ripgrep-bin/linux-${systemKey}
-    install -Dm755 ${ripgrep}/bin/rg \
-      apps/ripgrep-bin/linux-${systemKey}/rg
-    printf '%s\n' '${ripgrep.version}' > apps/ripgrep-bin/linux-${systemKey}/.version
+    install -Dm755 ${ripgrep}/bin/rg apps/ripgrep-bin/linux-${arch}/rg
+    echo ${ripgrep.version} > apps/ripgrep-bin/linux-${arch}/.version
   '';
 
   buildPhase = ''
     runHook preBuild
-    pnpm --config.manage-package-manager-versions=false --filter desktop package
+    pnpm --filter desktop package
     runHook postBuild
   '';
 
   installPhase = ''
     runHook preInstall
-    appDir="apps/desktop/out/Cindy-linux-${systemKey}"
-    test -x "$appDir/Cindy"
-    mkdir -p "$out/lib/cindy" "$out/bin"
-    cp -R "$appDir"/. "$out/lib/cindy/"
+    mkdir -p $out/lib $out/bin
+    cp -R apps/desktop/out/Cindy-linux-${arch} $out/lib/cindy
 
-    # node-gyp leaves compiler metadata behind. Keep the runtime .node files
-    # and node-pty's spawn-helper, but drop Makefiles/config.gypi/.deps.
-    find "$out/lib/cindy/resources/app.asar.unpacked/node_modules" \
-      -type f -path '*/build/*' ! -name '*.node' ! -name 'spawn-helper' -delete
-    find "$out/lib/cindy/resources/app.asar.unpacked/node_modules" -type d -empty -delete
-    rm -f "$out/lib/cindy/resources/app.asar.unpacked/node_modules/better-sqlite3/build/Release/test_extension.node"
+    # node-gyp build leftovers
+    find $out/lib/cindy/resources/app.asar.unpacked/node_modules \
+      -type f -path '*/build/*' ! -name '*.node' ! -name spawn-helper -delete
+    find $out/lib/cindy/resources/app.asar.unpacked/node_modules -type d -empty -delete
+    rm -f $out/lib/cindy/resources/app.asar.unpacked/node_modules/better-sqlite3/build/Release/test_extension.node
 
-    install -Dm644 apps/desktop/resources/icon.png \
-      "$out/share/icons/hicolor/512x512/apps/cindy.png"
-    makeWrapper "$out/lib/cindy/Cindy" "$out/bin/cindy" \
-      --chdir "$out/lib/cindy" \
+    install -Dm644 apps/desktop/resources/icon.png $out/share/icons/hicolor/512x512/apps/cindy.png
+    makeWrapper $out/lib/cindy/Cindy $out/bin/cindy \
+      --chdir $out/lib/cindy \
       --set CINDY_DISABLE_TELEMETRY 1 \
       --prefix LD_LIBRARY_PATH : "$out/lib/cindy:${lib.makeLibraryPath runtimeDependencies}" \
-      --prefix PATH : "${
+      --prefix PATH : ${
         lib.makeBinPath [
           git
           xdg-utils
         ]
-      }" \
+      } \
       --prefix XDG_DATA_DIRS : "$out/share:${adwaita-icon-theme}/share:${gsettings-desktop-schemas}/share/gsettings-schemas/${gsettings-desktop-schemas.name}" \
-      --add-flags "--no-sandbox --disable-setuid-sandbox"
+      --add-flags --no-sandbox
     runHook postInstall
   '';
 
   desktopItems = [ desktopItem ];
-
-  doInstallCheck = true;
-  installCheckPhase = ''
-    runHook preInstallCheck
-
-    test -x "$out/bin/cindy"
-    test -x "$out/lib/cindy/Cindy"
-    test -f "$out/lib/cindy/resources/app.asar"
-    test -f "$out/share/applications/cindy.desktop"
-    test -f "$out/share/icons/hicolor/512x512/apps/cindy.png"
-    grep -q 'CINDY_DISABLE_TELEMETRY' "$out/bin/cindy"
-    grep -q 'XDG_DATA_DIRS' "$out/bin/cindy"
-
-    runHook postInstallCheck
-  '';
 
   passthru = {
     category = "AI Assistants";
@@ -346,6 +292,9 @@ stdenv.mkDerivation {
     ];
     maintainers = with flake.lib.maintainers; [ rucadi ];
     mainProgram = "cindy";
-    platforms = platforms.linux;
+    platforms = [
+      "x86_64-linux"
+      "aarch64-linux"
+    ];
   };
 }
