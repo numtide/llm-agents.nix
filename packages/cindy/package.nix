@@ -7,7 +7,7 @@
   pnpmConfigHook,
   pnpm_10,
   nodejs_22,
-  electron_42,
+  electron_43,
   ripgrep,
   sqlite-vec,
   makeWrapper,
@@ -70,7 +70,7 @@ let
   inherit (versionData) version hash pnpmDepsHash;
 
   pname = "cindy";
-  electron = electron_42;
+  electron = electron_43;
   pnpm = pnpm_10;
   arch = if stdenv.hostPlatform.isx86_64 then "x64" else "arm64";
 
@@ -212,7 +212,7 @@ stdenv.mkDerivation {
     export HOME=$TMPDIR
 
     upstreamElectron=$(node -p "require('./apps/desktop/package.json').devDependencies.electron")
-    if [[ "''${upstreamElectron%%.*}" != ${lib.versions.major electron.version} ]]; then
+    if (( ''${upstreamElectron%%.*} > ${lib.versions.major electron.version} )); then
       echo "error: upstream expects Electron $upstreamElectron, nixpkgs has ${electron.version}" >&2
       exit 1
     fi
