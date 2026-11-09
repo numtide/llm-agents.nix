@@ -13,7 +13,9 @@
   git,
   makeWrapper,
   alsa-lib,
+  oniguruma,
   openssl,
+  sqlite,
   # Runtime tools wrapped onto PATH (typing/clipboard/notify backends).
   wtype,
   dotool,
@@ -58,11 +60,17 @@ rustPlatform.buildRustPackage rec {
 
   buildInputs = [
     alsa-lib
+    oniguruma
     openssl
+    sqlite
   ];
 
-  # whisper-rs runs bindgen against whisper.cpp headers.
-  env.LIBCLANG_PATH = "${llvmPackages.libclang.lib}/lib";
+  env = {
+    # whisper-rs runs bindgen against whisper.cpp headers.
+    LIBCLANG_PATH = "${llvmPackages.libclang.lib}/lib";
+    LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
+    RUSTONIG_SYSTEM_LIBONIG = "1";
+  };
 
   preBuild = ''
     export CMAKE_BUILD_PARALLEL_LEVEL=$NIX_BUILD_CORES

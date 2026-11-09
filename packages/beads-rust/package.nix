@@ -3,6 +3,8 @@
   flake,
   rustPlatform,
   fetchFromGitHub,
+  pkg-config,
+  aws-lc,
   versionCheckHook,
 }:
 
@@ -32,6 +34,10 @@ rustPlatform.buildRustPackage {
     inherit (data) hash;
   };
 
+  nativeBuildInputs = [ pkg-config ];
+
+  buildInputs = [ aws-lc ];
+
   postUnpack = ''
     cp -r ${frankensqlite} frankensqlite
     chmod -R u+w frankensqlite
@@ -42,9 +48,12 @@ rustPlatform.buildRustPackage {
     cp scripts/dev-local-frankensqlite.toml .cargo/config.toml
   '';
 
-  # fsqlite uses #![feature(peer_credentials_unix_socket)] which requires nightly.
-  # RUSTC_BOOTSTRAP=1 enables nightly features on stable rustc.
-  env.RUSTC_BOOTSTRAP = 1;
+  env = {
+    # fsqlite uses #![feature(peer_credentials_unix_socket)] which requires nightly.
+    # RUSTC_BOOTSTRAP=1 enables nightly features on stable rustc.
+    RUSTC_BOOTSTRAP = 1;
+    AWS_LC_SYS_USE_SYSTEM = "1";
+  };
 
   # Disable self_update feature — doesn't make sense in Nix
   buildNoDefaultFeatures = true;

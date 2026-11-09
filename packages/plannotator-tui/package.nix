@@ -2,6 +2,8 @@
   lib,
   fetchFromGitHub,
   rustPlatform,
+  pkg-config,
+  sqlite,
   versionCheckHook,
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
@@ -16,6 +18,12 @@ rustPlatform.buildRustPackage (finalAttrs: {
   };
 
   cargoHash = "sha256-wcgVVU9zhWhf2nPYvJbddkydiQpBA00gejHu/i9fZaU=";
+
+  nativeBuildInputs = [ pkg-config ];
+
+  buildInputs = [ sqlite ];
+
+  env.LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
 
   # The darwin cc-wrapper re-quotes non-ASCII arguments as $'\303\274', which
   # breaks linking the fake herdr in a temp dir named with "ü".

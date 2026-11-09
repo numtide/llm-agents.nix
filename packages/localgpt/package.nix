@@ -1,8 +1,10 @@
 {
   lib,
+  stdenv,
   rustPlatform,
   fetchFromGitHub,
   pkg-config,
+  jemalloc,
   openssl,
   onnxruntime,
   libGL,
@@ -41,6 +43,7 @@ rustPlatform.buildRustPackage rec {
   nativeBuildInputs = [ pkg-config ];
 
   buildInputs = [
+    jemalloc
     openssl
     onnxruntime
     # eframe/glow compile-time deps (desktop feature is default)
@@ -57,6 +60,7 @@ rustPlatform.buildRustPackage rec {
     # Use system onnxruntime instead of downloading binaries
     ORT_LIB_LOCATION = "${lib.getLib onnxruntime}/lib";
     ORT_PREFER_DYNAMIC_LINK = "1";
+    JEMALLOC_OVERRIDE = "${lib.getLib jemalloc}/lib/libjemalloc${stdenv.hostPlatform.extensions.sharedLibrary}";
   };
 
   # Add runtime library paths for dlopen'd libs (onnxruntime, GL, wayland, xkbcommon)

@@ -3,6 +3,9 @@
   flake,
   fetchFromGitHub,
   rustPlatform,
+  pkg-config,
+  sqlite,
+  zstd,
   versionCheckHook,
   versionCheckHomeHook,
 }:
@@ -22,6 +25,18 @@ rustPlatform.buildRustPackage rec {
   buildAndTestSubdir = "src-tauri";
 
   cargoHash = "sha256-VEpDWh8fHG+889IMVFmq2d+6TGStbqdJolD2cpfkjxc=";
+
+  nativeBuildInputs = [ pkg-config ];
+
+  buildInputs = [
+    sqlite
+    zstd
+  ];
+
+  env = {
+    LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
+    ZSTD_SYS_USE_PKG_CONFIG = "1";
+  };
 
   # Tests require network access and runtime configuration
   doCheck = false;

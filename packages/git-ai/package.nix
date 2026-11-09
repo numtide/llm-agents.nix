@@ -6,6 +6,9 @@
   git,
   perl,
   installAgentSkills,
+  pkg-config,
+  openssl,
+  sqlite,
   versionCheckHook,
   versionCheckHomeHook,
 }:
@@ -24,9 +27,20 @@ rustPlatform.buildRustPackage (finalAttrs: {
   cargoHash = "sha256-hoVm5IFXmGlEqEPrmsANkNUeavCmWjrJVLK6aknReyA=";
 
   nativeBuildInputs = [
-    perl
     installAgentSkills
+    pkg-config
+    perl
   ];
+
+  buildInputs = [
+    openssl
+    sqlite
+  ];
+
+  env = {
+    LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
+    OPENSSL_NO_VENDOR = "1";
+  };
 
   postPatch = ''
     substituteInPlace src/config.rs \

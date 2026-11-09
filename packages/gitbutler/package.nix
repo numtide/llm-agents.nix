@@ -58,6 +58,11 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-JLsIlkbNRqjCgidgI33djWcseGkwsEBzw6g9q6eYoDg=";
   };
 
+  # Upstream enables git2's `unstable-sha256`, so libgit2-sys probes the
+  # `libgit2-experimental` pkg-config module, which nixpkgs does not ship;
+  # LIBGIT2_NO_VENDOR (set by cargoSetupHook) would then abort the build.
+  dontCargoUseSystemLibs = true;
+
   # Pin the user-facing version into the Tauri release config and disable the
   # built-in updater so the packaged app doesn't try to self-update. The
   # `externalBin` rewrite keeps only the git helper shims that we actually ship.

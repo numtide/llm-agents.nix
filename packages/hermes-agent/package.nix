@@ -8,7 +8,10 @@
   fetchPypi,
   buildNpmPackage,
   nodejs,
+  pkg-config,
+  aws-lc,
   olm,
+  zstd,
   versionCheckHook,
   writeText,
   versionCheckHomeHook,
@@ -75,7 +78,19 @@ let
         maturinBuildHook
       ]
       # Tags lag the workspace Cargo.toml version that pyproject derives from.
-      ++ [ python3.pkgs.pyprojectVersionPatchHook ];
+      ++ [
+        python3.pkgs.pyprojectVersionPatchHook
+        pkg-config
+      ];
+
+    buildInputs = [
+      aws-lc
+      zstd
+    ];
+    env = {
+      AWS_LC_SYS_USE_SYSTEM = "1";
+      ZSTD_SYS_USE_PKG_CONFIG = "1";
+    };
 
     pythonImportsCheck = [
       "nemo_relay"

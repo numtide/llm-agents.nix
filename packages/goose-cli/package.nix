@@ -4,7 +4,11 @@
   rustPlatform,
   pkg-config,
   cmake,
+  aws-lc,
+  oniguruma,
   openssl,
+  sqlite,
+  zstd,
   libxcb,
   dbus,
   versionCheckHook,
@@ -43,7 +47,11 @@ rustPlatform.buildRustPackage rec {
   dontUseCmakeConfigure = true;
 
   buildInputs = [
+    aws-lc
+    oniguruma
     openssl
+    sqlite
+    zstd
     libxcb
     dbus
   ];
@@ -51,9 +59,15 @@ rustPlatform.buildRustPackage rec {
   # reqwest-based tests need a CA bundle to construct HTTP clients.
   nativeCheckInputs = [ cacert ];
 
-  # The v8 package will try to download a `librusty_v8.a` release at build time to our read-only filesystem
-  # To avoid this we pre-download the file and export it via RUSTY_V8_ARCHIVE
-  env.RUSTY_V8_ARCHIVE = librusty_v8;
+  env = {
+    # The v8 package will try to download a `librusty_v8.a` release at build time to our read-only filesystem
+    # To avoid this we pre-download the file and export it via RUSTY_V8_ARCHIVE
+    RUSTY_V8_ARCHIVE = librusty_v8;
+    AWS_LC_SYS_USE_SYSTEM = "1";
+    LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
+    RUSTONIG_SYSTEM_LIBONIG = "1";
+    ZSTD_SYS_USE_PKG_CONFIG = "1";
+  };
 
   # Build only the CLI package
   cargoBuildFlags = [

@@ -4,6 +4,11 @@
   fetchFromGitHub,
   rustPlatform,
   installShellFiles,
+  pkg-config,
+  libgit2,
+  oniguruma,
+  sqlite,
+  zlib,
   cacert,
   makeBinaryWrapper,
   coreutils,
@@ -58,8 +63,14 @@ rustPlatform.buildRustPackage (finalAttrs: {
     "kimi_code_apply_preserves_providers_and_third_party_hooks"
   ];
 
-  # build.rs would otherwise try to download the tailwind CLI for the web UI.
-  env.TAILWIND_SKIP = "1";
+  env = {
+    # build.rs would otherwise try to download the tailwind CLI for the web UI.
+    TAILWIND_SKIP = "1";
+    LIBGIT2_NO_VENDOR = "1";
+    LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
+    LIBZ_SYS_STATIC = "0";
+    RUSTONIG_SYSTEM_LIBONIG = "1";
+  };
 
   # `install-hooks`/`setup-agent` probe fixed FHS locations for the bundled
   # hook scripts; point the native-package candidate at our share/ dir.
@@ -73,6 +84,14 @@ rustPlatform.buildRustPackage (finalAttrs: {
   nativeBuildInputs = [
     installShellFiles
     makeBinaryWrapper
+    pkg-config
+  ];
+
+  buildInputs = [
+    libgit2
+    oniguruma
+    sqlite
+    zlib
   ];
 
   # reqwest loads native roots in the mcp_bridge test

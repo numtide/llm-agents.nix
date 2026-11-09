@@ -3,6 +3,8 @@
   rustPlatform,
   fetchFromGitHub,
   installAgentSkills,
+  pkg-config,
+  oniguruma,
   versionCheckHook,
   versionCheckHomeHook,
 }:
@@ -27,7 +29,15 @@ rustPlatform.buildRustPackage rec {
     "jscpd"
   ];
 
-  nativeBuildInputs = [ installAgentSkills ];
+  nativeBuildInputs = [
+    installAgentSkills
+    pkg-config
+  ];
+
+  buildInputs = [ oniguruma ];
+
+  env.RUSTONIG_SYSTEM_LIBONIG = "1";
+
   dontInstallAgentSkills = true;
 
   postInstall = ''

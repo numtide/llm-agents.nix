@@ -8,6 +8,9 @@
   nodejs,
   fetchNpmDeps,
   npmHooks,
+  pkg-config,
+  aws-lc,
+  sqlite,
   versionCheckHook,
   versionCheckHomeHook,
 }:
@@ -36,13 +39,23 @@ rustPlatform.buildRustPackage {
   nativeBuildInputs = [
     nodejs
     npmHooks.npmConfigHook
+    pkg-config
   ];
 
-  env.NIX_NPM_FETCHER_VERSION = "2";
+  buildInputs = [
+    aws-lc
+    sqlite
+  ];
 
-  # `cargo run` in preBuild bypasses cargoBuildHook's linker env vars.
-  env."CARGO_TARGET_${stdenv.hostPlatform.rust.cargoEnvVarTarget}_LINKER" =
-    "${stdenv.cc}/bin/${stdenv.cc.targetPrefix}cc";
+  env = {
+    NIX_NPM_FETCHER_VERSION = "2";
+    AWS_LC_SYS_USE_SYSTEM = "1";
+    LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
+
+    # `cargo run` in preBuild bypasses cargoBuildHook's linker env vars.
+    "CARGO_TARGET_${stdenv.hostPlatform.rust.cargoEnvVarTarget}_LINKER" =
+      "${stdenv.cc}/bin/${stdenv.cc.targetPrefix}cc";
+  };
 
   npmDeps = fetchNpmDeps {
     # nix-update needs a version attribute to update the subpackage hash

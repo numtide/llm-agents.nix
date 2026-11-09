@@ -26,6 +26,11 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   cargoHash = "sha256-Q+or42ppjjkt4OEc+cC2knTCkB7XloePpt2beHYG4q4=";
 
+  # Upstream enables git2's `unstable-sha256`, so libgit2-sys probes the
+  # `libgit2-experimental` pkg-config module, which nixpkgs does not ship;
+  # LIBGIT2_NO_VENDOR (set by cargoSetupHook) would then abort the build.
+  dontCargoUseSystemLibs = true;
+
   # Upstream pins a specific stable channel; allow building with nixpkgs' rustc.
   postPatch = ''
     rm -f rust-toolchain.toml

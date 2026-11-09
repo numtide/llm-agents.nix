@@ -5,8 +5,11 @@
   rustPlatform,
   cacert,
   git,
-  sqlite,
+  pkg-config,
+  aws-lc,
   libredirect,
+  sqlite,
+  zstd,
   versionCheckHook,
 }:
 
@@ -22,6 +25,14 @@ rustPlatform.buildRustPackage (finalAttrs: {
   };
 
   cargoHash = "sha256-9G/ih07H9O6QaJBuPAmtFpCNVBnt2gxCL5LAaeQa5HU=";
+
+  nativeBuildInputs = [ pkg-config ];
+
+  buildInputs = [
+    aws-lc
+    sqlite
+    zstd
+  ];
 
   # `launchctl print gui/<uid>/...` fails with exit code 125 for the darwin
   # build user, which has no per-user launchd domain, making every doctor
@@ -45,8 +56,13 @@ rustPlatform.buildRustPackage (finalAttrs: {
   # ~8.6 GB RSS in a single rustc and gets OOM-killed on the aarch64-linux
   # builders. Debug brings that to ~3 GB and halves the check time.
   checkType = "debug";
-  # Upstream runs its (debug) test suite with this too, see checkle.toml.
-  env.RUST_MIN_STACK = "4194304";
+  env = {
+    # Upstream runs its (debug) test suite with this too, see checkle.toml.
+    RUST_MIN_STACK = "4194304";
+    AWS_LC_SYS_USE_SYSTEM = "1";
+    LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
+    ZSTD_SYS_USE_PKG_CONFIG = "1";
+  };
 
   postInstall = ''
     install -d $out/share/aven

@@ -5,6 +5,8 @@
   rustPlatform,
   pkg-config,
   openssl,
+  sqlite,
+  zstd,
   versionCheckHook,
 }:
 
@@ -27,10 +29,16 @@ rustPlatform.buildRustPackage (finalAttrs: {
     # exceeds the aarch64 builder's 1200s timeout.
     CARGO_PROFILE_RELEASE_LTO = "off";
     CARGO_PROFILE_RELEASE_CODEGEN_UNITS = "16";
+    LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
+    ZSTD_SYS_USE_PKG_CONFIG = "1";
   };
 
   nativeBuildInputs = [ pkg-config ];
-  buildInputs = [ openssl ];
+  buildInputs = [
+    openssl
+    sqlite
+    zstd
+  ];
 
   # Tests need network access.
   doCheck = false;

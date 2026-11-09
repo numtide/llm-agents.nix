@@ -17,6 +17,7 @@
   libxcb,
   wayland,
   vulkan-loader,
+  zstd,
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "herdr-app";
@@ -59,13 +60,18 @@ rustPlatform.buildRustPackage (finalAttrs: {
     cctools
   ];
 
-  buildInputs = lib.optionals stdenv.hostPlatform.isLinux [
+  buildInputs = [
+    zstd
+  ]
+  ++ lib.optionals stdenv.hostPlatform.isLinux [
     fontconfig
     freetype
     libxkbcommon
     libxcb
     wayland
   ];
+
+  env.ZSTD_SYS_USE_PKG_CONFIG = "1";
 
   # Without HERDR_APP_RELEASE at build time the app never updates itself and
   # has no telemetry endpoint.

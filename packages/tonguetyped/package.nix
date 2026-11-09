@@ -9,6 +9,7 @@
   shaderc,
   alsa-lib,
   onnxruntime,
+  sqlite,
   spirv-headers,
   vulkan-headers,
   vulkan-loader,
@@ -49,6 +50,7 @@ rustPlatform.buildRustPackage rec {
   buildInputs = [
     alsa-lib
     onnxruntime
+    sqlite
     spirv-headers
     vulkan-headers
     vulkan-loader
@@ -64,6 +66,7 @@ rustPlatform.buildRustPackage rec {
     CMAKE_POLICY_VERSION_MINIMUM = "3.5";
     ORT_LIB_LOCATION = "${onnxruntime}/lib";
     ORT_PREFER_DYNAMIC_LINK = "1";
+    LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
   };
 
   nativeCheckInputs = [ dbus ];

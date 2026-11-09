@@ -3,8 +3,9 @@
   stdenv,
   rustPlatform,
   fetchFromGitHub,
-  dbus,
   pkg-config,
+  aws-lc,
+  dbus,
   versionCheckHook,
   unpinCargoMsrvHook,
   ...
@@ -27,16 +28,17 @@ rustPlatform.buildRustPackage rec {
   # use until nixpkgs ships a new enough rustc.
   patches = [ ./no-if-let-guard.patch ];
 
-  # keyring uses sync-secret-service (dbus) on Linux, apple-native on Darwin
-  buildInputs = lib.optionals stdenv.hostPlatform.isLinux [ dbus ];
   # unpinCargoMsrvHook: upstream pins rust-version = "1.95" (unreleased MSRV
   # bump) but builds fine on the rustc in nixpkgs.
   nativeBuildInputs = [
     unpinCargoMsrvHook
-  ]
-  ++ lib.optionals stdenv.hostPlatform.isLinux [
     pkg-config
   ];
+
+  # keyring uses sync-secret-service (dbus) on Linux, apple-native on Darwin
+  buildInputs = [ aws-lc ] ++ lib.optionals stdenv.hostPlatform.isLinux [ dbus ];
+
+  env.AWS_LC_SYS_USE_SYSTEM = "1";
 
   doCheck = false;
 

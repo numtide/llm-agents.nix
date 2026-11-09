@@ -3,8 +3,10 @@
   rustPlatform,
   fetchFromGitHub,
   pkg-config,
-  openssl,
+  oniguruma,
   onnxruntime,
+  openssl,
+  zstd,
   stdenv,
   darwinMinVersionHook,
 }:
@@ -24,8 +26,10 @@ rustPlatform.buildRustPackage rec {
   nativeBuildInputs = [ pkg-config ];
 
   buildInputs = [
-    openssl
+    oniguruma
     onnxruntime
+    openssl
+    zstd
   ]
   ++ lib.optionals stdenv.hostPlatform.isDarwin [
     (darwinMinVersionHook "11.0")
@@ -40,6 +44,8 @@ rustPlatform.buildRustPackage rec {
     # Use system onnxruntime instead of downloading binaries
     ORT_LIB_LOCATION = "${lib.getLib onnxruntime}/lib";
     ORT_PREFER_DYNAMIC_LINK = "1";
+    RUSTONIG_SYSTEM_LIBONIG = "1";
+    ZSTD_SYS_USE_PKG_CONFIG = "1";
   };
 
   postFixup = lib.optionalString stdenv.hostPlatform.isDarwin ''

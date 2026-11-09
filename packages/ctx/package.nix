@@ -4,6 +4,10 @@
   flake,
   rustPlatform,
   installAgentSkills,
+  pkg-config,
+  oniguruma,
+  sqlite,
+  zstd,
   versionCheckHook,
   versionCheckHomeHook,
 }:
@@ -29,7 +33,22 @@ rustPlatform.buildRustPackage (finalAttrs: {
   # CoreML acquisition tests fail in Nix sandbox.
   doCheck = false;
 
-  nativeBuildInputs = [ installAgentSkills ];
+  nativeBuildInputs = [
+    installAgentSkills
+    pkg-config
+  ];
+
+  buildInputs = [
+    oniguruma
+    sqlite
+    zstd
+  ];
+
+  env = {
+    LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
+    RUSTONIG_SYSTEM_LIBONIG = "1";
+    ZSTD_SYS_USE_PKG_CONFIG = "1";
+  };
 
   doInstallCheck = true;
   nativeInstallCheckInputs = [
