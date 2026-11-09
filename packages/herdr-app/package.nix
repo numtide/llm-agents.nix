@@ -17,6 +17,7 @@
   libxcb,
   wayland,
   vulkan-loader,
+  zstd,
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "herdr-app";
@@ -59,7 +60,12 @@ rustPlatform.buildRustPackage (finalAttrs: {
     cctools
   ];
 
-  buildInputs = lib.optionals stdenv.hostPlatform.isLinux [
+  # nixpkgs' cargo setup hook sets ZSTD_SYS_USE_PKG_CONFIG, so zstd-sys links
+  # the system libzstd instead of its bundled copy.
+  buildInputs = [
+    zstd
+  ]
+  ++ lib.optionals stdenv.hostPlatform.isLinux [
     fontconfig
     freetype
     libxkbcommon
