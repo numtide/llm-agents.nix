@@ -15,9 +15,11 @@
   makeWrapper,
   rcodesign,
   formatelf,
-  zlib,
   python3,
   zig,
+  oniguruma,
+  zlib,
+  zstd,
   libpulseaudio,
   pipewire,
 }:
@@ -80,7 +82,11 @@ stdenv.mkDerivation {
   ++ lib.optionals stdenv.hostPlatform.isLinux [ formatelf ]
   ++ lib.optionals stdenv.hostPlatform.isDarwin [ rcodesign ];
 
-  buildInputs = lib.optionals stdenv.hostPlatform.isLinux [
+  buildInputs = [
+    oniguruma
+    zstd
+  ]
+  ++ lib.optionals stdenv.hostPlatform.isLinux [
     stdenv.cc.cc.lib
     zlib
     # pi-natives' wayland-pipewire feature links system libpipewire (pkg-config)
@@ -95,6 +101,8 @@ stdenv.mkDerivation {
     # settings of upstream's own `ci` profile instead.
     CARGO_PROFILE_RELEASE_LTO = "thin";
     CARGO_PROFILE_RELEASE_CODEGEN_UNITS = 16;
+    RUSTONIG_SYSTEM_LIBONIG = "1";
+    ZSTD_SYS_USE_PKG_CONFIG = "1";
   };
 
   bunDeps = bun2nixLib.fetchBunDeps {

@@ -5,6 +5,8 @@
   rustPlatform,
   pkg-config,
   stdenv,
+  aws-lc,
+  zstd,
   versionCheckHook,
   versionCheckHomeHook,
 }:
@@ -50,16 +52,26 @@ rustPlatform.buildRustPackage rec {
 
   nativeBuildInputs = [ pkg-config ];
 
-  # nixpkgs' Darwin cc-wrapper injects -liconv even though ccusage references no
-  # iconv symbols, leaving an unused store dependency (upstream ccusage#1251).
-  # dead_strip_dylibs drops load commands whose symbols are never referenced.
-  env.RUSTFLAGS = lib.optionalString stdenv.hostPlatform.isDarwin "-C link-arg=-Wl,-dead_strip_dylibs";
+  buildInputs = [
+    aws-lc
+    zstd
+  ];
 
-  env.CCUSAGE_PRICING_JSON_PATH = litellm-pricing;
+  env = {
+    # nixpkgs' Darwin cc-wrapper injects -liconv even though ccusage references no
+    # iconv symbols, leaving an unused store dependency (upstream ccusage#1251).
+    # dead_strip_dylibs drops load commands whose symbols are never referenced.
+    RUSTFLAGS = lib.optionalString stdenv.hostPlatform.isDarwin "-C link-arg=-Wl,-dead_strip_dylibs";
 
-  # build.rs falls back to the tagged tree's own version, but the tag is
-  # authoritative for what we claim to ship.
-  env.CCUSAGE_VERSION = version;
+    CCUSAGE_PRICING_JSON_PATH = litellm-pricing;
+
+    # build.rs falls back to the tagged tree's own version, but the tag is
+    # authoritative for what we claim to ship.
+    CCUSAGE_VERSION = version;
+
+    AWS_LC_SYS_USE_SYSTEM = "1";
+    ZSTD_SYS_USE_PKG_CONFIG = "1";
+  };
 
   doInstallCheck = true;
 

@@ -4,6 +4,8 @@
   rustPlatform,
   makeWrapper,
   jq,
+  pkg-config,
+  sqlite,
 }:
 
 rustPlatform.buildRustPackage rec {
@@ -19,7 +21,14 @@ rustPlatform.buildRustPackage rec {
 
   cargoHash = "sha256-0VUc3Se3MdmffCkbCw2esLnmht9ZhwnmVCqxjudElfA=";
 
-  nativeBuildInputs = [ makeWrapper ];
+  nativeBuildInputs = [
+    makeWrapper
+    pkg-config
+  ];
+
+  buildInputs = [ sqlite ];
+
+  env.LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
 
   doCheck = false;
 

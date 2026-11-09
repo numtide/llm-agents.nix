@@ -5,10 +5,12 @@
   fetchPnpmDeps,
   rustPlatform,
   nodejs_22,
-  openssl,
   pkg-config,
   pnpm_11,
   pnpmConfigHook,
+  aws-lc,
+  openssl,
+  zstd,
   writeShellScriptBin,
   versionCheckHook,
   versionCheckHomeHook,
@@ -54,7 +56,16 @@ rustPlatform.buildRustPackage rec {
     pnpm
     pnpmConfigHook
   ];
-  buildInputs = [ openssl ];
+  buildInputs = [
+    aws-lc
+    openssl
+    zstd
+  ];
+
+  env = {
+    AWS_LC_SYS_USE_SYSTEM = "1";
+    ZSTD_SYS_USE_PKG_CONFIG = "1";
+  };
 
   # cargo-auditable's metadata collection cannot resolve the upstream
   # workspace's private libsql feature aliases.

@@ -1,11 +1,17 @@
 {
   lib,
+  stdenv,
   flake,
   rustPlatform,
   fetchFromGitHub,
   cmake,
   pkg-config,
+  aws-lc,
+  jemalloc,
+  oniguruma,
   openssl,
+  sqlite,
+  zstd,
   versionCheckHook,
   versionCheckHomeHook,
 }:
@@ -35,12 +41,26 @@ rustPlatform.buildRustPackage (finalAttrs: {
     pkg-config
   ];
 
-  buildInputs = [ openssl ];
+  buildInputs = [
+    aws-lc
+    jemalloc
+    oniguruma
+    openssl
+    sqlite
+    zstd
+  ];
 
   # Make the embedded version string a release one ("vX.Y.Z") instead of a
   # dev one; the build script falls back to "unknown" git metadata, which is
   # fine for tarball builds.
-  env.JCODE_RELEASE_BUILD = "1";
+  env = {
+    JCODE_RELEASE_BUILD = "1";
+    AWS_LC_SYS_USE_SYSTEM = "1";
+    LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
+    RUSTONIG_SYSTEM_LIBONIG = "1";
+    ZSTD_SYS_USE_PKG_CONFIG = "1";
+    JEMALLOC_OVERRIDE = "${lib.getLib jemalloc}/lib/libjemalloc${stdenv.hostPlatform.extensions.sharedLibrary}";
+  };
 
   # Test suite needs network access, provider credentials and a TTY.
   doCheck = false;

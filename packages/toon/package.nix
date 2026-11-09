@@ -3,6 +3,8 @@
   flake,
   rustPlatform,
   fetchCrate,
+  pkg-config,
+  oniguruma,
 }:
 
 rustPlatform.buildRustPackage rec {
@@ -15,6 +17,12 @@ rustPlatform.buildRustPackage rec {
   };
 
   cargoHash = "sha256-j+UijiWYMLWeo3CM6J3q2PqEZRjHfG59JhdNAo3J/rA=";
+
+  nativeBuildInputs = [ pkg-config ];
+
+  buildInputs = [ oniguruma ];
+
+  env.RUSTONIG_SYSTEM_LIBONIG = "1";
 
   cargoBuildFlags = [
     "--features"

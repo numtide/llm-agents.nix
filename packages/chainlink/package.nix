@@ -3,6 +3,8 @@
   flake,
   fetchFromGitHub,
   rustPlatform,
+  pkg-config,
+  sqlite,
   versionCheckHook,
 }:
 
@@ -22,6 +24,12 @@ rustPlatform.buildRustPackage rec {
   buildAndTestSubdir = "chainlink";
 
   cargoHash = "sha256-WmV6PRSuzdoCMXy4LMSMdHsSbI+A8jx89lwUt64DWmc=";
+
+  nativeBuildInputs = [ pkg-config ];
+
+  buildInputs = [ sqlite ];
+
+  env.LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
 
   # Upstream Cargo.toml version doesn't match release tags, and is sporadically
   # updated; replace it with the package version being careful to only update

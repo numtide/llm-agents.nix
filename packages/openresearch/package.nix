@@ -8,6 +8,7 @@
   runCommand,
   makeWrapper,
   installAgentSkills,
+  pkg-config,
   fetchPnpmDeps,
   nodejs,
   pnpm_11,
@@ -21,6 +22,7 @@
   procps,
   python3,
   xdg-utils,
+  sqlite,
   versionCheckHook,
   versionCheckHomeHook,
 }:
@@ -58,7 +60,12 @@ rustPlatform.buildRustPackage (finalAttrs: {
   nativeBuildInputs = [
     makeWrapper
     installAgentSkills
+    pkg-config
   ];
+
+  buildInputs = [ sqlite ];
+
+  env.LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
 
   # Export the CLI guide, not the agent-specific runtime skill collection.
   dontInstallAgentSkills = true;

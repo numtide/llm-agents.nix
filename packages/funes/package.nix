@@ -2,7 +2,11 @@
   lib,
   rustPlatform,
   fetchFromGitHub,
+  pkg-config,
   protobuf,
+  aws-lc,
+  oniguruma,
+  zstd,
   versionCheckHook,
   versionCheckHomeHook,
 }:
@@ -37,7 +41,22 @@ rustPlatform.buildRustPackage (finalAttrs: {
   '';
 
   # lance's protobuf schemas are generated at build time
-  nativeBuildInputs = [ protobuf ];
+  nativeBuildInputs = [
+    pkg-config
+    protobuf
+  ];
+
+  buildInputs = [
+    aws-lc
+    oniguruma
+    zstd
+  ];
+
+  env = {
+    AWS_LC_SYS_USE_SYSTEM = "1";
+    RUSTONIG_SYSTEM_LIBONIG = "1";
+    ZSTD_SYS_USE_PKG_CONFIG = "1";
+  };
 
   # lance's suite is slow and wants network fixtures
   doCheck = false;

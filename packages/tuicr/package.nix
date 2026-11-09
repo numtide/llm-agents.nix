@@ -3,9 +3,13 @@
   fetchFromGitHub,
   rustPlatform,
   pkg-config,
-  libgit2,
-  bash,
   installAgentSkills,
+  bash,
+  libgit2,
+  libssh2,
+  oniguruma,
+  openssl,
+  zlib,
   versionCheckHook,
   flake,
 }:
@@ -30,7 +34,18 @@ rustPlatform.buildRustPackage (finalAttrs: {
   buildInputs = [
     bash
     libgit2
+    libssh2
+    oniguruma
+    openssl
+    zlib
   ];
+
+  env = {
+    LIBSSH2_SYS_USE_PKG_CONFIG = "1";
+    LIBZ_SYS_STATIC = "0";
+    OPENSSL_NO_VENDOR = "1";
+    RUSTONIG_SYSTEM_LIBONIG = "1";
+  };
 
   doCheck = false;
 

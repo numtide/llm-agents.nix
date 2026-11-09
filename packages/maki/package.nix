@@ -6,6 +6,7 @@
   pkg-config,
   perl,
   python3,
+  aws-lc,
   openssl,
   dbus,
   versionCheckHook,
@@ -35,11 +36,16 @@ rustPlatform.buildRustPackage (finalAttrs: {
     python3
   ];
 
-  buildInputs = [ openssl ] ++ lib.optionals stdenv.hostPlatform.isLinux [ dbus ];
+  buildInputs = [
+    aws-lc
+    openssl
+  ]
+  ++ lib.optionals stdenv.hostPlatform.isLinux [ dbus ];
 
   env = {
     # isahc's native-tls-static would otherwise build OpenSSL from source.
     OPENSSL_NO_VENDOR = "1";
+    AWS_LC_SYS_USE_SYSTEM = "1";
     # Upstream's fat LTO alone outlasts the CI build timeout.
     CARGO_PROFILE_RELEASE_LTO = "thin";
   };

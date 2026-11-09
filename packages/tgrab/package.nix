@@ -3,6 +3,9 @@
   flake,
   fetchFromGitHub,
   rustPlatform,
+  pkg-config,
+  aws-lc,
+  zstd,
 }:
 
 rustPlatform.buildRustPackage (finalAttrs: {
@@ -18,7 +21,18 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   cargoHash = "sha256-r2IiZ2ud0ABQrmGxtqZRu2no9lQABoIKr5g0hqmjgDI=";
 
-  env.RUSTFLAGS = "--cfg reqwest_unstable";
+  nativeBuildInputs = [ pkg-config ];
+
+  buildInputs = [
+    aws-lc
+    zstd
+  ];
+
+  env = {
+    RUSTFLAGS = "--cfg reqwest_unstable";
+    AWS_LC_SYS_USE_SYSTEM = "1";
+    ZSTD_SYS_USE_PKG_CONFIG = "1";
+  };
 
   doInstallCheck = true;
   installCheckPhase = ''

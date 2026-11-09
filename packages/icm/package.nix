@@ -5,8 +5,10 @@
   rustPlatform,
   fetchFromGitHub,
   pkg-config,
-  openssl,
+  oniguruma,
   onnxruntime,
+  openssl,
+  sqlite,
   bun,
   bun2nixLib,
   versionCheckHook,
@@ -79,14 +81,18 @@ rustPlatform.buildRustPackage {
 
   nativeBuildInputs = [ pkg-config ];
   buildInputs = [
-    openssl
+    oniguruma
     onnxruntime
+    openssl
+    sqlite
   ];
 
   env = {
     ORT_LIB_LOCATION = "${lib.getLib onnxruntime}/lib";
     ORT_PREFER_DYNAMIC_LINK = "1";
     LIBRARY_PATH = "${lib.getLib onnxruntime}/lib";
+    LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
+    RUSTONIG_SYSTEM_LIBONIG = "1";
   }
   // lib.optionalAttrs stdenv.hostPlatform.isDarwin {
     RUSTFLAGS = "-C link-arg=-Wl,-headerpad_max_install_names";

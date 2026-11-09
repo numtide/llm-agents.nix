@@ -4,6 +4,9 @@
   fetchFromGitHub,
   rustPlatform,
   git,
+  pkg-config,
+  oniguruma,
+  sqlite,
   versionCheckHook,
 }:
 
@@ -21,6 +24,18 @@ rustPlatform.buildRustPackage rec {
   sourceRoot = "source/rust";
 
   cargoHash = "sha256-hQQIlsyvbz5slKnADYBbFUtk58KPEhLklTfYoCJSEUY=";
+
+  nativeBuildInputs = [ pkg-config ];
+
+  buildInputs = [
+    oniguruma
+    sqlite
+  ];
+
+  env = {
+    LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
+    RUSTONIG_SYSTEM_LIBONIG = "1";
+  };
 
   cargoBuildFlags = [
     "--package"

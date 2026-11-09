@@ -19,6 +19,7 @@
   makeBinaryWrapper,
 
   libsoup_3,
+  oniguruma,
   openssl,
   webkitgtk_4_1,
 
@@ -62,9 +63,9 @@ rustPlatform.buildRustPackage (finalAttrs: {
     pnpm_10
     nodejs
     cargo-tauri.hook
+    pkg-config
   ]
   ++ lib.optionals stdenv.hostPlatform.isLinux [
-    pkg-config
     wrapGAppsHook3
   ]
   ++ lib.optionals stdenv.hostPlatform.isDarwin [
@@ -77,15 +78,19 @@ rustPlatform.buildRustPackage (finalAttrs: {
     jujutsu
   ];
 
-  buildInputs =
-    lib.optionals stdenv.hostPlatform.isLinux [
-      libsoup_3
-      openssl
-      webkitgtk_4_1
-    ]
-    ++ lib.optionals stdenv.hostPlatform.isDarwin [
-      openssl
-    ];
+  buildInputs = [
+    oniguruma
+  ]
+  ++ lib.optionals stdenv.hostPlatform.isLinux [
+    libsoup_3
+    openssl
+    webkitgtk_4_1
+  ]
+  ++ lib.optionals stdenv.hostPlatform.isDarwin [
+    openssl
+  ];
+
+  env.RUSTONIG_SYSTEM_LIBONIG = "1";
 
   # pnpmConfigHook runs with --ignore-scripts, so the postinstall that copies
   # Excalidraw fonts from node_modules into static/ must be run manually.
