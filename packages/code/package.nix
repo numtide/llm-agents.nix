@@ -5,7 +5,16 @@
   installShellFiles,
   rustPlatform,
   pkg-config,
+  aws-lc,
+  symlinkJoin,
+  rust-jemalloc-sys,
+  libgit2,
+  libssh2,
+  oniguruma,
   openssl,
+  sqlite,
+  zlib,
+  zstd,
   versionCheckHook,
   installShellCompletions ? stdenv.buildPlatform.canExecute stdenv.hostPlatform,
 }:
@@ -42,9 +51,36 @@ rustPlatform.buildRustPackage {
     pkg-config
   ];
 
-  buildInputs = [ openssl ];
+  buildInputs = [
+    openssl
+    rust-jemalloc-sys
+    libgit2
+    libssh2
+    oniguruma
+    sqlite
+    zlib
+    zstd
+  ];
 
-  env.CODE_VERSION = version;
+  env = {
+    CODE_VERSION = version;
+    # aws-lc's compat openssl.pc would shadow openssl for openssl-sys, so it
+    # is not in buildInputs; its own aws-lc.pc has no Cflags to detect it by.
+    AWS_LC_SYS_SYSTEM_DIR = symlinkJoin {
+      name = "aws-lc-prefix";
+      paths = [
+        (lib.getDev aws-lc)
+        (lib.getLib aws-lc)
+      ];
+    };
+    LIBGIT2_NO_VENDOR = "1";
+    LIBSSH2_SYS_USE_PKG_CONFIG = "1";
+    LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
+    LIBZ_SYS_STATIC = "0";
+    RUSTONIG_SYSTEM_LIBONIG = "1";
+    ZSTD_SYS_USE_PKG_CONFIG = "1";
+    JEMALLOC_OVERRIDE = "${lib.getLib rust-jemalloc-sys}/lib/libjemalloc${stdenv.hostPlatform.extensions.sharedLibrary}";
+  };
 
   preBuild = ''
     # Remove LTO and single codegen-unit to reduce peak memory usage.
