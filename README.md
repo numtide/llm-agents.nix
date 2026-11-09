@@ -1857,6 +1857,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>asc</strong> - Fast, scriptable CLI for the App Store Connect API</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/rorkai/App-Store-Connect-CLI
+- **Usage**: `nix run github:numtide/llm-agents.nix#asc -- --help`
+- **Nix**: [packages/asc/package.nix](packages/asc/package.nix)
+
+</details>
+<details>
 <summary><strong>auv</strong> - Scriptable computer-use automation CLI that turns GUI operations into reusable commands</summary>
 
 - **Source**: binary
