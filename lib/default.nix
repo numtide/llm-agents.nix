@@ -354,6 +354,11 @@ inputs."nixpkgs".lib.extend (
         githubId = 23406;
         name = "Arthur Koziel";
       };
+      dxops = {
+        github = "dxops";
+        githubId = 1804871;
+        name = "Serhii Zhuravel";
+      };
     };
   }
 )
