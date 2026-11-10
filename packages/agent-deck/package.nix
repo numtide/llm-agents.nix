@@ -3,6 +3,7 @@
   stdenv,
   flake,
   bash,
+  python3,
   buildGo127Module,
   fetchFromGitHub,
   versionCheckHook,
@@ -61,7 +62,6 @@ buildGo127Module rec {
           "TestIssue2388_CapabilitiesCarryProbe" # resets PATH to /usr/bin:/bin, losing cat
           "TestIssue1576_WorktreeFinishSweepsNotifierState" # async event-bus flush races TempDir cleanup
           "TestIssue2921ClaudeLikeFakeIsGoneWhenItsCleanupReturns" # fails when its fixture skips for lack of python3
-          "TestProviderConnectAzure_" # fake az and the embedded provider use #!/usr/bin/env
         ]
         ++ lib.optionals stdenv.hostPlatform.isDarwin [
           # lsof on live processes is denied by the sandbox
@@ -86,6 +86,13 @@ buildGo127Module rec {
   ];
 
   preCheck = ''
+    # In preCheck, not postPatch: the installed binary must keep the provider's #!/usr/bin/env.
+    patchShebangs cmd/agent-deck/testdata/fake-az-connect examples/providers/azure-vm/provider
+    # Not on PATH: with python3 available, tmux-driven tests stop skipping and fail.
+    substituteInPlace examples/providers/azure-vm/provider \
+      --replace-fail 'python3 -I -c' '${lib.getExe python3} -I -c' \
+      --replace-fail 'need python3' 'need ${lib.getExe python3}'
+
     # Tests refuse paths under the passwd home (/build); keep TMPDIR dot-free
     # (breaks TestSessionContextJSONGolden) and symlink-resolved for darwin.
     tmp=$(cd /tmp && pwd -P)
