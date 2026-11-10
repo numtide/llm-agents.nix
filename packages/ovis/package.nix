@@ -43,7 +43,6 @@ stdenvNoCC.mkDerivation {
     makeWrapper ${lib.getExe bun} $out/bin/ovis \
       --add-flags "${ovis-unwrapped}/share/ovis/server/index.ts" \
       --set-default OVIS_TELEMETRY 0 \
-      --set-default OVIS_PTY_SIDECAR_BIN ${lib.getExe' ovis-unwrapped.ptySidecar "ovis-pty-sidecar"} \
       --prefix PATH : ${
         lib.makeBinPath [
           nodejs
@@ -61,6 +60,11 @@ stdenvNoCC.mkDerivation {
     # Keep the updater targeting the unwrapped build inputs.
     inherit (ovis-unwrapped) ptySidecar updater;
     unwrapped = ovis-unwrapped;
+    # Each links to `herdr-web-ui.js` in that agent's extensions directory, as upstream's installers write it.
+    integrations = {
+      pi = "${ovis-unwrapped}/share/ovis/integrations/pi/herdr-web-ui.js";
+      gjc = "${ovis-unwrapped}/share/ovis/integrations/gjc/herdr-web-ui.js";
+    };
   };
 
   meta = ovis-unwrapped.meta // {
