@@ -4,9 +4,9 @@
   platformSource,
   mkUpdater,
   stdenvNoCC,
-  bintools,
   formatelf,
   makeWrapper,
+  dpkg,
 
   alsa-lib,
   at-spi2-atk,
@@ -31,8 +31,6 @@
   nspr,
   nss,
   pango,
-
-  # libs-only build of systemd to avoid pulling the whole systemd closure
   systemdLibs,
 
   libglvnd,
@@ -46,8 +44,6 @@
   pipewire,
   wayland,
   xdg-utils,
-
-  # Needed for XDG_ICON_DIRS and GSETTINGS_SCHEMAS_PATH.
   adwaita-icon-theme,
   gsettings-desktop-schemas,
 }:
@@ -67,6 +63,7 @@ stdenvNoCC.mkDerivation {
   inherit (source) version src;
 
   nativeBuildInputs = [
+    dpkg
     formatelf
     makeWrapper
   ];
@@ -100,8 +97,7 @@ stdenvNoCC.mkDerivation {
     systemdLibs
   ];
 
-  # dlopen()ed by the main binary at runtime, so not discoverable from
-  # DT_NEEDED. List them here to put them on its RUNPATH.
+  # dlopen()ed
   runtimeDependencies = [
     libnotify
     libpulseaudio
@@ -113,46 +109,30 @@ stdenvNoCC.mkDerivation {
     wayland
   ];
 
-  # Chromium dlopen()s the system GL and Vulkan loaders, also from the bundled
-  # libraries. runtimeDependencies only reaches executables, while
-  # appendRunpaths is applied to every patched ELF.
+  # Also dlopen()ed from the bundled libraries, which runtimeDependencies skips.
   appendRunpaths = map (p: "${lib.getLib p}/lib") [
     libglvnd
     vulkan-loader
   ];
 
-  unpackPhase = ''
-    runHook preUnpack
-    ${lib.getExe' bintools "ar"} x $src
-    tar xf data.tar.*
-    runHook postUnpack
-  '';
-
   installPhase = ''
     runHook preInstall
 
-    # Keep the upstream opt/amp layout so bundled libs (e.g. libffmpeg.so)
-    # resolve next to the main binary.
     mkdir -p $out/lib $out/bin $out/share
     cp -a opt/amp $out/lib/amp-desktop
     cp -a usr/share/icons usr/share/applications $out/share
 
-    # Upstream's entry carries the sign-in URL scheme handler and the launcher
-    # actions in their intended order; only the /opt path needs rewriting.
     substituteInPlace $out/share/applications/amp-desktop.desktop \
       --replace-fail /opt/amp/amp-desktop amp-desktop
 
-    # chrome-sandbox needs setuid root, which a store path can never have.
-    # Electron falls back to user namespaces.
+    # needs setuid; Electron falls back to user namespaces
     rm -f $out/lib/amp-desktop/chrome-sandbox
 
     # The bundled loader does not search /run/opengl-driver for ICDs.
     ln -sf ${lib.getLib vulkan-loader}/lib/libvulkan.so.1 $out/lib/amp-desktop/libvulkan.so.1
 
-    # "Open at Login" writes process.execPath into the autostart entry, which
-    # would bypass the wrapper and pin a store path that a later update or GC
-    # removes. Launch the wrapper from PATH instead. The asar header records
-    # file offsets, so the replacement keeps the original byte length.
+    # "Open at Login" would pin process.execPath, a store path. The asar
+    # header records file offsets, so keep the byte length.
     asar=$out/lib/amp-desktop/resources/app.asar
     if [[ $(grep -aoF 'process.execPath,' "$asar" | wc -l) != 1 ]]; then
       echo "expected exactly one process.execPath in $asar" >&2
@@ -160,8 +140,7 @@ stdenvNoCC.mkDerivation {
     fi
     sed -i 's/process\.execPath,/"amp-desktop",   /' "$asar"
 
-    # The app shells out to `gdbus` to check for a tray host; without it,
-    # close-to-tray and start-hidden stay off. Plain NixOS has no gdbus on PATH.
+    # glib: gdbus probes for a tray host
     makeWrapper "$out/lib/amp-desktop/amp-desktop" "$out/bin/amp-desktop" \
       --suffix PATH : "${
         lib.makeBinPath [
