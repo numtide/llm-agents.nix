@@ -23,21 +23,18 @@ let
   };
   teamId = "WWP9DLJ27P";
 in
-# Upstream requires Zig 0.17.0-dev.813+2153f8143, not a released compiler.
+# Upstream builds with a Zig dev snapshot.
 stdenvNoCC.mkDerivation {
   pname = "codedb";
   inherit (source) version src;
 
   dontUnpack = true;
-  dontBuild = true;
   dontStrip = true;
 
   installPhase = ''
     runHook preInstall
 
     install -Dm755 $src $out/bin/codedb
-    install -Dm644 ${./LICENSE} $out/share/licenses/codedb/LICENSE
-    install -Dm644 ${./bbtree-LICENSE} $out/share/licenses/codedb/bbtree-LICENSE
 
     runHook postInstall
   '';
@@ -73,7 +70,10 @@ stdenvNoCC.mkDerivation {
     description = "Code intelligence server, CLI, and MCP tools for AI agents";
     homepage = "https://github.com/justrach/codedb";
     changelog = "https://github.com/justrach/codedb/releases/tag/v${source.version}";
-    license = licenses.bsd3;
+    license = with licenses; [
+      bsd3
+      mit # vendored bbtree
+    ];
     sourceProvenance = with sourceTypes; [ binaryNativeCode ];
     maintainers = with flake.lib.maintainers; [ smdex ];
     mainProgram = "codedb";

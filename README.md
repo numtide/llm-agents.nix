@@ -1599,7 +1599,7 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 <summary><strong>codedb</strong> - Code intelligence server, CLI, and MCP tools for AI agents</summary>
 
 - **Source**: binary
-- **License**: BSD-3-Clause
+- **License**: BSD-3-Clause / MIT
 - **Homepage**: https://github.com/justrach/codedb
 - **Usage**: `nix run github:numtide/llm-agents.nix#codedb -- --help`
 - **Nix**: [packages/codedb/package.nix](packages/codedb/package.nix)
