@@ -151,6 +151,10 @@ stdenv.mkDerivation {
   dontStrip = true;
 
   postPatch = ''
+    # const VecDeque::is_empty is newer than nixpkgs' rustc.
+    substituteInPlace crates/pi-shell/src/bash/vm/proc.rs \
+      --replace-fail 'pub const fn has_work(&self)' 'pub fn has_work(&self)'
+
     # Placeholder client bundle avoids building the full React dashboard.
     cat > packages/stats/src/embedded-client.generated.txt <<'PLACEHOLDER'
     export const EMBEDDED_CLIENT_ARCHIVE_TAR_GZ_BASE64 = "";
