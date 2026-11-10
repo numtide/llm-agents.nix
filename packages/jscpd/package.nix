@@ -22,6 +22,12 @@ rustPlatform.buildRustPackage rec {
 
   sourceRoot = "${src.name}/rust";
 
+  # nixpkgs' rustc uses LLVM 21, which rejects core::arch's vpdpbusd
+  # intrinsic signature; emit the instruction via inline asm instead.
+  postPatch = ''
+    patch -p1 -d "$cargoDepsCopy/source-registry-0/candle-core-0.11.1" < ${./candle-core-llvm21.patch}
+  '';
+
   cargoHash = "sha256-O7xyseezwHN/g+/q23frE3z9HAUXmnjB4e60USBYWLc=";
 
   cargoBuildFlags = [
