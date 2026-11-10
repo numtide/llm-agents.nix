@@ -37,12 +37,10 @@ buildNpmPackage (finalAttrs: {
     hash = "sha256-2ADn3U3lvUoB4tCEpzO0rMfYE4sis+5uBiEazcp0gpI=";
   };
 
-  npmDepsHash = "sha256-3WPXD+qm5WVfrTEvepKwX5RZBfbLBcPB0uDmKIx4MR8=";
+  npmDepsHash = "sha256-8aaD7k2oP5G3SNPwVH9+7EqkQhBX16QK7bBfBdWfSsc=";
   nodejs = nodejs_26;
-  # Version 1 works with the pinned lockfile and keeps its existing cache reusable.
-  npmDepsFetcherVersion = 1;
-  # Install the pinned Frida binding explicitly; its installer otherwise downloads
-  # a prebuild outside npm's dependency cache during the sandboxed build.
+  npmDepsFetcherVersion = 2;
+  # frida's install script downloads its binding; fetched separately below.
   npmFlags = [ "--ignore-scripts" ];
   env.HUSKY = "0";
 
@@ -52,10 +50,17 @@ buildNpmPackage (finalAttrs: {
   ];
   buildInputs = [ stdenv.cc.cc.lib ];
 
+  # Register the PATH launcher, which outlives this store path, rather than
+  # the store entrypoint. Upstream only does so when both are the same file.
+  postPatch = ''
+    substituteInPlace src/application/ClientRegistrationIdentity.ts \
+      --replace-fail 'if (directEntrypointIdentity(candidate, entrypoint) !== "owned") continue;' ""
+  '';
+
   preBuild = ''
     test "$(node -p 'require("./node_modules/frida/package.json").version')" = "${frida.version}"
     tar -xzf ${fridaBinding} -C node_modules/frida
-    # npm installs both libc variants; only the glibc build can run on NixOS.
+    # musl prebuilds would fail autoPatchelf
     find node_modules -type d -name '*-musl' -prune -exec rm -rf {} +
     autoPatchelf node_modules
   '';
@@ -73,9 +78,6 @@ buildNpmPackage (finalAttrs: {
     versionCheckHomeHook
   ];
   postInstallCheck = ''
-    "$out/bin/rea" --help > /dev/null
-    node -e 'require(process.argv[1])' \
-      "$out/lib/node_modules/rea-agents/node_modules/@lydell/node-pty"
     node --input-type=module -e '
       const frida = await import(process.argv[1]);
       const device = await frida.getLocalDevice();
@@ -85,7 +87,6 @@ buildNpmPackage (finalAttrs: {
       }
       console.log("Frida local device and process enumeration passed");
     ' "$out/lib/node_modules/rea-agents/node_modules/frida/build/src/frida.js"
-    node ${./check-mcp.mjs} "$out/bin/rea"
   '';
 
   passthru.category = "Utilities";

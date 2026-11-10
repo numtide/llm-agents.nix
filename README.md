@@ -2033,7 +2033,6 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 - **Homepage**: https://github.com/morluto/rea
 - **Usage**: `nix run github:numtide/llm-agents.nix#rea -- --help`
 - **Nix**: [packages/rea/package.nix](packages/rea/package.nix)
-- **Documentation**: See [packages/rea/README.md](packages/rea/README.md) for detailed usage
 
 </details>
 <details>
