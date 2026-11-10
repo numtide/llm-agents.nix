@@ -42,6 +42,12 @@ and Codex support also point their adapters (`claude-agent-acp` via
 `CLAUDE_CODE_EXECUTABLE`, `codex-acp` via `CODEX_PATH`) at the Nix-packaged
 executables instead of their incompatible bundled binaries on NixOS.
 
+For OpenCode, a packaged `opencode` on `PATH` also overrides Kandev's stored
+OpenCode runtime selection: Kandev uses it as the native runtime and derives the
+v1/v2 family from `opencode --version`. The managed `opencode-ai` and
+`@opencode/cli` npm runtimes ship FHS-linked binaries that only run on NixOS
+with `programs.nix-ld.enable`.
+
 Pi chat and inference retain Kandev's upstream `npx pi-acp` path. This package's
 passthrough patch launches the local `pi` CLI, so enable `piSupport` or otherwise
 provide `pi` on `PATH` before selecting Pi passthrough.
