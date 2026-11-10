@@ -61,6 +61,7 @@ buildGo127Module rec {
           "TestIssue2388_CapabilitiesCarryProbe" # resets PATH to /usr/bin:/bin, losing cat
           "TestIssue1576_WorktreeFinishSweepsNotifierState" # async event-bus flush races TempDir cleanup
           "TestIssue2921ClaudeLikeFakeIsGoneWhenItsCleanupReturns" # fails when its fixture skips for lack of python3
+          "TestProviderConnectAzure_" # fake az and the embedded provider use #!/usr/bin/env
         ]
         ++ lib.optionals stdenv.hostPlatform.isDarwin [
           # lsof on live processes is denied by the sandbox
