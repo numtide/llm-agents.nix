@@ -1,0 +1,113 @@
+--- a/src/quantized/repack_x86.rs	2026-11-10 10:53:00.922749704 +0100
++++ b/src/quantized/repack_x86.rs	2026-11-10 10:59:58.721890443 +0100
+@@ -203,6 +203,21 @@
+     use super::*;
+     use core::arch::x86_64::*;
+ 
++    // nixpkgs' rustc uses LLVM 21, which rejects core::arch's vpdpbusd
++    // intrinsic signature; emit the instruction directly.
++    #[inline]
++    #[target_feature(enable = "avx512f,avx512vnni")]
++    unsafe fn dpbusd_asm(mut acc: __m512i, a: __m512i, b: __m512i) -> __m512i {
++        core::arch::asm!(
++            "vpdpbusd {acc}, {a}, {b}",
++            acc = inout(zmm_reg) acc,
++            a = in(zmm_reg) a,
++            b = in(zmm_reg) b,
++            options(pure, nomem, nostack),
++        );
++        acc
++    }
++
+     // acc[m][16] f32 for up to MT activation rows against one 16-row weight tile
+     pub(crate) const MAX_MT: usize = 4;
+ 
+@@ -233,13 +248,13 @@
+                 let hi_b = _mm512_and_si512(_mm512_srli_epi16(wb, 4), mask);
+                 for (m, act) in acts.iter().enumerate() {
+                     isum_a[m] =
+-                        _mm512_dpbusd_epi32(isum_a[m], lo_a, bcast4(&act.qs, sa * 32 + g4 * 8));
++                        dpbusd_asm(isum_a[m], lo_a, bcast4(&act.qs, sa * 32 + g4 * 8));
+                     isum_a[m] =
+-                        _mm512_dpbusd_epi32(isum_a[m], hi_a, bcast4(&act.qs, sa * 32 + g4 * 8 + 4));
++                        dpbusd_asm(isum_a[m], hi_a, bcast4(&act.qs, sa * 32 + g4 * 8 + 4));
+                     isum_b[m] =
+-                        _mm512_dpbusd_epi32(isum_b[m], lo_b, bcast4(&act.qs, sb * 32 + g4 * 8));
++                        dpbusd_asm(isum_b[m], lo_b, bcast4(&act.qs, sb * 32 + g4 * 8));
+                     isum_b[m] =
+-                        _mm512_dpbusd_epi32(isum_b[m], hi_b, bcast4(&act.qs, sb * 32 + g4 * 8 + 4));
++                        dpbusd_asm(isum_b[m], hi_b, bcast4(&act.qs, sb * 32 + g4 * 8 + 4));
+                 }
+             }
+             for (sub, isum) in [(sa, &isum_a), (sb, &isum_b)] {
+@@ -268,7 +283,7 @@
+                 let w = _mm512_loadu_si512(tile.qs.as_ptr().add(g * TILE_N * 4) as *const _);
+                 for (m, act) in acts.iter().enumerate() {
+                     let a = bcast4(&act.qs, sub * 16 + g4 * 4);
+-                    isum[m] = _mm512_dpbusd_epi32(isum[m], w, a);
++                    isum[m] = dpbusd_asm(isum[m], w, a);
+                 }
+             }
+             let scale = _mm512_loadu_ps(tile.scales[sub].as_ptr());
+@@ -299,9 +314,9 @@
+             let wb = _mm512_loadu_si512(t1.qs.as_ptr().add(g4 * TILE_N * 4) as *const _);
+             for (m, act) in acts.iter().enumerate() {
+                 isum_a[m] =
+-                    _mm512_dpbusd_epi32(isum_a[m], wa, bcast4(&act.qs, sub32 * 32 + g4 * 4));
++                    dpbusd_asm(isum_a[m], wa, bcast4(&act.qs, sub32 * 32 + g4 * 4));
+                 isum_b[m] =
+-                    _mm512_dpbusd_epi32(isum_b[m], wb, bcast4(&act.qs, (sub32 + 1) * 32 + g4 * 4));
++                    dpbusd_asm(isum_b[m], wb, bcast4(&act.qs, (sub32 + 1) * 32 + g4 * 4));
+             }
+         }
+         for (blk, isum, tile) in [(sub32, &isum_a, t0), (sub32 + 1, &isum_b, t1)] {
+@@ -934,6 +949,20 @@
+     use super::*;
+     use core::arch::x86_64::*;
+ 
++    // See dpbusd_asm in kernels.
++    #[inline]
++    #[target_feature(enable = "avxvnni")]
++    unsafe fn dpbusd_avx_asm(mut acc: __m256i, a: __m256i, b: __m256i) -> __m256i {
++        core::arch::asm!(
++            "{{vex}} vpdpbusd {acc}, {a}, {b}",
++            acc = inout(ymm_reg) acc,
++            a = in(ymm_reg) a,
++            b = in(ymm_reg) b,
++            options(pure, nomem, nostack),
++        );
++        acc
++    }
++
+     #[target_feature(enable = "avx2")]
+     unsafe fn bcast4_256(act: &[i8], off: usize) -> __m256i {
+         _mm256_set1_epi32(std::ptr::read_unaligned(act.as_ptr().add(off) as *const i32))
+@@ -941,7 +970,7 @@
+ 
+     #[target_feature(enable = "avx2,avxvnni")]
+     unsafe fn dp_vnni(acc: __m256i, w_u8: __m256i, a_i8: __m256i) -> __m256i {
+-        _mm256_dpbusd_avx_epi32(acc, w_u8, a_i8)
++        dpbusd_avx_asm(acc, w_u8, a_i8)
+     }
+ 
+     // dpbusd stand-in for pure AVX2: maddubs (u8 x i8 -> i16 pairs) then madd against ones.
+@@ -1065,12 +1094,12 @@
+                 let wb =
+                     _mm256_loadu_si256(t1.qs.as_ptr().add(g4 * TILE_N * 4 + h * 32) as *const _);
+                 for (m, act) in acts.iter().enumerate() {
+-                    isum_a[m][h] = _mm256_dpbusd_avx_epi32(
++                    isum_a[m][h] = dpbusd_avx_asm(
+                         isum_a[m][h],
+                         wa,
+                         bcast4_256(&act.qs, sub32 * 32 + g4 * 4),
+                     );
+-                    isum_b[m][h] = _mm256_dpbusd_avx_epi32(
++                    isum_b[m][h] = dpbusd_avx_asm(
+                         isum_b[m][h],
+                         wb,
+                         bcast4_256(&act.qs, (sub32 + 1) * 32 + g4 * 4),
+@@ -1092,3 +1121,4 @@
+         }
+     }
+ }
++

@@ -11,18 +11,24 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "jscpd";
-  version = "5.4.2";
+  version = "5.4.3";
 
   src = fetchFromGitHub {
     owner = "kucherenko";
     repo = "jscpd";
     tag = "v${version}";
-    hash = "sha256-SVcZGeTDn3AVAZtVECHjSkAaAhRbDsGoqERQWQ5WznE=";
+    hash = "sha256-ltvWxSJvnnCeRYozMPujFRQy2ADCiGbayzaHiacTEbw=";
   };
 
   sourceRoot = "${src.name}/rust";
 
-  cargoHash = "sha256-G3HBs3an7KvjHaCK0Tk7i4f89Vi5sfwxlDHlanaTGJs=";
+  # nixpkgs' rustc uses LLVM 21, which rejects core::arch's vpdpbusd
+  # intrinsic signature; emit the instruction via inline asm instead.
+  postPatch = ''
+    patch -p1 -d "$cargoDepsCopy/source-registry-0/candle-core-0.11.1" < ${./candle-core-llvm21.patch}
+  '';
+
+  cargoHash = "sha256-O7xyseezwHN/g+/q23frE3z9HAUXmnjB4e60USBYWLc=";
 
   cargoBuildFlags = [
     "-p"
