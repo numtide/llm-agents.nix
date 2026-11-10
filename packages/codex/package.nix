@@ -6,7 +6,14 @@
   rustPlatform,
   pkg-config,
   lld,
-  openssl,
+  aws-lc,
+  rust-jemalloc-sys,
+  libgit2,
+  oniguruma,
+  rust-bindgen,
+  sqlite,
+  zlib,
+  zstd,
   bubblewrap,
   ripgrep,
   libcap,
@@ -81,16 +88,35 @@ rustPlatform.buildRustPackage (
     nativeBuildInputs = [
       installShellFiles
       pkg-config
+      rust-bindgen
     ]
     ++ lib.optionals stdenv.hostPlatform.isDarwin [
       # Unable to find libclang: "couldn't find any valid shared libraries matching: ['libclang.dylib']
       rustPlatform.bindgenHook
     ];
 
-    buildInputs = [ openssl ] ++ lib.optionals stdenv.hostPlatform.isLinux [ libcap ];
+    buildInputs = [
+      aws-lc
+      rust-jemalloc-sys
+      libgit2
+      oniguruma
+      sqlite
+      zlib
+      zstd
+    ]
+    ++ lib.optionals stdenv.hostPlatform.isLinux [ libcap ];
 
     env = {
       RUSTY_V8_ARCHIVE = librusty_v8;
+      # openssl-sys also builds against aws-lc (through its compat openssl.pc):
+      # linking both libcrypto copies leaves openssl symbols unresolved.
+      AWS_LC_SYS_USE_SYSTEM = "1";
+      LIBGIT2_NO_VENDOR = "1";
+      LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
+      LIBZ_SYS_STATIC = "0";
+      RUSTONIG_SYSTEM_LIBONIG = "1";
+      ZSTD_SYS_USE_PKG_CONFIG = "1";
+      JEMALLOC_OVERRIDE = "${lib.getLib rust-jemalloc-sys}/lib/libjemalloc${stdenv.hostPlatform.extensions.sharedLibrary}";
     }
     // lib.optionalAttrs (librusty_v8 ? srcBinding) {
       # rusty_v8 >= 150 include!s this instead of running bindgen.
