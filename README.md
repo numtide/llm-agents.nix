@@ -29,6 +29,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>amp-desktop</strong> - Desktop app for Amp, the frontier coding agent</summary>
+
+- **Source**: binary
+- **License**: unfree
+- **Homepage**: https://ampcode.com/docs/apps/linux
+- **Usage**: `nix run github:numtide/llm-agents.nix#amp-desktop -- --help`
+- **Nix**: [packages/amp-desktop/package.nix](packages/amp-desktop/package.nix)
+
+</details>
+<details>
 <summary><strong>antigravity-cli</strong> - CLI for Google Antigravity, an agentic development platform</summary>
 
 - **Source**: binary
