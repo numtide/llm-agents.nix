@@ -11,18 +11,19 @@ let
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "chock";
-  version = "0.1.0-unstable-20261103-3dadfc6";
+  version = "0.1.0-unstable-20261106-d771f90";
 
   src = fetchFromGitHub {
     owner = "LilithSemi";
     repo = "chock";
-    tag = finalAttrs.version;
-    hash = "sha256-yjsvitTCus9wSX7lh5uIM/CDrPoYMghdn8XTDsuGA2Q=";
+    # Untagged: zig 0.17.1 support (4b02d0a) is not in a tag yet.
+    rev = "d771f90bd111acfebd7ae393d113ac44fe95ca08";
+    hash = "sha256-OlR2AY4uizuuHpinpxz0qXDOSum6nFH7TEMGArWnui8=";
   };
 
   zigDeps = zig.fetchDeps {
     inherit (finalAttrs) src pname version;
-    hash = "sha256-jiK/WsLCx+mje3MsNkRqrJIqj64nGN6Y7fxykJLrU1k=";
+    hash = "sha256-DyTznIycyOV42TepVCqffKrmGixIJUaRONqzB+1BGz0=";
   };
 
   nativeBuildInputs = [
@@ -51,7 +52,7 @@ stdenv.mkDerivation (finalAttrs: {
   meta = {
     description = "Sandbox-first AI coding harness";
     homepage = "https://chock.ws";
-    changelog = "https://github.com/LilithSemi/chock/releases/tag/${finalAttrs.version}";
+    changelog = "https://github.com/LilithSemi/chock/commits/${finalAttrs.src.rev}";
     license = lib.licenses.asl20;
     sourceProvenance = [ lib.sourceTypes.fromSource ];
     maintainers = with lib.maintainers; [ RossComputerGuy ];
