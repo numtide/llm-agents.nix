@@ -79,13 +79,27 @@ stdenv.mkDerivation {
   buildPhase = ''
     runHook preBuild
     bun run build
+    # Upstream's own installers, so the files and their ownership banner match a manual
+    # install. They write under $HOME, which bun2nix's hook points at a scratch directory.
+    bun scripts/install-pi-integration.ts
+    bun scripts/install-gjc-integration.ts
     runHook postBuild
   '';
 
   installPhase = ''
     runHook preInstall
-    mkdir -p $out/share/ovis
+    mkdir -p $out/share/ovis/bin
     cp -r server shared dist node_modules package.json $out/share/ovis/
+    # For pi's and GJC's extension directories; the server itself never loads them.
+    install -Dm644 $HOME/.pi/agent/extensions/herdr-web-ui.js $out/share/ovis/integrations/pi/herdr-web-ui.js
+    install -Dm644 $HOME/.gjc/agent/extensions/herdr-web-ui.js $out/share/ovis/integrations/gjc/herdr-web-ui.js
+
+    # Where the server looks without OVIS_PTY_SIDECAR_BIN, which the servers it starts for
+    # herdr-core's other machines never inherit; the record vouches for this binary and version.
+    sidecar=${lib.getExe' ptySidecar "ovis-pty-sidecar"}
+    ln -s $sidecar $out/share/ovis/bin/ovis-pty-sidecar
+    printf '{"version":"%s","sha256":"%s"}\n' ${version} "$(sha256sum $sidecar | cut -d' ' -f1)" \
+      > $out/share/ovis/bin/ovis-pty-sidecar.json
     ${lib.optionalString (stdenv.hostPlatform.isLinux && !stdenv.hostPlatform.isMusl) ''
       # musl variants cannot run on the glibc host and fail ELF dependency checks.
       find "$out/share/ovis/node_modules/.bun" \
