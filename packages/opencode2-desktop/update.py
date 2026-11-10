@@ -17,7 +17,7 @@ LATEST_DESKTOP_URL = "https://opencode.ai/download/stable/darwin-aarch64-dmg"
 
 def fetch_latest_version() -> str:
     """Read the desktop version from OpenCode's canonical stable redirect."""
-    request = urllib.request.Request(LATEST_DESKTOP_URL, method="HEAD")
+    request = urllib.request.Request(LATEST_DESKTOP_URL)
     request.add_header("User-Agent", "llm-agents-updater")
     with urllib.request.urlopen(request, timeout=30) as response:
         final_url = response.url
