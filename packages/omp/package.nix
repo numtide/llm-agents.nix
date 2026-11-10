@@ -154,6 +154,9 @@ stdenv.mkDerivation {
     # const VecDeque::is_empty is newer than nixpkgs' rustc.
     substituteInPlace crates/pi-shell/src/bash/vm/proc.rs \
       --replace-fail 'pub const fn has_work(&self)' 'pub fn has_work(&self)'
+    # Only newer rustc lets a safe extern fn item satisfy an Fn bound.
+    substituteInPlace crates/pi-natives/src/desktop/macos/session.rs \
+      --replace-fail '&online_displays(), CGDisplayIsAsleep)' '&online_displays(), |id| CGDisplayIsAsleep(id))'
 
     # Placeholder client bundle avoids building the full React dashboard.
     cat > packages/stats/src/embedded-client.generated.txt <<'PLACEHOLDER'
