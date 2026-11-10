@@ -3,6 +3,7 @@
   stdenv,
   flake,
   bash,
+  python3,
   buildGo127Module,
   fetchFromGitHub,
   versionCheckHook,
@@ -61,7 +62,6 @@ buildGo127Module rec {
           "TestIssue2388_CapabilitiesCarryProbe" # resets PATH to /usr/bin:/bin, losing cat
           "TestIssue1576_WorktreeFinishSweepsNotifierState" # async event-bus flush races TempDir cleanup
           "TestIssue2921ClaudeLikeFakeIsGoneWhenItsCleanupReturns" # fails when its fixture skips for lack of python3
-          "TestProviderConnectAzure_" # fake az and the embedded provider use #!/usr/bin/env
         ]
         ++ lib.optionals stdenv.hostPlatform.isDarwin [
           # lsof on live processes is denied by the sandbox
@@ -86,6 +86,9 @@ buildGo127Module rec {
   ];
 
   preCheck = ''
+    # In preCheck, not postPatch: the installed binary must keep the provider's #!/usr/bin/env.
+    patchShebangs cmd/agent-deck/testdata/fake-az-connect examples/providers/azure-vm/provider
+
     # Tests refuse paths under the passwd home (/build); keep TMPDIR dot-free
     # (breaks TestSessionContextJSONGolden) and symlink-resolved for darwin.
     tmp=$(cd /tmp && pwd -P)
@@ -98,6 +101,7 @@ buildGo127Module rec {
     lsof
     ncurses # clear, used by the fake claude pane in the switch-settle tests
     procps
+    python3 # the azure-vm provider
     tmux
   ];
 
