@@ -13,13 +13,13 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "codex-auth";
-  version = "0.3.1";
+  version = "0.4.0";
 
   src = fetchFromGitHub {
     owner = "loongphy";
     repo = "codex-auth";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-dPkc7L0Vz0BCUDfSkyWkUlvsFogGdB/ipNt8jgst1fU=";
+    hash = "sha256-Xgu4fclDvFbNUnzP0TZuwfVKdGBk98BIvPmY+U3XB10=";
   };
 
   nativeBuildInputs = [
