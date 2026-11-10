@@ -88,6 +88,10 @@ buildGo127Module rec {
   preCheck = ''
     # In preCheck, not postPatch: the installed binary must keep the provider's #!/usr/bin/env.
     patchShebangs cmd/agent-deck/testdata/fake-az-connect examples/providers/azure-vm/provider
+    # Not on PATH: with python3 available, tmux-driven tests stop skipping and fail.
+    substituteInPlace examples/providers/azure-vm/provider \
+      --replace-fail 'python3 -I -c' '${lib.getExe python3} -I -c' \
+      --replace-fail 'need python3' 'need ${lib.getExe python3}'
 
     # Tests refuse paths under the passwd home (/build); keep TMPDIR dot-free
     # (breaks TestSessionContextJSONGolden) and symlink-resolved for darwin.
@@ -101,7 +105,6 @@ buildGo127Module rec {
     lsof
     ncurses # clear, used by the fake claude pane in the switch-settle tests
     procps
-    python3 # the azure-vm provider
     tmux
   ];
 
