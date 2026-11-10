@@ -140,8 +140,10 @@ stdenvNoCC.mkDerivation {
     fi
     sed -i 's/process\.execPath,/"amp-desktop",   /' "$asar"
 
+    # prefer the amp in PATH over the one in ~/.amp/bin/amp
     # glib: gdbus probes for a tray host
     makeWrapper "$out/lib/amp-desktop/amp-desktop" "$out/bin/amp-desktop" \
+      --run 'if [ -z "''${AMP_DESKTOP_RUNNER_CLI-}" ] && amp=$(command -v amp); then export AMP_DESKTOP_RUNNER_CLI=$amp; fi' \
       --suffix PATH : "${
         lib.makeBinPath [
           glib
