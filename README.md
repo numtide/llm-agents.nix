@@ -552,6 +552,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>pi-bolt</strong> - Pi, the coding agent, compiled ahead of time to one native executable</summary>
+
+- **Source**: binary
+- **License**: MIT
+- **Homepage**: https://github.com/opensec-git/Pi-Bolt
+- **Usage**: `nix run github:numtide/llm-agents.nix#pi-bolt -- --help`
+- **Nix**: [packages/pi-bolt/package.nix](packages/pi-bolt/package.nix)
+
+</details>
+<details>
 <summary><strong>pool</strong> - Poolside's coding agent</summary>
 
 - **Source**: binary
