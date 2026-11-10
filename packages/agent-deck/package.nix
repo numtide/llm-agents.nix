@@ -16,16 +16,16 @@
 
 buildGo127Module rec {
   pname = "agent-deck";
-  version = "1.16.36";
+  version = "1.16.38";
 
   src = fetchFromGitHub {
     owner = "asheshgoplani";
     repo = "agent-deck";
     tag = "v${version}";
-    hash = "sha256-D6PF5KWhiTwI+1M4XiT6KFv0+uO2PrdSWm9cjdSQofg=";
+    hash = "sha256-fvJaRcWtaFKdFbyPJOYKU95gerpeWL819Ol0e8Y7c8k=";
   };
 
-  vendorHash = "sha256-yNCm//ZOTAIxUUm4yEPobbNw0dD01huAth6B9xvBaiE=";
+  vendorHash = "sha256-8d56v5csbdGaQku2LR7Twy2fKoXBVPKN9KPHdsithjg=";
 
   subPackages = [ "cmd/agent-deck" ];
 
@@ -61,6 +61,7 @@ buildGo127Module rec {
           "TestIssue2388_CapabilitiesCarryProbe" # resets PATH to /usr/bin:/bin, losing cat
           "TestIssue1576_WorktreeFinishSweepsNotifierState" # async event-bus flush races TempDir cleanup
           "TestIssue2921ClaudeLikeFakeIsGoneWhenItsCleanupReturns" # fails when its fixture skips for lack of python3
+          "TestProviderConnectAzure_" # fake az and the embedded provider use #!/usr/bin/env
         ]
         ++ lib.optionals stdenv.hostPlatform.isDarwin [
           # lsof on live processes is denied by the sandbox

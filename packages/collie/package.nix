@@ -48,15 +48,13 @@ stdenv.mkDerivation {
     ${lib.getExe jq} --arg v "$typesBun" '.devDependencies."@types/bun" = $v' \
       package.json > package.json.tmp && mv package.json.tmp package.json
     sed -i 's/"@types\/bun": "latest"/"@types\/bun": "'"$typesBun"'"/' bun.lock
-
-    # The build id bakes in the wall clock; pin it so builds reproduce.
-    substituteInPlace web/vite.config.ts \
-      --replace-fail 'const buildTime = new Date().toISOString();' \
-        'const buildTime = new Date(Number(process.env.SOURCE_DATE_EPOCH ?? 0) * 1000).toISOString();'
   '';
 
   buildPhase = ''
     runHook preBuild
+
+    # The build id bakes in the wall clock; pin it so builds reproduce.
+    export COLLIE_BUILD_TIME=$(date -u -d @$SOURCE_DATE_EPOCH +%Y-%m-%dT%H:%M:%SZ)
 
     # Hoisted linker (not the hook's isolated one): vite-plugin-pwa's virtual
     # module resolves its transitive workbox-window from the project root,
