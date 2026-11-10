@@ -3,8 +3,8 @@
   stdenv,
   flake,
   fetchFromGitHub,
-  # build.zig uses b.args, removed in Zig 0.17
-  zig_0_16,
+  zig_0_17,
+  bashInteractive,
   makeWrapper,
   nodejs,
   curl,
@@ -23,15 +23,21 @@ stdenv.mkDerivation (finalAttrs: {
   };
 
   nativeBuildInputs = [
-    zig_0_16.hook
+    zig_0_17.hook
     makeWrapper
   ];
 
   zigBuildFlags = [ "-Doptimize=ReleaseSafe" ];
 
   doCheck = true;
+  # zig segfaults compiling some tests with ReleaseSafe; upstream CI tests in Debug.
+  zigCheckFlags = [ "-Doptimize=Debug" ];
   # the CLI shells out to curl for API-backed usage refresh; the tests exercise it
-  nativeCheckInputs = [ curl ];
+  nativeCheckInputs = [
+    curl
+    # completion tests rely on COMP_WORDBREAKS, which needs readline
+    bashInteractive
+  ];
 
   # codex-auth shells out to Node.js for ChatGPT HTTP/usage queries
   # (CODEX_AUTH_NODE_EXECUTABLE in src/api/http_types.zig). Pin it so the
