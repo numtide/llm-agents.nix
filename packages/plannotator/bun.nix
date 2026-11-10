@@ -1387,17 +1387,21 @@
     url = "https://registry.npmjs.org/@oxc-project/types/-/types-0.154.0.tgz";
     hash = "sha512-KYOUGQFlLWR+s4QMV2Q9ko38TZm7EdO87Qm7rvZLqk/webse/cDjtyxKhg/47l0byCbs/k46LT8qc4PKjAikzA==";
   };
-  "@pierre/diffs@1.5.2" = fetchurl {
-    url = "https://registry.npmjs.org/@pierre/diffs/-/diffs-1.5.2.tgz";
-    hash = "sha512-QVxIWQEnNoko22k63maERzozd29+FtaUNpRrZiw603WMe5R1mFSED+jMtPkcVP3SDYS1DWg5K7sa7sJbr3xkNQ==";
+  "@pierre/diffs@1.6.4" = fetchurl {
+    url = "https://registry.npmjs.org/@pierre/diffs/-/diffs-1.6.4.tgz";
+    hash = "sha512-RsKoruCOp50qaDM3a7BQan5K77xMkGWT1NF01fiYP1PfT3v4CvIjwytNk5WjZG0BesBkMOP2UbrBIDigB1k0ug==";
+  };
+  "@pierre/highlights@0.4.0" = fetchurl {
+    url = "https://registry.npmjs.org/@pierre/highlights/-/highlights-0.4.0.tgz";
+    hash = "sha512-2a38H7ep3KweGi1fGQpJk+Krod2OMpDIXagKPlqBd1Y9P460T7zQmc66Wm2JAH1SpIG93wCyyhZVrkc5dnAJVQ==";
   };
   "@pierre/theme@2.0.0" = fetchurl {
     url = "https://registry.npmjs.org/@pierre/theme/-/theme-2.0.0.tgz";
     hash = "sha512-yNDd9GYLQl1mEUJR8AneJ5e4ohLIHQd/wZLWr4fagt78vS2RwwZNW530vVgHqXFAyFVcFlRmGUD5ramXH46OXw==";
   };
-  "@pierre/theming@1.0.1" = fetchurl {
-    url = "https://registry.npmjs.org/@pierre/theming/-/theming-1.0.1.tgz";
-    hash = "sha512-WCI5Qd7iprDpISL9fBYOLe8RV53+b7mFNA3bPzl60/2CKCSrsKN8zEcep6Y3BAzvARlmca50zGjDodqPGiTUKA==";
+  "@pierre/theming@1.0.2" = fetchurl {
+    url = "https://registry.npmjs.org/@pierre/theming/-/theming-1.0.2.tgz";
+    hash = "sha512-RmXLLqtx31UGcR8kZyO5hGAQ1EXz6loT1Cu0BFAGsbnBboIxp2BlomkLfWyvdT4WZXnBGyu25onL1gKpFQuSUw==";
   };
   "@pkgjs/parseargs@0.11.0" = fetchurl {
     url = "https://registry.npmjs.org/@pkgjs/parseargs/-/parseargs-0.11.0.tgz";
@@ -1754,10 +1758,6 @@
   "@shikijs/themes@4.5.0" = fetchurl {
     url = "https://registry.npmjs.org/@shikijs/themes/-/themes-4.5.0.tgz";
     hash = "sha512-zGb87H3UBbpuI4yoh5UguB1XbU+2BDU3kflM7UfZ+Cy2hWo9lBtqjSVK20gmLY6ukYl040hAypGXMgud9vul8Q==";
-  };
-  "@shikijs/transformers@4.4.3" = fetchurl {
-    url = "https://registry.npmjs.org/@shikijs/transformers/-/transformers-4.4.3.tgz";
-    hash = "sha512-oJSARV6NaWd+rnNJbtnpAdj3Zg0ZVyzsnMgb3vi3HA+35y8lBWUCpOnWsmyiXZIikY+x1BDqrQUgmxfzWh7Jvw==";
   };
   "@shikijs/types@4.4.3" = fetchurl {
     url = "https://registry.npmjs.org/@shikijs/types/-/types-4.4.3.tgz";
