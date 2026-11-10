@@ -29,14 +29,14 @@
 
 let
   pname = "t3code";
-  version = "0.1.7";
+  version = "0.1.8";
   pnpm = pnpm_11;
 
   src = fetchFromGitHub {
     owner = "pingdotgg";
     repo = "t3code";
     tag = "v${version}";
-    hash = "sha256-oQLmDCDuJPNBsf8MHMD2xhMq+CF6L836/PQesM91Clw=";
+    hash = "sha256-QPZpT/1zm5sLIDw3AOzUCIrmOFPwUU8jP/q1A8GzLow=";
   };
 
   # The web build's third-party-licenses vite plugin downloads SPDX license
@@ -128,7 +128,7 @@ stdenv.mkDerivation {
       pnpmWorkspaces
       ;
     fetcherVersion = 4;
-    hash = "sha256-hVpxbHZ5syedAc1Zc20TkxSgB6VA3XQGubQMx6e0njA=";
+    hash = "sha256-vowtkFA/HWVK0cUIdCp7m9v4+q94Ce1deLZPy9kFW94=";
   };
 
   nativeBuildInputs = [
