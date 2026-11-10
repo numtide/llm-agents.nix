@@ -17,11 +17,8 @@ let
   versionData = lib.importJSON ./hashes.json;
   inherit (versionData) version;
 
-  # The npm tarball ships the built UI (dist/ + server/) but no lockfile, so
-  # vendor one next to the source. The lock is generated without
-  # devDependencies (build-only React/Vite tooling) and without the scripts
-  # block, whose `prepack` runs a monorepo build the tarball does not carry.
-  # Mirror both deletions here or `npm ci` re-resolves the whole tree.
+  # The npm tarball ships a prebuilt UI but no lockfile. The vendored lock
+  # omits devDependencies and scripts (prepack needs the monorepo).
   srcWithLock = runCommand "openchamber-src-with-lock" { nativeBuildInputs = [ jq ]; } ''
     mkdir -p $out
     tar -xzf ${
@@ -44,24 +41,15 @@ buildNpmPackage {
   npmDepsHash = versionData.npmDepsHash;
   npmDepsFetcherVersion = 2;
 
-  # Install scripts build native addons from source: node-pty/bun-pty for the
-  # in-browser terminal and sherpa-onnx-node for local dictation. Both ship
-  # prebuilt platform packages, and the server imports them lazily, so skip
-  # the compiles that the Nix sandbox cannot run offline.
+  # Native addons ship prebuilds; their install scripts would compile online.
   npmInstallFlags = [ "--ignore-scripts" ];
   npmRebuildFlags = [ "--ignore-scripts" ];
 
-  # dist/ is prebuilt in the tarball; the build script needs the monorepo.
   dontNpmBuild = true;
 
   makeWrapperArgs = [
-    # OpenChamber drives an OpenCode 2.x server and refuses a build older than
-    # the floor it ships with (2.2.4 as of 2.6.0, no newer than the in-repo
-    # OpenCode 2 there). It reads OPENCODE_BINARY before searching PATH for
-    # `opencode`, so bind it straight to that build. `--set-default` leaves the
-    # variable writable for people running their own checkout.
+    # requires OpenCode 2.x
     "--set-default OPENCODE_BINARY ${lib.getExe opencode2}"
-    # The server shells out to git for worktrees and to ripgrep for search.
     "--prefix PATH : ${
       lib.makeBinPath [
         git
@@ -86,15 +74,8 @@ buildNpmPackage {
 
   meta = {
     description = "Web and desktop UI for the OpenCode AI coding agent";
-    longDescription = ''
-      OpenChamber turns OpenCode sessions into a browser and desktop
-      workspace: project sessions, diffs, terminals, worktrees and mobile
-      access over an encrypted relay. This package installs the web server and
-      its `openchamber` CLI, wired to the in-repo OpenCode 2 build it requires.
-    '';
     homepage = "https://github.com/openchamber/openchamber";
     changelog = "https://github.com/openchamber/openchamber/releases/tag/v${version}";
-    downloadPage = "https://www.npmjs.com/package/@openchamber/web?activeTab=versions";
     license = lib.licenses.mit;
     sourceProvenance = with lib.sourceTypes; [ binaryBytecode ];
     maintainers = with flake.lib.maintainers; [ dxops ];
