@@ -15,6 +15,8 @@
   versionCheckHook,
   writeText,
   versionCheckHomeHook,
+  runCommand,
+  makeWrapper,
 }:
 
 let
@@ -558,8 +560,52 @@ let
       payload = "bootstrap";
     }
   );
+
+  # Also used by withPythonPackages.
+  wrapperArgs =
+    { out, env }:
+    [
+      "--set"
+      "HERMES_TUI_DIR"
+      "${hermes-frontend}/lib/hermes-tui"
+      "--set"
+      "HERMES_WEB_DIST"
+      "${hermes-frontend}/share/hermes-web"
+      "--set"
+      "HERMES_PYTHON"
+      "${env}/bin/python3"
+      "--set"
+      "HERMES_PYTHON_SRC_ROOT"
+      "${out}/${python3.sitePackages}"
+      "--set"
+      "HERMES_NODE"
+      "${nodejs}/bin/node"
+      # Runtime data is copied to $out/share/hermes in postInstall; point Hermes at it.
+      "--set"
+      "HERMES_BUNDLED_SKILLS"
+      "${out}/share/hermes/skills"
+      "--set"
+      "HERMES_OPTIONAL_SKILLS"
+      "${out}/share/hermes/optional-skills"
+      "--set"
+      "HERMES_BUNDLED_PLUGINS"
+      "${out}/share/hermes/plugins"
+      "--set"
+      "HERMES_BUNDLED_LOCALES"
+      "${out}/share/hermes/locales"
+      # Disable runtime pip installs; absent extras disable cleanly.
+      "--set"
+      "HERMES_DISABLE_LAZY_INSTALLS"
+      "1"
+      # node+npm on PATH short-circuits _ensure_tui_node()'s download bootstrap.
+      "--prefix"
+      "PATH"
+      ":"
+      "${nodejs}/bin"
+    ];
+
 in
-python3.pkgs.buildPythonApplication {
+python3.pkgs.buildPythonApplication (finalAttrs: {
   pname = "hermes-agent";
   inherit version src;
   pyproject = true;
@@ -599,45 +645,10 @@ python3.pkgs.buildPythonApplication {
   dependencies = hermesDeps;
   optional-dependencies = optionalDeps;
 
-  makeWrapperArgs = [
-    "--set"
-    "HERMES_TUI_DIR"
-    "${hermes-frontend}/lib/hermes-tui"
-    "--set"
-    "HERMES_WEB_DIST"
-    "${hermes-frontend}/share/hermes-web"
-    "--set"
-    "HERMES_PYTHON"
-    "${pythonEnv}/bin/python3"
-    "--set"
-    "HERMES_PYTHON_SRC_ROOT"
-    "${placeholder "out"}/${python3.sitePackages}"
-    "--set"
-    "HERMES_NODE"
-    "${nodejs}/bin/node"
-    # Runtime data is copied to $out/share/hermes in postInstall; point Hermes at it.
-    "--set"
-    "HERMES_BUNDLED_SKILLS"
-    "${placeholder "out"}/share/hermes/skills"
-    "--set"
-    "HERMES_OPTIONAL_SKILLS"
-    "${placeholder "out"}/share/hermes/optional-skills"
-    "--set"
-    "HERMES_BUNDLED_PLUGINS"
-    "${placeholder "out"}/share/hermes/plugins"
-    "--set"
-    "HERMES_BUNDLED_LOCALES"
-    "${placeholder "out"}/share/hermes/locales"
-    # Disable runtime pip installs; absent extras disable cleanly.
-    "--set"
-    "HERMES_DISABLE_LAZY_INSTALLS"
-    "1"
-    # node+npm on PATH short-circuits _ensure_tui_node()'s download bootstrap.
-    "--prefix"
-    "PATH"
-    ":"
-    "${nodejs}/bin"
-  ];
+  makeWrapperArgs = wrapperArgs {
+    out = placeholder "out";
+    env = pythonEnv;
+  };
 
   # Upstream keeps runtime data outside site-packages and locates it through
   # wrapper environment variables. Preserve that layout because setuptools
@@ -750,6 +761,51 @@ python3.pkgs.buildPythonApplication {
       installStamp
       pmRuntime
       ;
+
+    # Python packages for plugins, which PM cannot install on Nix; the package itself is not rebuilt.
+    withPythonPackages =
+      extraPythonPackages:
+      let
+        hermes = finalAttrs.finalPackage;
+        env = python3.withPackages (ps: hermesDeps ++ extraPythonPackages ps);
+        entryPoints = {
+          hermes = "hermes_cli.main";
+          hermes-agent = "agent.legacy_cli";
+          hermes-acp = "acp_adapter.entry";
+        };
+        # Like .hermes-wrapped, but argv[0] names this wrapper so relaunches keep the extras.
+        entryScript = name: module: ''
+          cat > $out/libexec/hermes-agent/${name} <<EOF
+          #!${env}/bin/python3
+          import site
+          import sys
+          site.addsitedir("${hermes}/${python3.sitePackages}")
+          sys.argv[0] = "$out/bin/${name}"
+          from ${module} import main
+          sys.exit(main())
+          EOF
+          chmod +x $out/libexec/hermes-agent/${name}
+          makeWrapper $out/libexec/hermes-agent/${name} $out/bin/${name} \
+            ${lib.escapeShellArgs (wrapperArgs {
+              out = hermes;
+              inherit env;
+            })}
+        '';
+      in
+      runCommand "hermes-agent-${version}"
+        {
+          nativeBuildInputs = [ makeWrapper ];
+          passthru = hermes.passthru // {
+            unwrapped = hermes;
+            pythonEnv = env;
+          };
+          inherit (hermes) meta;
+        }
+        ''
+          mkdir -p $out/bin $out/libexec/hermes-agent
+          ${lib.concatStrings (lib.mapAttrsToList entryScript entryPoints)}
+          ln -s ${hermes}/share $out/share
+        '';
   };
 
   meta = with lib; {
@@ -769,4 +825,4 @@ python3.pkgs.buildPythonApplication {
     ];
     mainProgram = "hermes";
   };
-}
+})
