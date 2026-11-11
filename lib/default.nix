@@ -359,6 +359,11 @@ inputs."nixpkgs".lib.extend (
         githubId = 1804871;
         name = "Serhii Zhuravel";
       };
+      j4n-r = {
+        github = "j4n-r";
+        githubId = 101867832;
+        name = "Jan Rüggeberg";
+      };
     };
   }
 )
