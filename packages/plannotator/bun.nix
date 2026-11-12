@@ -2963,6 +2963,14 @@
     url = "https://registry.npmjs.org/domutils/-/domutils-3.2.2.tgz";
     hash = "sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==";
   };
+  "drizzle-kit@1.0.0-rc.5" = fetchurl {
+    url = "https://registry.npmjs.org/drizzle-kit/-/drizzle-kit-1.0.0-rc.5.tgz";
+    hash = "sha512-8glQN7iFK3e1aOIoRit1NtslcsqE/rnlqNw/1jUC5Ph4RFVh/E5Jricxd6Nu2ugj2HlFZlZ6O4006AwqJ9e24g==";
+  };
+  "drizzle-orm@1.0.0-rc.5" = fetchurl {
+    url = "https://registry.npmjs.org/drizzle-orm/-/drizzle-orm-1.0.0-rc.5.tgz";
+    hash = "sha512-7BMYTsAZbQ9DcQCtLG4G202Hq6nc/e8o1EBKN6nBweRI8EGPFe/VdyvWQCsU9fuZSiRjNpELolUSi//JFBq+lw==";
+  };
   "dset@3.1.4" = fetchurl {
     url = "https://registry.npmjs.org/dset/-/dset-3.1.4.tgz";
     hash = "sha512-2QF/g9/zTaPDc3BjNcVTGoBbXBgYfMTTceLaYcFJ/W9kggFUkhxD/hMEeuLKbugyef9SqAx8cpgwlIP/jinUTA==";
