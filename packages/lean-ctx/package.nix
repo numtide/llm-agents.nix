@@ -7,7 +7,6 @@
   cmake,
   pkg-config,
   aws-lc,
-  symlinkJoin,
   rust-jemalloc-sys,
   openssl,
   sqlite,
@@ -37,6 +36,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   ];
 
   buildInputs = [
+    aws-lc
     openssl
     rust-jemalloc-sys
     sqlite
@@ -48,15 +48,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   env = {
     CARGO_PROFILE_RELEASE_LTO = "off";
     CARGO_PROFILE_RELEASE_CODEGEN_UNITS = "16";
-    # aws-lc's compat openssl.pc would shadow openssl for openssl-sys, so it
-    # is not in buildInputs; its own aws-lc.pc has no Cflags to detect it by.
-    AWS_LC_SYS_SYSTEM_DIR = symlinkJoin {
-      name = "aws-lc-prefix";
-      paths = [
-        (lib.getDev aws-lc)
-        (lib.getLib aws-lc)
-      ];
-    };
+    AWS_LC_SYS_USE_SYSTEM = "1";
     LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
     OPENSSL_NO_VENDOR = "1";
     ZSTD_SYS_USE_PKG_CONFIG = "1";

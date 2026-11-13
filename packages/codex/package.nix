@@ -7,6 +7,7 @@
   pkg-config,
   lld,
   aws-lc,
+  openssl,
   rust-jemalloc-sys,
   libgit2,
   oniguruma,
@@ -97,6 +98,7 @@ rustPlatform.buildRustPackage (
 
     buildInputs = [
       aws-lc
+      openssl
       rust-jemalloc-sys
       libgit2
       oniguruma
@@ -108,8 +110,6 @@ rustPlatform.buildRustPackage (
 
     env = {
       RUSTY_V8_ARCHIVE = librusty_v8;
-      # openssl-sys also builds against aws-lc (through its compat openssl.pc):
-      # linking both libcrypto copies leaves openssl symbols unresolved.
       AWS_LC_SYS_USE_SYSTEM = "1";
       LIBGIT2_NO_VENDOR = "1";
       LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";

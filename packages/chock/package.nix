@@ -32,6 +32,13 @@ stdenv.mkDerivation (finalAttrs: {
     typescript
   ];
 
+  # curl 8.23 makes git re-ask for the URL's username, which the askpass
+  # helper under test does not answer
+  postPatch = ''
+    substituteInPlace test/broker/git_push.zig \
+      --replace-fail 'const git_path = @import("chock_path").git_path;' 'const git_path = "";'
+  '';
+
   postConfigure = ''
     ln -s ${finalAttrs.zigDeps} "$ZIG_GLOBAL_CACHE_DIR/p"
   '';
