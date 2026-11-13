@@ -67,6 +67,7 @@ python.pkgs.buildPythonApplication rec {
   # nixpkgs 3.x build until the next tagged release.
   pythonRelaxDeps = [
     "fastmcp"
+    "tree-sitter"
     "tree-sitter-language-pack"
     "watchdog"
   ];
