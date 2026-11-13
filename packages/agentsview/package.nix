@@ -14,6 +14,9 @@
   jq,
   unpinGoModVersionHook,
   sqlite,
+  callPackage,
+  symlinkJoin,
+  withCjk ? false,
 }:
 
 let
@@ -77,93 +80,140 @@ let
       runHook postInstall
     '';
   };
-in
 
-buildGo127Module {
-  pname = "agentsview";
-  inherit version src vendorHash;
+  # Built from hashes.json pins alone, so an agentsview bump that keeps the pins
+  # reuses the sidecar. The wrapper checks the pins against this release.
+  cjk = callPackage ./cjk.nix { pins = versionData.cjk; };
 
-  nativeBuildInputs = [
-    makeBinaryWrapper
-    jq
-    unpinGoModVersionHook
-  ];
+  unwrapped = buildGo127Module {
+    pname = "agentsview";
+    inherit version src vendorHash;
 
-  # sqlite-vec-go-bindings/cgo needs <sqlite3.h> at build time.
-  buildInputs = [ sqlite ];
+    nativeBuildInputs = [
+      jq
+      unpinGoModVersionHook
+    ];
 
-  subPackages = [ "cmd/agentsview" ];
-  tags = [ "fts5" ];
-  env.CGO_ENABLED = "1";
+    # sqlite-vec-go-bindings/cgo needs <sqlite3.h> at build time.
+    buildInputs = [ sqlite ];
 
-  preBuild = ''
-    rm -rf internal/web/dist
-    cp -r ${frontend} internal/web/dist
+    subPackages = [ "cmd/agentsview" ];
+    tags = [ "fts5" ];
+    env.CGO_ENABLED = "1";
 
-    install -Dm644 ${litellmSnapshotFile} internal/pricing/snapshot/litellm_snapshot.json.gz
-  '';
+    preBuild = ''
+      rm -rf internal/web/dist
+      cp -r ${frontend} internal/web/dist
 
-  ldflags = [
-    "-s"
-    "-w"
-    "-X main.version=${version}"
-    "-X main.commit=v${version}"
-    "-X main.buildDate=1970-01-01T00:00:00Z"
-  ];
+      install -Dm644 ${litellmSnapshotFile} internal/pricing/snapshot/litellm_snapshot.json.gz
+    '';
 
-  doCheck = false;
+    ldflags = [
+      "-s"
+      "-w"
+      "-X main.version=${version}"
+      "-X main.commit=v${version}"
+      "-X main.buildDate=1970-01-01T00:00:00Z"
+    ];
 
-  doInstallCheck = true;
-  nativeInstallCheckInputs = [ versionCheckHook ];
+    doCheck = false;
 
-  postInstall = ''
-    wrapProgram $out/bin/agentsview \
-      --set AGENTSVIEW_TELEMETRY_ENABLED 0
-  ''
-  + lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
-    # The source tree has the skill only as a Go template. `agentsview skills
-    # install` renders it per harness and adds a header recording a hash of
-    # the body, which `agentsview skills list` compares against a fresh render
-    # to detect a stale or edited file. A copy taken from the source tree
-    # would have neither the harness-specific text nor that header, so only
-    # the binary can produce a usable file. The installer writes under $HOME
-    # and accepts no other destination, hence the staging home.
-    #
-    # `skills list --json` reports one row per installed file, so a harness or
-    # an artifact added upstream needs no change here. The human table gained
-    # a column in 0.45.0 and broke a column-based parse. Each file keeps its
-    # path below <home>/.<harness>/<kind>/.
-    (
-      export HOME="$NIX_BUILD_TOP/agentsview-skills-home"
+    doInstallCheck = true;
+    nativeInstallCheckInputs = [ versionCheckHook ];
 
-      "$out/bin/agentsview" skills install
+    postInstall = lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
+      # The source tree has the skill only as a Go template. `agentsview skills
+      # install` renders it per harness and adds a header recording a hash of
+      # the body, which `agentsview skills list` compares against a fresh render
+      # to detect a stale or edited file. A copy taken from the source tree
+      # would have neither the harness-specific text nor that header, so only
+      # the binary can produce a usable file. The installer writes under $HOME
+      # and accepts no other destination, hence the staging home.
+      #
+      # `skills list --json` reports one row per installed file, so a harness or
+      # an artifact added upstream needs no change here. The human table gained
+      # a column in 0.45.0 and broke a column-based parse. Each file keeps its
+      # path below <home>/.<harness>/<kind>/.
+      (
+        export HOME="$NIX_BUILD_TOP/agentsview-skills-home"
 
-      "$out/bin/agentsview" skills list --json \
-        | jq -r '.[]? | "\(.harness) \(.path)"' \
-        | while read -r harness path; do
-            rel=''${path#"$HOME"/}
-            rel=''${rel#*/}
-            rel=''${rel#*/}
-            install -Dm644 "$path" "$out/share/agentsview/skills/$harness/$rel"
-          done
+        "$out/bin/agentsview" skills install
 
-      if [ ! -d "$out/share/agentsview/skills" ]; then
-        echo "agentsview: no skills were installed; has 'skills list' changed?" >&2
-        exit 1
-      fi
-    )
-  '';
+        "$out/bin/agentsview" skills list --json \
+          | jq -r '.[]? | "\(.harness) \(.path)"' \
+          | while read -r harness path; do
+              rel=''${path#"$HOME"/}
+              rel=''${rel#*/}
+              rel=''${rel#*/}
+              install -Dm644 "$path" "$out/share/agentsview/skills/$harness/$rel"
+            done
 
-  passthru.category = "Usage Analytics";
+        if [ ! -d "$out/share/agentsview/skills" ]; then
+          echo "agentsview: no skills were installed; has 'skills list' changed?" >&2
+          exit 1
+        fi
+      )
+    '';
 
-  meta = with lib; {
-    description = "Local-first viewer and analytics for AI coding agent sessions";
-    homepage = "https://github.com/kenn-io/agentsview";
-    changelog = "https://github.com/kenn-io/agentsview/releases/tag/v${version}";
-    license = licenses.mit;
-    sourceProvenance = with sourceTypes; [ fromSource ];
-    maintainers = with flake.lib.maintainers; [ ak2k ];
-    mainProgram = "agentsview";
-    platforms = platforms.unix;
+    passthru.category = "Usage Analytics";
+
+    meta = with lib; {
+      description = "Local-first viewer and analytics for AI coding agent sessions";
+      homepage = "https://github.com/kenn-io/agentsview";
+      changelog = "https://github.com/kenn-io/agentsview/releases/tag/v${version}";
+      license = licenses.mit;
+      sourceProvenance = with sourceTypes; [ fromSource ];
+      maintainers = with flake.lib.maintainers; [ ak2k ];
+      mainProgram = "agentsview";
+      platforms = platforms.unix;
+    };
   };
+
+  wrapperArgs = [
+    "--set"
+    "AGENTSVIEW_TELEMETRY_ENABLED"
+    "0"
+  ]
+  # Set the sidecar path in the wrapper to avoid rebuilding Go/frontend for CJK.
+  ++ lib.optionals withCjk [
+    "--set"
+    "AGENTSVIEW_SIMPLE_DIR"
+    "${cjk}/lib/agentsview/simple"
+  ];
+in
+symlinkJoin {
+  pname = "agentsview";
+  inherit version;
+  paths = [ unwrapped ];
+  nativeBuildInputs = [ makeBinaryWrapper ];
+  postBuild =
+    lib.optionalString withCjk ''
+      # Reject stale pins and unsupported assignments without executing upstream code.
+      check_pin() {
+        local found
+        found=$(grep -E "^[[:space:]]*((export|readonly|local|declare)[[:space:]]+([^=]*[[:space:]])?)?$1=" \
+          ${src}/scripts/build-simple-fts.sh || true)
+        if [ "$found" != "$1=\"$2\"" ]; then
+          echo "agentsview ${version} scripts/build-simple-fts.sh: expected exactly $1=\"$2\", found: ''${found:-nothing}" >&2
+          echo "Remove only the cjk entry from hashes.json, then run packages/agentsview/update.py" >&2
+          exit 1
+        fi
+      }
+      check_pin simple_repo ${cjk.simpleGitUrl}
+      check_pin simple_commit ${cjk.pins.simple.rev}
+      check_pin cppjieba_commit ${cjk.pins.cppjieba.rev}
+    ''
+    + ''
+      wrapProgram $out/bin/agentsview ${lib.escapeShellArgs wrapperArgs}
+    '';
+  passthru = {
+    inherit
+      frontend
+      unwrapped
+      cjk
+      withCjk
+      ;
+    category = "Usage Analytics";
+  };
+  inherit (unwrapped) meta;
 }

@@ -6,5 +6,15 @@
   "litellmSnapshot": {
     "url": "https://raw.githubusercontent.com/kenn-io/agentsview/8ebb4aa694bf544c465d6c78aa2c465b4cd14ef5/litellm_snapshot.json.gz",
     "hash": "sha256-dQl+oRmaP1NZDMv27GGqBaDEcf/C9EAYkl1KiVq1o+g="
+  },
+  "cjk": {
+    "simple": {
+      "rev": "4ed008934495fc55ff4bf6620bba58311988b23e",
+      "hash": "sha256-8N9SGW2LlROEhLRzoseIlj9FmH/NnD23bqBw+moXAus="
+    },
+    "cppjieba": {
+      "rev": "194c144d8b5ed1baf3190d07c5226e804454ab47",
+      "hash": "sha256-QC7AxbSscnkBQEHM5YqrBdtS/fnFFAjHv7oxgmJtM3E="
+    }
   }
 }
