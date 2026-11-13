@@ -11,16 +11,16 @@
 
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "tilth";
-  version = "0.14.0";
+  version = "0.15.0";
 
   src = fetchFromGitHub {
     owner = "jahala";
     repo = "tilth";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-ltpzNz7n+Nzq1TcOk9Jsg3pI/8D4YFQqC/CEK7je8bg=";
+    hash = "sha256-b+dmQSZPU424sllkFkz5vfhE9aBDCe6x5L25+e4Odr0=";
   };
 
-  cargoHash = "sha256-LeroIJ7dLjif/YyHPQPSLZClNSkvRar9OH2rZ4KY8EQ=";
+  cargoHash = "sha256-vqPjUktsZVKzZb2Te9gGUNUzgzXYlIpY6o/SPLT6O/U=";
 
   nativeBuildInputs = [ makeWrapper ];
   nativeCheckInputs = [ git ];
