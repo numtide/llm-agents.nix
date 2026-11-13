@@ -208,6 +208,8 @@ in
     # prebuilt Electron app here.
     rm -f $out/lib/Orca/chrome-sandbox
 
+    rm -rf $out/lib/Orca/resources/node_modules/@koromix/koffi-linux-*/musl_*
+
     chmod +x $out/lib/Orca/orca-ide $out/lib/Orca/resources/bin/orca-ide
 
     mkdir -p "$out/libexec"
