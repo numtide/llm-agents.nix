@@ -12,16 +12,16 @@
 
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "tokscale";
-  version = "4.22.0";
+  version = "4.22.1";
 
   src = fetchFromGitHub {
     owner = "junhoyeo";
     repo = "tokscale";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-A/xPUH5vGeMg8VZkf0XAYCFcCyXYLowv9TIo186FQt8=";
+    hash = "sha256-H+f84Rev3i+aFnbqP4Ym99FhKURrskmo5C6iJdC1cPc=";
   };
 
-  cargoHash = "sha256-8Msr80AVLkAYZZpVQPqb98JnoIR1EAiok/rMZ9KiCQE=";
+  cargoHash = "sha256-+rhyQYELntvYmZ+c0BNrIuWRsKd5VxQ5Rw6FYq+pRf8=";
 
   env = {
     OPENSSL_NO_VENDOR = 1;
