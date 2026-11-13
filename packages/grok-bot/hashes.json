@@ -1,14 +1,14 @@
 {
-  "version": "1.0.1",
-  "buildId": "7eb488cd12ea2e65065a6b227f3ab49160b618bd",
+  "version": "1.0.3",
+  "buildId": "be8eaf76ba888db05a6a8950922f5fc8bb4d14e9",
   "urls": {
-    "x86_64-linux": "https://downloads.cursor.com/grokbot/stable/7eb488cd12ea2e65065a6b227f3ab49160b618bd/linux/x64/grok-bot_1.0.1_amd64.deb",
-    "aarch64-linux": "https://downloads.cursor.com/grokbot/stable/7eb488cd12ea2e65065a6b227f3ab49160b618bd/linux/arm64/grok-bot_1.0.1_arm64.deb",
-    "aarch64-darwin": "https://downloads.cursor.com/grokbot/stable/darwin-arm64/1.0.1/Grok_Bot_1.0.1.zip"
+    "x86_64-linux": "https://downloads.cursor.com/grokbot/stable/be8eaf76ba888db05a6a8950922f5fc8bb4d14e9/linux/x64/grok-bot_1.0.3_amd64.deb",
+    "aarch64-linux": "https://downloads.cursor.com/grokbot/stable/be8eaf76ba888db05a6a8950922f5fc8bb4d14e9/linux/arm64/grok-bot_1.0.3_arm64.deb",
+    "aarch64-darwin": "https://downloads.cursor.com/grokbot/stable/darwin-arm64/1.0.3/Grok_Bot_1.0.3.zip"
   },
   "hashes": {
-    "x86_64-linux": "sha256-hghqhKmVg2uMvwncqzOr4LD954LNn6W5ikJ+3nEcwzc=",
-    "aarch64-linux": "sha256-AGOgRu3yrvXD9JV0Lw75ruExzQ/aWXE1xa5n25KeRtc=",
-    "aarch64-darwin": "sha256-LdPoxq52zNS04A3x9SepS1sPZLKIrFfy/hMFf8XCzAI="
+    "x86_64-linux": "sha256-75DYFx/iB/ObiHdTwf9JLGaEoan5ENbh36AwOIn8+PA=",
+    "aarch64-linux": "sha256-ozAIE/LyKMxde/LSI2q97gxEySRdBr4ExOYP9lXa8gQ=",
+    "aarch64-darwin": "sha256-23BffqRfTs3a24hHX2dACb6vT0eter9LyjdsnN8pwlw="
   }
 }
