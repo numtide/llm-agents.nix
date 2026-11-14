@@ -43,19 +43,27 @@ let
   inlangMFunctionMatcher =
     inlangPlugin "plugin-m-function-matcher" "2.3.4"
       "sha512-Jd2ccLjEqyUAj+y54fb/8O1bEREsaHcPOw6PBercVjDMTvcUqAQZ8V/1t5Z0ZmSCuWgof7XxnmBcwgMuf0Xk+A==";
+  testPath = lib.makeBinPath [
+    bash
+    coreutils
+    git
+    gnutar
+    openssh
+    python3
+  ];
 in
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "openresearch";
-  version = "0.2.25";
+  version = "0.2.27";
 
   src = fetchFromGitHub {
     owner = "alphaXiv";
     repo = "OpenResearch";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-/wBl0D92vi3/U1oXXzCn5ov/2aigUrCuhAi7IQ/QcQI=";
+    hash = "sha256-wCpUNe0qy8dlHI5WxTz2ujaK/qjWsTNbZELb9Gv2Kw0=";
   };
 
-  cargoHash = "sha256-5A0WeuUKeszjgEisIHvtZfR7IpTOMjr9wRGVl6PAP1E=";
+  cargoHash = "sha256-E65WBB37WQeaqKfe/xUUnAshCpahQtgFqybO6sqGyRQ=";
 
   nativeBuildInputs = [
     makeWrapper
@@ -76,20 +84,11 @@ rustPlatform.buildRustPackage (finalAttrs: {
       --replace-fail '#!/bin/sh' '#!${bash}/bin/sh'
     substituteInPlace src/commands/up.rs \
       --replace-fail '"sh",' '"${bash}/bin/sh",'
-    # The fake ssh in these tests calls cat and, for `ssh -G`, /usr/bin/ssh;
-    # neither exists in the sandbox.
-    substituteInPlace tests/cli/compute_cli.rs \
-      --replace-fail '{}:/usr/bin:/bin"' '{}:${
-        lib.makeBinPath [
-          bash
-          coreutils
-          gnutar
-          python3
-        ]
-      }"' \
-      --replace-fail 'exec /usr/bin/ssh' 'exec ${openssh}/bin/ssh'
+    # the test PATH has no cat, tar or python in the sandbox;
     # the nested orx-host build must not inherit CARGO_BUILD_TARGET
     substituteInPlace tests/support/src/lib.rs \
+      --replace-fail '"/usr/bin:/bin")' '"${testPath}")' \
+      --replace-fail '{}:/usr/bin:/bin:/usr/sbin:/sbin' '{}:${testPath}' \
       --replace-fail '.env("CARGO_PROFILE_DEV_DEBUG", "0")' '.env_remove("CARGO_BUILD_TARGET").env("CARGO_PROFILE_DEV_DEBUG", "0")'
   '';
 
@@ -191,7 +190,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
           ;
         pnpm = pnpm_11;
         fetcherVersion = 4;
-        hash = "sha256-2dtywPWAWp21DBfEzqG9/3NeidLZR4h1GY4Zebc4W/4=";
+        hash = "sha256-TPEAGDxXoJcdwkLgihRz9uU2Jlsn7MBRDYh9M2AkzU0=";
       };
 
       nativeBuildInputs = [
