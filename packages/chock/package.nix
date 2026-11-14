@@ -11,7 +11,7 @@ let
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "chock";
-  version = "0.1.0-unstable-20261106-d771f90";
+  version = "0.1.0-unstable-20261114-f683646";
 
   src = fetchFromGitHub {
     owner = "LilithSemi";
