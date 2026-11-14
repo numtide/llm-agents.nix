@@ -1,45 +1,50 @@
 diff --git a/bun.lock b/bun.lock
-index acd4159..c1a2772 100644
+index 1e67986..81eb9ab 100644
 --- a/bun.lock
 +++ b/bun.lock
-@@ -25,11 +25,11 @@
+@@ -26,11 +26,11 @@
      },
      "apps/cline-plugin": {
        "name": "@plannotator/cline",
 -      "version": "0.28.61",
-+      "version": "0.28.62",
++      "version": "0.28.64",
      },
      "apps/dsh-plugin": {
        "name": "@plannotator/dsh",
 -      "version": "0.28.61",
-+      "version": "0.28.62",
++      "version": "0.28.64",
      },
      "apps/feedback-service": {
        "name": "@plannotator/feedback-service",
-@@ -132,7 +132,7 @@
+@@ -133,11 +133,11 @@
+     },
+     "apps/openclaw-plugin": {
+       "name": "@plannotator/openclaw",
+-      "version": "0.28.61",
++      "version": "0.28.64",
      },
      "apps/opencode-plugin": {
        "name": "@plannotator/opencode",
 -      "version": "0.28.61",
-+      "version": "0.28.62",
++      "version": "0.28.64",
        "devDependencies": {
          "@opencode-ai/plugin": "1.19.3",
          "@opencode/plugin": "2.0.32",
-@@ -151,7 +151,7 @@
+@@ -156,7 +156,7 @@
      },
      "apps/pi-extension": {
        "name": "@plannotator/pi-extension",
 -      "version": "0.28.61",
-+      "version": "0.28.62",
++      "version": "0.28.64",
        "dependencies": {
          "@joplin/turndown-plugin-gfm": "^1.0.68",
          "@pierre/diffs": "1.6.4",
-@@ -388,7 +388,7 @@
+@@ -393,7 +393,7 @@
      },
      "packages/server": {
        "name": "@plannotator/server",
 -      "version": "0.28.61",
-+      "version": "0.28.62",
++      "version": "0.28.64",
        "dependencies": {
          "@modelcontextprotocol/server": "2.3.1",
          "@pierre/diffs": "1.6.4",
