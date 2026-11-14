@@ -29,13 +29,13 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "voxtype";
-  version = "1.2.1";
+  version = "1.2.2";
 
   src = fetchFromGitHub {
     owner = "peteonrails";
     repo = "voxtype";
     tag = "v${version}";
-    hash = "sha256-CPo6hWALy+bAoKgX0m05Hw8oAL2whc1vgaHJdY4bjYU=";
+    hash = "sha256-9gXDvLS35we9aSqHoFYcG4Yby9mNRlKxjG+c4hGQqIM=";
   };
 
   cargoDeps = rustPlatform.fetchCargoVendor {
@@ -47,7 +47,7 @@ rustPlatform.buildRustPackage rec {
     postBuild = ''
       rm -r $out/git/*/crates/openvino-sys/upstream/thirdparty
     '';
-    hash = "sha256-IcklG+WhCVBdGPHcMxnFGBSlE2ES+vh85B9A1iVSbe8=";
+    hash = "sha256-8ogR2P1EqfAHqPkj5AuVc9tjWQ6cYEtOVzH22WFa31c=";
   };
 
   nativeBuildInputs = [
