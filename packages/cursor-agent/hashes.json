@@ -1,8 +1,8 @@
 {
-  "version": "2026.11.11-b912975",
+  "version": "2026.11.13-eacade1",
   "hashes": {
-    "x86_64-linux": "sha256-vgH0KtM0+B0FqZkvzwYKUsx0b1LMRR6EnrZSFGpuPJE=",
-    "aarch64-linux": "sha256-8GivZO2RtTBGBZdlhvaQV5Z590CkHziAkaazoud2mHw=",
-    "aarch64-darwin": "sha256-LGC1j7fZpUx8uUYPDLsQ1FHUrwJdRFHyUuXx2Vb4xm8="
+    "x86_64-linux": "sha256-wC5DIfINaR7gOvlNKZSNw6gcbDTnMo2nuxr63kx1gS8=",
+    "aarch64-darwin": "sha256-CHIgzPHhJNzfJ1NgFCKJIEKkWixXfvDqJbilsOR7tpE=",
+    "aarch64-linux": "sha256-5LoGEQRaJNHPePAh00wZRhaA/HI0wZwfmB8cwWn3DNw="
   }
 }
