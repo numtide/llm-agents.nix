@@ -1987,6 +1987,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>gomodel</strong> - Fast and resource-efficient AI gateway with caching, cost tracking, budgets, rate limits, virtual models, failover, MCP gateway, plugins and workflows</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/ENTERPILOT/GoModel
+- **Usage**: `nix run github:numtide/llm-agents.nix#gomodel -- --help`
+- **Nix**: [packages/gomodel/package.nix](packages/gomodel/package.nix)
+
+</details>
+<details>
 <summary><strong>happy-coder</strong> - Mobile and Web client for Codex and Claude Code, with realtime voice and encryption</summary>
 
 - **Source**: source

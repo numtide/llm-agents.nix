@@ -369,6 +369,12 @@ inputs."nixpkgs".lib.extend (
         githubId = 6445619;
         name = "Ruben Cano";
       };
+      ser = {
+        email = "nixos-github@random.re";
+        github = "ser";
+        githubId = 231537;
+        name = "ᎠᎡ. Ѕϵrgϵ Ѵictor";
+      };
     };
   }
 )
