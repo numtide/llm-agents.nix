@@ -22,7 +22,7 @@
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "herdr-app";
-  version = "0.1.15";
+  version = "0.1.16";
 
   src = fetchFromGitHub {
     owner = "herdrdev";
@@ -30,12 +30,12 @@ rustPlatform.buildRustPackage (finalAttrs: {
     tag = "v${finalAttrs.version}";
     # vendor/ghostty is a git submodule (ghostty-org/ghostty).
     fetchSubmodules = true;
-    hash = "sha256-CNktD+tQrMMN4vpzFPZkZWnwDalaTkUV0A2UiLVeO3E=";
+    hash = "sha256-yR8tu/a5TXJktYTdb9mkqXY4jKPGljfTQbYraP/S8Ss=";
   };
 
   __structuredAttrs = true;
 
-  cargoHash = "sha256-usCdairGam65XVKtb1jJpRC0tNXnoafAnMFQjPgvgqQ=";
+  cargoHash = "sha256-mO00lakVFzV2pDsMVR9l1N8IBSkFiMCN3Agk66/ePoQ=";
 
   # Build-platform Zig: passthru attrs are not spliced.
   zigDeps = buildPackages.zig_0_16.fetchDeps {
