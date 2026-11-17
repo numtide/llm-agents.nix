@@ -50,6 +50,7 @@
   libXext,
   libXfixes,
   libXrandr,
+  libXtst,
   libnotify,
   libsecret,
   libxshmfence,
@@ -103,6 +104,7 @@ let
     libXext
     libXfixes
     libXrandr
+    libXtst
     libxkbcommon
     libxshmfence
     libxml2
