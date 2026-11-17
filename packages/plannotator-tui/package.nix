@@ -3,6 +3,7 @@
   fetchFromGitHub,
   rustPlatform,
   pkg-config,
+  git,
   sqlite,
   versionCheckHook,
 }:
@@ -22,6 +23,8 @@ rustPlatform.buildRustPackage (finalAttrs: {
   nativeBuildInputs = [ pkg-config ];
 
   buildInputs = [ sqlite ];
+
+  nativeCheckInputs = [ git ];
 
   env.LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
 
