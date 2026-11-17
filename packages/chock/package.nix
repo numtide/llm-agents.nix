@@ -16,14 +16,13 @@ stdenv.mkDerivation (finalAttrs: {
   src = fetchFromGitHub {
     owner = "LilithSemi";
     repo = "chock";
-    # Untagged: zig 0.17.1 support (4b02d0a) is not in a tag yet.
-    rev = "d771f90bd111acfebd7ae393d113ac44fe95ca08";
-    hash = "sha256-OlR2AY4uizuuHpinpxz0qXDOSum6nFH7TEMGArWnui8=";
+    tag = finalAttrs.version;
+    hash = "sha256-s0JDfsxr5cwu1XFsbkdrANnsND6C5s+IO2+3b1esNJU=";
   };
 
   zigDeps = zig.fetchDeps {
     inherit (finalAttrs) src pname version;
-    hash = "sha256-DyTznIycyOV42TepVCqffKrmGixIJUaRONqzB+1BGz0=";
+    hash = "sha256-EKB48hSspw5yy/Mzh0gsM94TH7YYhnLkDkrgVGwjzP8=";
   };
 
   nativeBuildInputs = [
@@ -31,6 +30,14 @@ stdenv.mkDerivation (finalAttrs: {
     git
     typescript
   ];
+
+  # the build dir is too long for a unix socket path in the darwin sandbox
+  postPatch = ''
+    substituteInPlace lib/chock-broker/handover.zig \
+      --replace-fail 'const endpoint = try Endpoint.open(io, paths, null);' \
+        'if (paths.socket.len > socket.max_socket_path) return error.SkipZigTest;
+         const endpoint = try Endpoint.open(io, paths, null);'
+  '';
 
   postConfigure = ''
     ln -s ${finalAttrs.zigDeps} "$ZIG_GLOBAL_CACHE_DIR/p"
@@ -52,7 +59,7 @@ stdenv.mkDerivation (finalAttrs: {
   meta = {
     description = "Sandbox-first AI coding harness";
     homepage = "https://chock.ws";
-    changelog = "https://github.com/LilithSemi/chock/commits/${finalAttrs.src.rev}";
+    changelog = "https://github.com/LilithSemi/chock/releases/tag/${finalAttrs.version}";
     license = lib.licenses.asl20;
     sourceProvenance = [ lib.sourceTypes.fromSource ];
     maintainers = with lib.maintainers; [ RossComputerGuy ];
