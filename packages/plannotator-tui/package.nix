@@ -28,6 +28,9 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   env.LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
 
+  # diffs-rs needs libgit2-sys' vendored source and refuses LIBGIT2_NO_VENDOR
+  dontCargoUseSystemLibs = true;
+
   # The darwin cc-wrapper re-quotes non-ASCII arguments as $'\303\274', which
   # breaks linking the fake herdr in a temp dir named with "ü".
   postPatch = ''
