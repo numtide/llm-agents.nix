@@ -76,6 +76,9 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       # platforms we build for; drop them from the fixed output.
       find $out -type f -name '*.exe' -delete
 
+      # bun filters by libc on linux only, so darwin keeps musl packages
+      find $out -name '*fff-bin-linux-*-musl*' -prune -exec rm -rf {} +
+
       runHook postInstall
     '';
 
