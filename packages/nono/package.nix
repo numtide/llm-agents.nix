@@ -6,6 +6,7 @@
   pkg-config,
   aws-lc,
   dbus,
+  zstd,
   versionCheckHook,
   unpinCargoMsrvHook,
   ...
@@ -36,7 +37,11 @@ rustPlatform.buildRustPackage rec {
   ];
 
   # keyring uses sync-secret-service (dbus) on Linux, apple-native on Darwin
-  buildInputs = [ aws-lc ] ++ lib.optionals stdenv.hostPlatform.isLinux [ dbus ];
+  buildInputs = [
+    aws-lc
+    zstd
+  ]
+  ++ lib.optionals stdenv.hostPlatform.isLinux [ dbus ];
 
   env.AWS_LC_SYS_USE_SYSTEM = "1";
 
