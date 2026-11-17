@@ -1939,6 +1939,14 @@
     url = "https://registry.npmjs.org/@tailwindcss/vite/-/vite-4.3.3.tgz";
     hash = "sha512-yYU8cogLeSh/ms2jh8Fj7jaba/EWa7Ja6GoUqYZaraEuCI5YS6ms6ObZgjjedm+jm6XZjdNRWBpPP6Z86oOxcw==";
   };
+  "@tanstack/query-core@5.105.3" = fetchurl {
+    url = "https://registry.npmjs.org/@tanstack/query-core/-/query-core-5.105.3.tgz";
+    hash = "sha512-v1rbNy7MB/4Akth7CQH+CerV13K7Ok9hAusEsfz4sCjDdu3/kOSJPoWfoB+YjdEX1eBFBWKNAGE5nqZCgdlHDw==";
+  };
+  "@tanstack/react-query@5.105.3" = fetchurl {
+    url = "https://registry.npmjs.org/@tanstack/react-query/-/react-query-5.105.3.tgz";
+    hash = "sha512-dj5hGWZmwoc9NG4enoXuYbiYwb5FxgJYPVv06eUgicMTfEMTRXn08Xv9D/r1V8TfjAv+BpxdvZFzJ1h3hSWZcQ==";
+  };
   "@tanstack/react-table@8.21.3" = fetchurl {
     url = "https://registry.npmjs.org/@tanstack/react-table/-/react-table-8.21.3.tgz";
     hash = "sha512-5nNMTSETP4ykGegmVkhjcS8tTLW6Vl4axfEGQN3v0zdHYbK4UfoqfPChclTrJ4EoK9QynqAu9oUf8VEmrpZ5Ww==";
@@ -2730,6 +2738,10 @@
   "crelt@1.0.7" = fetchurl {
     url = "https://registry.npmjs.org/crelt/-/crelt-1.0.7.tgz";
     hash = "sha512-aK6BbWfhf4U/wCcLHKPJl/xa6VkVstRaPywWtMKGwuOLc/wZTyQYuoxgvZnNsBvv7Kg3YTBQYYBCggcviQczuA==";
+  };
+  "croner@11.0.0" = fetchurl {
+    url = "https://registry.npmjs.org/croner/-/croner-11.0.0.tgz";
+    hash = "sha512-T17ADjdttrVToyzLpLq9Xb9xzcMwpQ/M3Qs9szhh0MVNTbv6NWQ9OFYa2qlzPYXFMn+uoDlnW1IpIv6cAvFtyA==";
   };
   "cross-spawn@7.0.6" = fetchurl {
     url = "https://registry.npmjs.org/cross-spawn/-/cross-spawn-7.0.6.tgz";
