@@ -123,6 +123,8 @@ rustPlatform.buildRustPackage (finalAttrs: {
     "openresearch-cli"
   ];
 
+  # test timers are only sped up in debug builds
+  checkType = "debug";
   dontUseCargoParallelTests = true; # ETXTBSY: tests write+exec scripts
 
   nativeCheckInputs = [
