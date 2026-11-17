@@ -2057,6 +2057,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>opencode-browse</strong> - MCP server that lets agents use a real Chromium browser</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/anomalyco/browse
+- **Usage**: `nix run github:numtide/llm-agents.nix#opencode-browse -- --help`
+- **Nix**: [packages/opencode-browse/package.nix](packages/opencode-browse/package.nix)
+
+</details>
+<details>
 <summary><strong>opencodex</strong> - Universal provider proxy for OpenAI Codex, Claude Code, Claude Desktop & Grok Build</summary>
 
 - **Source**: source
