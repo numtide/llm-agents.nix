@@ -18,13 +18,13 @@
 
 buildNpmPackage (finalAttrs: {
   pname = "qwen-code";
-  version = "0.27.4";
+  version = "0.28.0";
 
   src = fetchFromGitHub {
     owner = "QwenLM";
     repo = "qwen-code";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-lmwmzLEu7SS3eHBxSdVefo9KYLZRrL8uFn2VfbktnTA=";
+    hash = "sha256-OrIaWuLstQS+LZCgNzK+h4ianRd+/TigdA6nszzntek=";
   };
 
   npmDeps = null;
@@ -32,7 +32,7 @@ buildNpmPackage (finalAttrs: {
     inherit (finalAttrs) pname version src;
     pnpm = pnpm_11;
     fetcherVersion = 4;
-    hash = "sha256-Hd+HddouueF007Iez+gexpfJVPGL2PxM+2s/rVbnRx0=";
+    hash = "sha256-gAk+ilBbU9jDdfShUpruqvYvXMN9eck7dKXS2WngxRA=";
   };
   npmConfigHook = pnpmConfigHook;
   dontNpmPrune = true;
