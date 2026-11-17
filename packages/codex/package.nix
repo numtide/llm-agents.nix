@@ -105,19 +105,14 @@ rustPlatform.buildRustPackage (
       zlib
       zstd
     ]
-    ++ lib.optionals stdenv.hostPlatform.isLinux [ libcap ]
-    # Newer nixpkgs builds aws-lc with prefixed symbols and suffixed
-    # libraries, and without the compat openssl.pc, so openssl-sys (Linux
-    # only) needs the real openssl there. The two no longer clash.
-    ++ lib.optionals (
-      stdenv.hostPlatform.isLinux && !(lib.elem "openssl" (aws-lc.meta.pkgConfigModules or [ ]))
-    ) [ openssl ];
+    # openssl-sys is only in the Linux dependency tree.
+    ++ lib.optionals stdenv.hostPlatform.isLinux [
+      libcap
+      openssl
+    ];
 
     env = {
       RUSTY_V8_ARCHIVE = librusty_v8;
-      # Where aws-lc ships a compat openssl.pc, openssl-sys also builds
-      # against aws-lc: linking both libcrypto copies leaves openssl symbols
-      # unresolved.
       AWS_LC_SYS_USE_SYSTEM = "1";
       LIBGIT2_NO_VENDOR = "1";
       LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
