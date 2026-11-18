@@ -31,12 +31,15 @@ stdenv.mkDerivation (finalAttrs: {
     typescript
   ];
 
-  # the build dir is too long for a unix socket path in the darwin sandbox
+  # the build dir is too long for a unix socket path in the darwin sandbox;
+  # curl 8.23 makes git re-ask for the URL's username, which askpass ignores
   postPatch = ''
     substituteInPlace lib/chock-broker/handover.zig \
       --replace-fail 'const endpoint = try Endpoint.open(io, paths, null);' \
         'if (paths.socket.len > socket.max_socket_path) return error.SkipZigTest;
          const endpoint = try Endpoint.open(io, paths, null);'
+    substituteInPlace test/broker/git_push.zig \
+      --replace-fail 'const git_path = @import("chock_path").git_path;' 'const git_path = "";'
   '';
 
   postConfigure = ''

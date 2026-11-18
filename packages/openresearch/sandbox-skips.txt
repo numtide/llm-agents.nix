@@ -17,6 +17,7 @@ engine::adapters::api_tests::k8s_unpullable_image_fails_with_the_pull_error_and_
 engine::adapters::api_tests::k8s_waiting_pod_stays_queued_and_receives_the_source_once_it_runs
 engine::adapters::api_tests::kubernetes_cancel_keeps_the_spool_without_an_attention_notice
 engine::adapters::api_tests::modal_logs_reopen_a_stalled_stream_mid_batch_without_losing_bytes
+engine::adapters::api_tests::openresearch_box_refusing_the_key_fails_the_run_with_the_cause
 engine::adapters::api_tests::openresearch_completed_log_is_readable_after_release
 engine::adapters::api_tests::openresearch_staging_rejected_key_needs_auth_after_one_attempt
 engine::adapters::api_tests::openresearch_watching_rejected_key_needs_auth_after_one_attempt
