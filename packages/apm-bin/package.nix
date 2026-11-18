@@ -31,7 +31,10 @@ stdenv.mkDerivation {
   };
 
   nativeBuildInputs = lib.optionals stdenv.hostPlatform.isLinux [ formatelf ];
-  buildInputs = lib.optionals stdenv.hostPlatform.isLinux [ zlib ];
+  buildInputs = lib.optionals stdenv.hostPlatform.isLinux [
+    (lib.getLib stdenv.cc.cc)
+    zlib
+  ];
 
   # PyInstaller bundle: the bootloader and _internal must stay together.
   dontStrip = true;
