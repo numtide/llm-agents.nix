@@ -188,6 +188,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
         mcp
         tyro
       ];
+      # a floor on a transitive dependency of mcp that rlm does not import
+      pythonRelaxDeps = [ "opentelemetry-api" ];
       pythonImportsCheck = [ "rlm" ];
     };
 
