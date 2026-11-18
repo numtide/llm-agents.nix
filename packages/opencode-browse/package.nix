@@ -14,18 +14,20 @@
 
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "opencode-browse";
-  version = "0.1.1";
+  version = "0.1.5";
 
   src = fetchFromGitHub {
     owner = "anomalyco";
     repo = "browse";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-lvndoaUv9kKdt5Mthblm/CHS3dlICwQz2F/Y2hzrTAY=";
+    hash = "sha256-BIzCe/atioMcWg+UvuXeEpijh6CHIXe5tPpR5L0JYcU=";
   };
 
   cargoRoot = "rust";
   buildAndTestSubdir = "rust";
-  cargoHash = "sha256-Dv8bZ3qJpvGsIclV8hM7chJXuxBwqOJ51ZBcV0zSAIg=";
+  cargoHash = "sha256-IDAIKwDYSnNjqS6bUV7b+vS4wjYa1UNOGChIhYK/MHA=";
+
+  patches = [ ./relay-read-unread-body.patch ];
 
   cargoBuildFlags = [
     "-p"
