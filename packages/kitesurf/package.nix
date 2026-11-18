@@ -3,7 +3,8 @@
   stdenv,
   fetchFromGitHub,
   rustPlatform,
-  perl,
+  aws-lc,
+  openssl,
   pkg-config,
 }:
 
@@ -22,9 +23,11 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   cargoHash = "sha256-5wfCrn/+8zN817XrdxzNp2RDWIYuSDD2BoyZZND5NkU=";
 
-  nativeBuildInputs = lib.optionals stdenv.hostPlatform.isLinux [
-    perl
-    pkg-config
+  nativeBuildInputs = lib.optionals stdenv.hostPlatform.isLinux [ pkg-config ];
+
+  buildInputs = lib.optionals stdenv.hostPlatform.isLinux [
+    aws-lc
+    openssl
   ];
 
   checkFlags = map (t: "--skip=${t}") [
