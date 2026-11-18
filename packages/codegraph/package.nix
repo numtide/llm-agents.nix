@@ -21,14 +21,6 @@ buildNpmPackage rec {
   npmDepsHash = "sha256-jb2PXrDiQGPoFPLGHBtUdvLhlZfNVmgiS4kMQK0IMZs=";
   makeCacheWritable = true;
 
-  # build:ui runs the ui workspace through a nested `npm run`, where the root
-  # node_modules/.bin precedes the workspace's in PATH. That picks the hoisted
-  # vite 5 (for vitest) over the vite 7 the ui's svelte plugin needs.
-  postPatch = ''
-    substituteInPlace ui/package.json \
-      --replace-fail '"build": "vite build"' '"build": "node node_modules/vite/bin/vite.js build"'
-  '';
-
   # The ui workspace is only needed at build time (emitted to dist/viewer) and
   # is not installed, which leaves its node_modules link dangling.
   postInstall = ''
