@@ -81,14 +81,14 @@ let
 in
 python3.pkgs.buildPythonApplication (finalAttrs: {
   pname = "apm";
-  version = "0.35.1";
+  version = "0.36.0";
   pyproject = true;
 
   src = fetchFromGitHub {
     owner = "microsoft";
     repo = "apm";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-WFK8aFVeef4031AA6W7WqE7unX/CYOXhHgbKOrqk8Qo=";
+    hash = "sha256-vhseU9beSZb1D0k/HGH67rfD1Bl4D6iRMQOLs+6vcf4=";
   };
 
   build-system = with python3.pkgs; [
