@@ -11,13 +11,13 @@
 
 python3.pkgs.buildPythonApplication rec {
   pname = "orbi-cli";
-  version = "0.7.45";
+  version = "0.7.47";
   pyproject = true;
 
   src = fetchPypi {
     pname = "orbi_cli";
     inherit version;
-    hash = "sha256-iGRJcr/Cs//P+ZkAj+3jLApwsVwPWKW9DrnSNQuwP/k=";
+    hash = "sha256-fDE7h1l4vkBGrrLwhsOxsiFXKp3lQB+PlEKZGwe6H1M=";
   };
 
   build-system = [ python3.pkgs.setuptools ];
