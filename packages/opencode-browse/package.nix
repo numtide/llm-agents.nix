@@ -30,6 +30,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   patches = [
     ./relay-read-unread-body.patch
     ./package-update-tests-on-arm64.patch
+    ./package-update-tests-without-home.patch
   ];
 
   cargoBuildFlags = [
@@ -47,12 +48,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
   // lib.optionalAttrs stdenv.hostPlatform.isLinux {
     BROWSE_TEST_CHROME = "${chromium}/bin/chromium";
   };
-
-  # package_update tests install a binary under $HOME/.cache.
-  preCheck = ''
-    export HOME="$TMPDIR/home"
-    mkdir -p "$HOME"
-  '';
 
   postInstall = ''
     wrapProgram $out/bin/browse \

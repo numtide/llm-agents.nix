@@ -1,0 +1,31 @@
+From 73fed7ae6093f88b8ef27b77d0c6982dd1d33955 Mon Sep 17 00:00:00 2001
+From: ryoppippi <1560508+ryoppippi@users.noreply.github.com>
+Date: Wed, 18 Nov 2026 21:37:04 +0000
+Subject: [PATCH] tests: keep the unrecognised install in the temp folder, not
+ HOME
+
+an_unrecognized_install_checks_in_and_installs_nothing only needs its
+binary outside the target folder, but it put it under $HOME/.cache, so
+the suite fails wherever HOME isn't writable, such as a Nix build. The
+temp folder is outside the target folder too, as the uninstall and MCP
+pool tests already rely on.
+---
+ rust/crates/browse/tests/package_update.rs | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/rust/crates/browse/tests/package_update.rs b/rust/crates/browse/tests/package_update.rs
+index 5c16be5..7bd93d2 100644
+--- a/rust/crates/browse/tests/package_update.rs
++++ b/rust/crates/browse/tests/package_update.rs
+@@ -543,7 +543,7 @@ fn a_relay_updates_without_curl() {
+ fn an_unrecognized_install_checks_in_and_installs_nothing() {
+     let scene = Scene::new("other");
+     // Outside the target folder, which would make it a checkout build.
+-    let outside = PathBuf::from(std::env::var_os("HOME").unwrap()).join(format!(".cache/oc-tmp/browse-other-{}", std::process::id()));
++    let outside = std::env::temp_dir().join(format!("browse-other-{}", std::process::id()));
+     let binary = outside.join("Downloads/browse");
+     std::fs::create_dir_all(binary.parent().unwrap()).unwrap();
+     std::fs::copy(env!("CARGO_BIN_EXE_browse"), &binary).unwrap();
+-- 
+2.56.0
+
