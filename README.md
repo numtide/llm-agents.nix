@@ -2007,6 +2007,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>kitesurf</strong> - Terminal client for Kitesurf, an experimental browser engine that runs on Cloudflare Workers</summary>
+
+- **Source**: source
+- **License**: Apache-2.0
+- **Homepage**: https://kitesurf.dev/
+- **Usage**: `nix run github:numtide/llm-agents.nix#kitesurf -- --help`
+- **Nix**: [packages/kitesurf/package.nix](packages/kitesurf/package.nix)
+
+</details>
+<details>
 <summary><strong>mcp-remote</strong> - Connect MCP clients that only support local (stdio) servers to a remote MCP server</summary>
 
 - **Source**: source
