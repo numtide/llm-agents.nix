@@ -89,7 +89,7 @@ stdenv.mkDerivation {
   ++ lib.optionals stdenv.hostPlatform.isLinux [
     stdenv.cc.cc.lib
     zlib
-    # pi-natives' wayland-pipewire feature links system libpipewire (pkg-config)
+    # pi-natives' wayland capture links system libpipewire (pkg-config)
     pipewire
   ];
 
@@ -173,7 +173,6 @@ stdenv.mkDerivation {
 
     echo "Building Rust native addon..."
     cargo build --release -p pi-natives \
-      ${lib.optionalString stdenv.hostPlatform.isLinux "--features wayland-pipewire"} \
       --target ${rustTarget} --target-dir target
 
     mkdir -p packages/natives/native
