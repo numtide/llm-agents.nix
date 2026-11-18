@@ -1887,6 +1887,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>apm-bin</strong> - Agent Package Manager (official standalone release)</summary>
+
+- **Source**: binary
+- **License**: MIT
+- **Homepage**: https://github.com/microsoft/apm
+- **Usage**: `nix run github:numtide/llm-agents.nix#apm-bin -- --help`
+- **Nix**: [packages/apm-bin/package.nix](packages/apm-bin/package.nix)
+
+</details>
+<details>
 <summary><strong>asc</strong> - Fast, scriptable CLI for the App Store Connect API</summary>
 
 - **Source**: source
