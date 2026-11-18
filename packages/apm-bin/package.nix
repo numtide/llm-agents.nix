@@ -3,7 +3,7 @@
   flake,
   stdenv,
   fetchurl,
-  autoPatchelfHook,
+  formatelf,
   zlib,
   mkUpdater,
 }:
@@ -16,7 +16,6 @@ let
     x86_64-linux = "linux-x86_64";
     aarch64-linux = "linux-arm64";
     aarch64-darwin = "darwin-arm64";
-    x86_64-darwin = "darwin-x86_64";
   };
 
   platform = stdenv.hostPlatform.system;
@@ -31,7 +30,7 @@ stdenv.mkDerivation {
     hash = hashes.${platform};
   };
 
-  nativeBuildInputs = lib.optionals stdenv.hostPlatform.isLinux [ autoPatchelfHook ];
+  nativeBuildInputs = lib.optionals stdenv.hostPlatform.isLinux [ formatelf ];
   buildInputs = lib.optionals stdenv.hostPlatform.isLinux [ zlib ];
 
   # PyInstaller bundle: the bootloader and _internal must stay together.
@@ -79,7 +78,6 @@ stdenv.mkDerivation {
       "x86_64-linux"
       "aarch64-linux"
       "aarch64-darwin"
-      "x86_64-darwin"
     ];
   };
 }
