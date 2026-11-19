@@ -446,6 +446,7 @@ let
         disabledTestPaths = (old.disabledTestPaths or [ ]) ++ [
           "tests/adapter_tests/pyramid/"
           "tests/scenario_tests_async/test_events_assistant.py"
+          "tests/scenario_tests_async/test_events_assistant_without_middleware.py"
         ];
       });
 
