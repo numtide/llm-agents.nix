@@ -14,6 +14,11 @@ inputs."nixpkgs".lib.extend (
     };
 
     maintainers = prev.maintainers // {
+      dachxy = {
+        github = "DACHXY";
+        githubId = 47590416;
+        name = "DACHXY";
+      };
       sleroq = {
         github = "sleroq";
         githubId = 52239427;
