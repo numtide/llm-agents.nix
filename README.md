@@ -1877,6 +1877,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>agent-workspace-linux</strong> - Isolated Linux desktop workspaces for AI agents, over MCP and CLI</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/agent-sh/agent-workspace-linux
+- **Usage**: `nix run github:numtide/llm-agents.nix#agent-workspace-linux -- --help`
+- **Nix**: [packages/agent-workspace-linux/package.nix](packages/agent-workspace-linux/package.nix)
+
+</details>
+<details>
 <summary><strong>apm</strong> - Agent Package Manager — dependency manager for AI agents</summary>
 
 - **Source**: source
