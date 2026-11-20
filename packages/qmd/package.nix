@@ -99,6 +99,12 @@ stdenv.mkDerivation {
     "libvulkan.so.1"
   ];
 
+  # we run src with bun; the prepare script only builds dist for node
+  postPatch = ''
+    substituteInPlace package.json \
+      --replace-fail '"prepare": "node scripts/install-hooks.mjs && node scripts/build.mjs",' ""
+  '';
+
   # avoid bun's shared /private/tmp/bun-node-* shim on darwin
   preBunLifecycleScriptsPhase = ''
     mkdir -p $TMPDIR/node-shim
