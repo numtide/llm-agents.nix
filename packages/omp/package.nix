@@ -89,7 +89,7 @@ stdenv.mkDerivation {
   ++ lib.optionals stdenv.hostPlatform.isLinux [
     stdenv.cc.cc.lib
     zlib
-    # pi-natives' wayland capture links system libpipewire (pkg-config)
+    # omp-natives' wayland capture links system libpipewire (pkg-config)
     pipewire
   ];
 
@@ -152,10 +152,10 @@ stdenv.mkDerivation {
 
   postPatch = ''
     # const VecDeque::is_empty is newer than nixpkgs' rustc.
-    substituteInPlace crates/pi-shell/src/bash/vm/proc.rs \
+    substituteInPlace crates/shell/src/bash/vm/proc.rs \
       --replace-fail 'pub const fn has_work(&self)' 'pub fn has_work(&self)'
     # Only newer rustc lets a safe extern fn item satisfy an Fn bound.
-    substituteInPlace crates/pi-natives/src/desktop/macos/session.rs \
+    substituteInPlace crates/natives/src/desktop/macos/session.rs \
       --replace-fail '&online_displays(), CGDisplayIsAsleep)' '&online_displays(), |id| CGDisplayIsAsleep(id))'
 
     # Placeholder client bundle avoids building the full React dashboard.
@@ -172,7 +172,7 @@ stdenv.mkDerivation {
     ''}
 
     echo "Building Rust native addon..."
-    cargo build --release -p pi-natives \
+    cargo build --release -p omp-natives \
       --target ${rustTarget} --target-dir target
 
     mkdir -p packages/natives/native
@@ -182,7 +182,7 @@ stdenv.mkDerivation {
     napiBin="$(pwd)/node_modules/.bin/napi"
     if [ -x "$napiBin" ]; then
       "$napiBin" build \
-        --manifest-path crates/pi-natives/Cargo.toml \
+        --manifest-path crates/natives/Cargo.toml \
         --package-json-path packages/natives/package.json \
         --platform \
         --no-js \
