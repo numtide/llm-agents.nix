@@ -5,3 +5,7 @@
 packages/t3code/unwrapped.nix
 --subpackage
 resourceMonitor
+--subpackage
+hyprlandSnapShot
+--subpackage
+kdeSnapShot

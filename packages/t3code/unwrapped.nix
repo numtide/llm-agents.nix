@@ -61,6 +61,27 @@ let
     cargoHash = "sha256-5cmG2daM1bVOA23gjjoalbx0fEL1hmqV6WZov0sUZp8=";
   };
 
+  hyprlandSnapShot = rustPlatform.buildRustPackage {
+    pname = "t3code-hyprland-snap-shot";
+    inherit version src;
+
+    sourceRoot = "${src.name}/native/hyprland-snap-shot";
+    cargoHash = "sha256-oki1DAzUJ/8YIFhaJlw2wOukiQMcAaexdJqxDcFXFW4=";
+  };
+
+  kdeSnapShot = rustPlatform.buildRustPackage {
+    pname = "t3code-kde-snap-shot";
+    inherit version src;
+
+    sourceRoot = "${src.name}/native/kde-snap-shot";
+    # spawns dbus-daemon --session, unavailable in the sandbox
+    checkFlags = [
+      "--skip=transport_tests::"
+      "--skip=feedback::tests::"
+    ];
+    cargoHash = "sha256-ZbetrRAvnNLLS51IwR9xLb1NhnpFQB4J1ahn4CthJy0=";
+  };
+
   platformKey =
     {
       x86_64-linux = "linux-x64";
@@ -245,6 +266,10 @@ stdenv.mkDerivation {
     ${lib.optionalString stdenv.hostPlatform.isLinux ''
       install -Dm755 native/browser-secret/build/${stdenv.hostPlatform.node.arch}/t3-browser-secret \
         "$desktop/libexec/t3code/apps/desktop/prod-resources/browser-secret/t3-browser-secret"
+      install -Dm755 ${hyprlandSnapShot}/bin/t3-hyprland-snap-shot \
+        "$desktop/libexec/t3code/native/hyprland-snap-shot/target/release/t3-hyprland-snap-shot"
+      install -Dm755 ${kdeSnapShot}/bin/t3-kde-snap-shot \
+        "$desktop/libexec/t3code/native/kde-snap-shot/target/release/t3-kde-snap-shot"
     ''}
 
     find "$out/libexec/t3code" "$desktop/libexec/t3code" -xtype l -delete
@@ -303,7 +328,12 @@ stdenv.mkDerivation {
 
   passthru = {
     category = "AI Coding Agents";
-    inherit appName resourceMonitor;
+    inherit
+      appName
+      hyprlandSnapShot
+      kdeSnapShot
+      resourceMonitor
+      ;
   };
 
   meta = {

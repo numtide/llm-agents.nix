@@ -74,7 +74,13 @@ stdenvNoCC.mkDerivation {
     category = "AI Coding Agents";
     inherit providerPackages;
     # Keep the existing t3code updater targeting the unwrapped build inputs.
-    inherit (t3code-unwrapped) pnpmDeps resourceMonitor src;
+    inherit (t3code-unwrapped)
+      hyprlandSnapShot
+      kdeSnapShot
+      pnpmDeps
+      resourceMonitor
+      src
+      ;
     unwrapped = t3code-unwrapped;
   };
 
