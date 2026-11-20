@@ -197,6 +197,13 @@ python.pkgs.buildPythonApplication {
   # are newer but compatible.
   pythonRelaxDeps = true;
 
+  # proprietary binary wheel (and its dependencies) that 3.1.3 does not import
+  pythonRemoveDeps = [
+    "mistralai-vibe-harness"
+    "structlog"
+    "tenacity"
+  ];
+
   # `import vibe` alone is lazy and misses dependency drift: mistralai 2.1.3
   # lacked mistralai.extra.observability.telemetry yet built fine and crashed
   # at runtime (issue #6462). Import submodules that pull in the vendored deps
