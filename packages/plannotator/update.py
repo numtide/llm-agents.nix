@@ -18,7 +18,6 @@ from updater import (
     load_hashes,
     save_hashes,
     should_update,
-    strip_workspace_entries,
 )
 
 PKG_DIR = Path(__file__).parent
@@ -124,7 +123,6 @@ def main() -> None:
         FLAKE_ROOT,
         ref_prefix="v",
     )
-    strip_workspace_entries(BUN_NIX, "@plannotator", FLAKE_ROOT)
     refresh_stale_lock_patch(latest)
 
     print(f"Updated plannotator to {latest}")

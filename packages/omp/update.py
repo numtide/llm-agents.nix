@@ -20,7 +20,6 @@ from updater import (
     load_hashes,
     save_hashes,
     should_update,
-    strip_workspace_entries,
     update_dependency_hash,
 )
 from updater.hash import DUMMY_SHA256_HASH
@@ -67,7 +66,6 @@ def main() -> None:
         FLAKE_ROOT,
         ref_prefix="v",
     )
-    strip_workspace_entries(BUN_NIX, "@oh-my-pi", FLAKE_ROOT)
 
     update_dependency_hash(".#omp", "cargoHash", HASHES_FILE, data)
 
