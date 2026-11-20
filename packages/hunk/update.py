@@ -5,8 +5,7 @@
 
 Custom updater needed because hunk uses bun2nix: after each version
 bump the bun.nix lockfile must be regenerated from the upstream
-bun.lock using the bun2nix CLI, then workspace package entries are
-stripped (they resolve from the source tree at build time).
+bun.lock using the bun2nix CLI.
 """
 
 import sys
@@ -21,7 +20,6 @@ from updater import (
     load_hashes,
     save_hashes,
     should_update,
-    strip_workspace_entries,
 )
 
 PKG_DIR = Path(__file__).parent
@@ -63,7 +61,6 @@ def main() -> None:
         pkg_dir=PKG_DIR,
         ref_prefix="v",
     )
-    strip_workspace_entries(BUN_NIX, "@hunk", FLAKE_ROOT)
 
     print(f"Updated hunk to {latest}")
 

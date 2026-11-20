@@ -6,7 +6,6 @@ used by packages that depend on the bun2nix flake input.
 
 from __future__ import annotations
 
-import re
 import subprocess
 import tempfile
 from pathlib import Path
@@ -187,45 +186,3 @@ def clone_and_generate_bun_nix(
         elif patch_file is not None:
             # Upstream lockfile is now fresh — clear the patch so it's a no-op.
             patch_file.write_text("")
-
-
-def strip_workspace_entries(
-    bun_nix: Path,
-    scope: str,
-    flake_root: Path,
-) -> None:
-    """Remove workspace ``copyPathToStore`` entries from a bun.nix file.
-
-    bun2nix emits ``copyPathToStore`` entries for monorepo workspace
-    packages, but the paths are relative to the upstream repo root and
-    do not exist next to the generated bun.nix in this flake.  The
-    bun2nix hook resolves workspace deps from the source tree during
-    ``bun install``, so these entries are unnecessary and would fail to
-    evaluate.
-
-    Args:
-        bun_nix: Path to the bun.nix file to rewrite in place.
-        scope: npm scope of the workspace packages (e.g. ``"@hunk"``).
-        flake_root: Root directory of the flake (for ``nix fmt``).
-
-    """
-    text = bun_nix.read_text()
-    text = re.sub(r"  copyPathToStore,\n", "", text)
-    text = re.sub(
-        rf'  "{re.escape(scope)}/[^"]*"\s*=\s*copyPathToStore\s+[^;]+;\n',
-        "",
-        text,
-    )
-    # Also strip any remaining unscoped copyPathToStore entries
-    text = re.sub(
-        r'  "[^"]*"\s*=\s*copyPathToStore\s+[^;]+;\n',
-        "",
-        text,
-    )
-    text = text.replace(
-        "}:\n{",
-        "}:\n{\n  # Workspace packages are in the source tree, resolved at build time",
-        1,
-    )
-    bun_nix.write_text(text)
-    run_command(["nix", "fmt", "--", str(bun_nix)], cwd=flake_root)

@@ -20,7 +20,6 @@ from updater import (
     load_hashes,
     save_hashes,
     should_update,
-    strip_workspace_entries,
     update_dependency_hash,
 )
 
@@ -61,8 +60,6 @@ def main() -> None:
         ref_prefix="v",
         pkg_dir=PKG_DIR,
     )
-    # Strip workspace copyPathToStore entries that don't exist in our tree
-    strip_workspace_entries(BUN_NIX, "@oh-my-opencode", FLAKE_ROOT)
 
     # Step 3: Source hash. nix-prefetch-url can't be used because the
     # GitHub tarball excludes submodule contents.
