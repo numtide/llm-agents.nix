@@ -1,0 +1,129 @@
+/* Palette and type follow numtide.com. */
+:root {
+  --black: #1c1c1c;
+  --ink: #232323;
+  --white: #fff;
+  --lightgray: #fafafa;
+  --gray: #9a9a9a;
+  --border: #333;
+  --primary: #f58220;
+  --primary-dark: #ea510c;
+  --radius: 6px;
+  font-family: "GT Pressura Standard", "GT Pressura", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--black); color: var(--white); }
+a { color: var(--primary); text-decoration: none; }
+a:hover { color: var(--primary-dark); text-decoration: underline; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88em; }
+.wrap { max-width: 1000px; margin: 0 auto; padding: 0 1.25rem; }
+.muted { color: var(--gray); }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.skip { position: absolute; left: 0.5rem; top: -3rem; background: var(--primary); color: var(--black); padding: 0.4rem 0.8rem; border-radius: var(--radius); z-index: 2; }
+.skip:focus { top: 0.5rem; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+search { display: block; }
+
+header { padding: 1.5rem 0 1.25rem; border-bottom: 1px solid var(--border); }
+.brand { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.25rem; }
+.brand img { height: 34px; width: 34px; vertical-align: middle; margin-right: 0.6rem; }
+.brand a { color: var(--white); font-size: 1.35rem; font-weight: 500; letter-spacing: 0.01em; }
+.brand .sep { color: var(--gray); }
+.brand .gh { margin-left: auto; display: inline-flex; color: var(--gray); }
+.brand .gh:hover { color: var(--white); }
+header h1 { margin: 0; font-size: 2.6rem; line-height: 1.1; font-weight: 500; }
+header h1 .accent { color: var(--primary); display: block; }
+.tagline { margin: 0.75rem 0 1.5rem; max-width: 42rem; }
+#q {
+  width: 100%; font: inherit; font-size: 1.1rem; padding: 0.8rem 1rem;
+  border: 2px solid var(--white); border-radius: 999px;
+  background: transparent; color: var(--white);
+}
+#q::placeholder { color: var(--gray); }
+#q:focus-visible { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px #f5822055; }
+.filters { margin-top: 1rem; display: grid; gap: 0.6rem; }
+.row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.row #count { margin-left: auto; font-size: 0.9rem; }
+select {
+  font: inherit; font-size: 0.85rem; padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--ink); color: var(--white);
+}
+.chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.chip {
+  font: inherit; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 0.25rem 0.7rem; border: 1px solid var(--border); border-radius: 999px;
+  background: transparent; color: var(--white); cursor: pointer;
+}
+.chip:hover { border-color: var(--primary); }
+.chip .n { color: var(--gray); }
+.chip[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--black); }
+.chip[aria-pressed="true"] .n { color: var(--black); }
+
+main { background: var(--lightgray); color: var(--black); padding: 1.5rem 0 2rem; }
+#results {
+  list-style: none; padding: 0; margin: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 1rem;
+}
+.card {
+  background: var(--black); color: var(--white); min-width: 0;
+  border-radius: var(--radius); padding: 1rem 1.1rem 0.9rem;
+  border-bottom: 4px solid var(--primary);
+  display: flex; flex-direction: column;
+}
+.card .head { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+.card .name { margin: 0; font-size: 1.2rem; }
+.card .name button {
+  font: inherit; font-weight: 600; letter-spacing: 0.01em; color: var(--white);
+  background: none; border: 0; padding: 0; cursor: pointer; text-align: left;
+}
+.card .name button::after { content: " +"; color: var(--primary); font-weight: 400; }
+.card .name button[aria-expanded="true"]::after { content: " \2212"; }
+.card .name button:hover { color: var(--primary); }
+.card .version { font-size: 0.8rem; font-family: ui-monospace, monospace; }
+.card .desc { margin: 0.4rem 0 0.6rem; font-size: 0.92rem; flex: 1; }
+.links { font-size: 0.8rem; margin: 0; padding: 0; list-style: none; color: var(--gray); }
+.links li { display: inline; }
+.links li + li::before { content: " \b7 "; }
+.links a { text-decoration: underline; text-underline-offset: 2px; }
+.card.open { grid-column: 1 / -1; }
+.install { margin-top: 0.8rem; border-top: 1px solid var(--border); padding-top: 0.7rem; }
+.install .bar { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+[role="tablist"] { display: flex; gap: 0.25rem; flex-wrap: wrap; flex: 1; }
+[role="tab"] {
+  font: inherit; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;
+  padding: 0.2rem 0.55rem; border: 1px solid var(--border); border-radius: 999px;
+  background: transparent; color: var(--gray); cursor: pointer;
+}
+[role="tab"][aria-selected="true"] { color: var(--black); background: var(--primary); border-color: var(--primary); }
+.install pre { margin: 0.6rem 0 0; background: var(--ink); border-radius: 4px; padding: 0.6rem 0.7rem; overflow-x: auto; }
+.install pre code { font-size: 0.78rem; white-space: pre; display: block; }
+.copy {
+  font: inherit; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;
+  padding: 0.15rem 0.5rem; cursor: pointer;
+  border: 1px solid var(--white); border-radius: 999px; background: transparent; color: var(--white);
+}
+.copy:hover { border-color: var(--primary); color: var(--primary); }
+#empty { color: var(--black); }
+footer { padding: 1.25rem; font-size: 0.85rem; text-align: center; }
+footer a { text-decoration: underline; text-underline-offset: 2px; }
+footer code { color: var(--white); }
+
+@media (max-width: 600px) {
+  /* Keep the first result above the fold on phones. */
+  header { padding: 1rem 0; }
+  .brand { margin-bottom: 0.75rem; }
+  header h1 { font-size: 1.6rem; }
+  header h1 .accent { display: inline; }
+  .tagline { display: none; }
+  #results { grid-template-columns: 1fr; }
+  /* Scroll chips sideways so results stay above the fold. */
+  .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .chip { white-space: nowrap; }
+}
