@@ -10,7 +10,6 @@
   ...
 }:
 {
-  # Workspace packages are in the source tree, resolved at build time
   "@ai-sdk/provider@3.0.8" = fetchurl {
     url = "https://registry.npmjs.org/@ai-sdk/provider/-/provider-3.0.8.tgz";
     hash = "sha512-oGMAgGoQdBXbZqNG0Ze56CHjDZ1IDYOwGYxYjO5KLSlz5HiNQ9udIXsPZ61VWaHGZ5XW/jyjmr6t2xz2jGVwbQ==";
@@ -395,37 +394,37 @@
     url = "https://registry.npmjs.org/@clack/prompts/-/prompts-1.8.1.tgz";
     hash = "sha512-dlT1m5e/0yUL0kRNcQn7yGLVThkgbB0Ga/1AmfDDC/8ik6AIiSf2QLQO2zPYvefsHP0aFgxO93cVLCCfDp7kzQ==";
   };
-  "@code-yeongyu/senpi-agent-core@2026.11.18-3" = fetchurl {
-    url = "https://registry.npmjs.org/@code-yeongyu/senpi-agent-core/-/senpi-agent-core-2026.11.18-3.tgz";
-    hash = "sha512-6J6v7f4KU5lSv+MYphpdoLpECuUvar/ClXvZLWdgDJE34CrB7AdwaJHHXgMKUZoosENA/3Kw12C/psu/kGh7tg==";
+  "@code-yeongyu/senpi-agent-core@2026.11.19-5" = fetchurl {
+    url = "https://registry.npmjs.org/@code-yeongyu/senpi-agent-core/-/senpi-agent-core-2026.11.19-5.tgz";
+    hash = "sha512-uAtgqSUnBsRkV3b3MpmYNX1pM12IH0MbWOv+czx5zFoSX/fwaxZezth6VY41a/dz6+WmVLzH/FBbRwAAtxzLdw==";
   };
-  "@code-yeongyu/senpi-ai@2026.11.18-3" = fetchurl {
-    url = "https://registry.npmjs.org/@code-yeongyu/senpi-ai/-/senpi-ai-2026.11.18-3.tgz";
-    hash = "sha512-3gHmtrhyFgN1R8+E1mm3yxT08CJaaNHIRi+wXetNHdRoHDkyqw7RsZZ0ZrWeLnLoSt3ky9UHqEOQ+T8clQtvGA==";
+  "@code-yeongyu/senpi-ai@2026.11.19-5" = fetchurl {
+    url = "https://registry.npmjs.org/@code-yeongyu/senpi-ai/-/senpi-ai-2026.11.19-5.tgz";
+    hash = "sha512-RJz0D5rsoMtNG0mC0IWz8vcu6tdE5r3/Zp1mxp1kHJk0Gseia78EvtvdyPyhT5KUCRdljuli3/sf0uy6JteiGQ==";
   };
-  "@code-yeongyu/senpi-codemode@2026.11.18-3" = fetchurl {
-    url = "https://registry.npmjs.org/@code-yeongyu/senpi-codemode/-/senpi-codemode-2026.11.18-3.tgz";
-    hash = "sha512-5FWmQs+SRvu/2dt8SMRvfKy+i5GsIDePFkW1CvDRkEtKBczQ/qzjxxsb7Y1iILcdcUdFuxxwPhLxFYl1tnQxMQ==";
+  "@code-yeongyu/senpi-codemode@2026.11.19-5" = fetchurl {
+    url = "https://registry.npmjs.org/@code-yeongyu/senpi-codemode/-/senpi-codemode-2026.11.19-5.tgz";
+    hash = "sha512-WOEazh/fXqrkPKsMGL/q7UTmC1016Gl4hY05hTRnQ/OaohCZrrbMC27zXvD9M+KXhIjX/St9IQa2NaTMdoJosQ==";
   };
-  "@code-yeongyu/senpi-pty@2026.11.18-3" = fetchurl {
-    url = "https://registry.npmjs.org/@code-yeongyu/senpi-pty/-/senpi-pty-2026.11.18-3.tgz";
-    hash = "sha512-AMS6E3csfNOVzpm/kaqUntz/SZi8W6ulWdBHOqza2Gs+hQKrTFxpf2+dTmkW9udjBtAtXEihWEycdH616uoZ7A==";
+  "@code-yeongyu/senpi-pty@2026.11.19-5" = fetchurl {
+    url = "https://registry.npmjs.org/@code-yeongyu/senpi-pty/-/senpi-pty-2026.11.19-5.tgz";
+    hash = "sha512-qfN+OvOC2uSTaS7qPjqlQSU3UojDpDMdNcCJDyPXr894LVHsxxL9S9HjH9zlvckiEZJSgZycT943M9JPVjPVPA==";
   };
-  "@code-yeongyu/senpi-realm-registry@2026.11.18-3" = fetchurl {
-    url = "https://registry.npmjs.org/@code-yeongyu/senpi-realm-registry/-/senpi-realm-registry-2026.11.18-3.tgz";
-    hash = "sha512-ZAIfj0mLC6Jv7GxLPf4Cyy3UDuTjgQVSzNfeI2iHrg5VIvxbm4/5S+dvv1LgP3Es0YIdMKLen+mJRrQhNkoqgw==";
+  "@code-yeongyu/senpi-realm-registry@2026.11.19-5" = fetchurl {
+    url = "https://registry.npmjs.org/@code-yeongyu/senpi-realm-registry/-/senpi-realm-registry-2026.11.19-5.tgz";
+    hash = "sha512-BB9PrN5YmSAhop+QL4Ahsj6sZxsnYhbtMbfXNNus8+RwrjGr09dmavPPa6cHGhSfwmjOP4TTl79itxq7x4JSYQ==";
   };
-  "@code-yeongyu/senpi-telemetry@2026.11.18-3" = fetchurl {
-    url = "https://registry.npmjs.org/@code-yeongyu/senpi-telemetry/-/senpi-telemetry-2026.11.18-3.tgz";
-    hash = "sha512-kIYnMdeyZ7t2eSrH8vgoGvNKvhHnzTBfmCJRo+lgFEJLbAKDNmNca6mh9GlV3VYBI1nSsPnZA3GCOdKTPE0ObQ==";
+  "@code-yeongyu/senpi-telemetry@2026.11.19-5" = fetchurl {
+    url = "https://registry.npmjs.org/@code-yeongyu/senpi-telemetry/-/senpi-telemetry-2026.11.19-5.tgz";
+    hash = "sha512-pRDDs9de5nhK89UVHeQD3MpR8jo6DtN9pok5OBdF+9Giz/hstU5WUalajfrhKNZmFaDi2bRfOgSWROUzC2GHPA==";
   };
-  "@code-yeongyu/senpi-tui@2026.11.18-3" = fetchurl {
-    url = "https://registry.npmjs.org/@code-yeongyu/senpi-tui/-/senpi-tui-2026.11.18-3.tgz";
-    hash = "sha512-j6JxImj4XfSCZHeT/QpRXvowjnLJ1RiptqIP9yEThhYp5lx6GJnYWY+db81nD7qlAN47PpI9H/B0j/rf9JAhkw==";
+  "@code-yeongyu/senpi-tui@2026.11.19-5" = fetchurl {
+    url = "https://registry.npmjs.org/@code-yeongyu/senpi-tui/-/senpi-tui-2026.11.19-5.tgz";
+    hash = "sha512-RYMJDzTV4oNcPGKqZLfIEWHWdD8V1qXsfDep+a9EBQ03jAqpZ7SlLZ1EQOq2l7ynD2Ydrqm4PVi/7CptVC1srQ==";
   };
-  "@code-yeongyu/senpi@2026.11.18-3" = fetchurl {
-    url = "https://registry.npmjs.org/@code-yeongyu/senpi/-/senpi-2026.11.18-3.tgz";
-    hash = "sha512-2rdqfhjwESM7892nVmRjb7hxk8rRVerVtUGvVZC2uADcc18TunRd5TztXGHHV4mfHIV9mG+HStIBzSg4gMpLBA==";
+  "@code-yeongyu/senpi@2026.11.19-5" = fetchurl {
+    url = "https://registry.npmjs.org/@code-yeongyu/senpi/-/senpi-2026.11.19-5.tgz";
+    hash = "sha512-zXdQcEvZA6D9mAJvi9Ax9la8gCyFSCS/I8eMma2fvfnAg59VWs1WPT30X2qfaWwk1LwikLXnJIJGhrY2ObDEtQ==";
   };
   "@earendil-works/chord@0.99.1" = fetchurl {
     url = "https://registry.npmjs.org/@earendil-works/chord/-/chord-0.99.1.tgz";
