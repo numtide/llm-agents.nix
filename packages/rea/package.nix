@@ -12,7 +12,9 @@
   python3,
   versionCheckHook,
   versionCheckHomeHook,
-  mkUpdater,
+  writeShellApplication,
+  nix,
+  cacert,
 }:
 
 let
@@ -102,13 +104,17 @@ buildNpmPackage {
 
   passthru.category = "Utilities";
 
-  # frida.json is reconciled by update.py: it pins release assets keyed by the
-  # npm version of `frida`, which no declarative kind can express.
-  passthru.updater = mkUpdater {
-    kind = "github-source";
-    purl = "pkg:github/morluto/rea";
-    depHashKey = "npmDepsHash";
-    refPrefix = "rea-agents-";
+  # Use the checkout's updater, as CI does: both pin files must be writable.
+  passthru.updateScript = writeShellApplication {
+    name = "update-rea";
+    runtimeInputs = [
+      python3
+      nix
+    ];
+    text = ''
+      export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
+      exec python3 packages/rea/update.py
+    '';
   };
 
   meta = {

@@ -122,9 +122,8 @@ def run(pkg_dir: Path, config: dict[str, Any], *, flows: FlowMap | None = None) 
             pkg_dir,
             _owner(purl),
             purl.name,
-            config.get("flakeAttr"),
-            config.get("depHashKey"),
-            ref_prefix=config.get("refPrefix", "v"),
+            config["flakeAttr"],
+            config["depHashKey"],
         )
     elif kind == "bun-github":
         purl = Purl.parse(config["purl"])

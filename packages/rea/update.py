@@ -1,13 +1,7 @@
 #!/usr/bin/env nix
 #! nix shell --inputs-from .# nixpkgs#python3 --command python3
 
-"""Update REA and the Frida prebuilds selected by its dependency lockfile.
-
-`passthru.updater` (kind github-source) bumps the version, source hash and
-npmDepsHash, but it cannot express frida.json: those pins are release assets
-keyed by the npm version of `frida`, which only the refreshed lockfile knows.
-Run the declarative updater first, then reconcile the pins.
-"""
+"""Update REA from stable rea-agents releases, then pin its locked Frida assets."""
 
 from __future__ import annotations
 
@@ -19,23 +13,17 @@ from typing import Any, cast
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 
+from updater.fetch import Resolved
+from updater.flows.github_source import update_github_source
 from updater.hash import hex_to_sri
 from updater.http import fetch_json
 from updater.nix import nix_store_prefetch_file
+from updater.version import fetch_github_latest_release
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PACKAGE_DIR.parents[1]
-REA_ATTR = ".#packages.x86_64-linux.rea"
+REA_ATTR = ".#rea"
 ARCHITECTURES = {"x86_64-linux": "x64", "aarch64-linux": "arm64"}
-
-
-def run_declarative_update() -> None:
-    """Bump version, source hash and npmDepsHash through the generated script."""
-    subprocess.run(
-        ["nix", "run", f"{REA_ATTR}.updateScript"],
-        check=True,
-        cwd=REPO_ROOT,
-    )
 
 
 def locked_frida_version() -> str:
@@ -92,7 +80,17 @@ def reconcile_frida(version: str) -> None:
 
 def main() -> None:
     """Refresh REA's hashes, then the Frida pins they imply."""
-    run_declarative_update()
+    tag = fetch_github_latest_release(
+        "morluto", "rea", tag_pattern=r"rea-agents-[0-9]+\.[0-9]+\.[0-9]+"
+    )
+    update_github_source(
+        PACKAGE_DIR,
+        "morluto",
+        "rea",
+        REA_ATTR,
+        "npmDepsHash",
+        release=Resolved(version=tag.removeprefix("rea-agents-"), ref=tag),
+    )
     reconcile_frida(locked_frida_version())
 
 

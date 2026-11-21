@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import ExitStack
 from typing import TYPE_CHECKING
 
 from updater.deps import update_dependency_hash
@@ -14,54 +15,45 @@ from updater.version import should_update
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from updater.fetch import Resolved
+
 
 def update_github_source(
     pkg_dir: Path,
     owner: str,
     repo: str,
-    flake_attr: str | None = None,
-    dep_hash_key: str | None = None,
+    flake_attr: str,
+    dep_hash_key: str,
     *,
-    ref_prefix: str = "v",
+    release: Resolved | None = None,
 ) -> None:
-    """Bump version/src hash and recalc dep_hash_key (e.g. Go vendorHash).
-
-    A non-default ref_prefix becomes an x_tag_template qualifier, so prefixed
-    release tags (``pkg-v1.2.3``) resolve to the bare version the package
-    interpolates into its own ``rev``/``tag``.
-    """
-    if dep_hash_key and not flake_attr:
-        msg = "github-source: depHashKey needs flakeAttr"
-        raise ValueError(msg)
-
+    """Refresh source and dependency pins for a selected or latest release."""
     hashes_file = pkg_dir / "hashes.json"
     data = load_hashes(hashes_file)
     current = data["version"]
 
     fetcher = PurlFetcher.default()
     purl = Purl("github", owner, repo)
-    if ref_prefix != "v":
-        purl = purl.with_qualifiers(x_tag_template=f"{ref_prefix}{{v}}")
-    resolved = fetcher.resolve(purl)
+    resolved = release or fetcher.resolve(purl)
 
     print(f"Current: {current}, Latest: {resolved.version}")
 
-    if not should_update(current, resolved.version):
+    incomplete = current == resolved.version and data[dep_hash_key] == DUMMY_SHA256_HASH
+    if not incomplete and not should_update(current, resolved.version):
         print("Already up to date")
         return
 
     print("Calculating source hash...")
     source_hash = fetcher.hashes(purl, resolved)["src"]
 
-    data = {"version": resolved.version, "hash": source_hash}
-    if dep_hash_key:
+    # Nix must see the candidate pins while computing the dependency hash.
+    # On failure restore the entire file, not just the already-staged dummy.
+    with ExitStack() as rollback:
+        rollback.callback(hashes_file.write_bytes, hashes_file.read_bytes())
+        data.update(version=resolved.version, hash=source_hash)
         data[dep_hash_key] = DUMMY_SHA256_HASH
-    save_hashes(hashes_file, data)
-
-    if dep_hash_key:
-        if flake_attr is None:
-            msg = "github-source: depHashKey needs flakeAttr"
-            raise ValueError(msg)
+        save_hashes(hashes_file, data)
         update_dependency_hash(flake_attr, dep_hash_key, hashes_file, data)
+        rollback.pop_all()
 
     print(f"Updated to {resolved.version}")
