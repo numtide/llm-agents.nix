@@ -8,22 +8,44 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from contextlib import ExitStack
 from pathlib import Path
 from typing import Any, cast
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 
-from updater.fetch import Resolved
-from updater.flows.github_source import update_github_source
-from updater.hash import hex_to_sri
+from updater.deps import update_dependency_hash
+from updater.hash import DUMMY_SHA256_HASH, calculate_url_hash, hex_to_sri
+from updater.hashes_file import load_hashes, save_hashes
 from updater.http import fetch_json
 from updater.nix import nix_store_prefetch_file
-from updater.version import fetch_github_latest_release
+from updater.version import fetch_github_latest_release, should_update
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PACKAGE_DIR.parents[1]
 REA_ATTR = ".#rea"
 ARCHITECTURES = {"x86_64-linux": "x64", "aarch64-linux": "arm64"}
+
+
+def update_release(tag: str) -> None:
+    """Pin the selected source and its npm dependencies as a pair."""
+    version = tag.removeprefix("rea-agents-")
+    path = PACKAGE_DIR / "hashes.json"
+    pins = load_hashes(path)
+    current = pins["version"]
+    incomplete = current == version and pins["npmDepsHash"] == DUMMY_SHA256_HASH
+    if not incomplete and not should_update(current, version):
+        print(f"Keeping REA {current} (latest stable: {version})")
+        return
+
+    url = f"https://github.com/morluto/rea/archive/refs/tags/{tag}.tar.gz"
+    pins.update(version=version, hash=calculate_url_hash(url, unpack=True))
+    # Nix reads the candidate source from disk while computing npmDepsHash.
+    with ExitStack() as rollback:
+        rollback.callback(path.write_bytes, path.read_bytes())
+        save_hashes(path, pins)
+        update_dependency_hash(REA_ATTR, "npmDepsHash", path, pins)
+        rollback.pop_all()
 
 
 def locked_frida_version() -> str:
@@ -83,14 +105,7 @@ def main() -> None:
     tag = fetch_github_latest_release(
         "morluto", "rea", tag_pattern=r"rea-agents-[0-9]+\.[0-9]+\.[0-9]+"
     )
-    update_github_source(
-        PACKAGE_DIR,
-        "morluto",
-        "rea",
-        REA_ATTR,
-        "npmDepsHash",
-        release=Resolved(version=tag.removeprefix("rea-agents-"), ref=tag),
-    )
+    update_release(tag)
     reconcile_frida(locked_frida_version())
 
 

@@ -10,15 +10,11 @@ import tempfile
 import unittest
 from pathlib import Path
 from typing import Any
-from unittest import mock
 
 from updater import http
-from updater.fetch import Resolved
-from updater.flows import github_source as gs
 from updater.flows import manifest_checksums as mc
 from updater.flows.bun_github import update_bun_github
 from updater.hash import hex_to_sri
-from updater.nix import NixCommandError
 
 _MANIFEST = {
     "platforms": {
@@ -90,34 +86,6 @@ class TestBunGithub(unittest.TestCase):
                 update_bun_github(pkg, "o", "r", dep_hash_key="cargoHash")
             self.assertEqual(
                 json.loads(hashes.read_text()), {"version": "1.0.0", "hash": "sha256-x"}
-            )
-
-
-class TestGithubSource(unittest.TestCase):
-    def test_dependency_failure_restores_pins_and_retry_finishes(self) -> None:
-        release = Resolved(version="2.0.0", ref="rea-agents-2.0.0")
-        with (
-            tempfile.TemporaryDirectory() as tmp,
-            mock.patch("updater.fetch.PurlFetcher.default") as fetcher,
-            mock.patch("updater.nix.nix_command") as build,
-        ):
-            pkg = Path(tmp)
-            hashes = pkg / "hashes.json"
-            original = b'{"version":"1.0.0","hash":"old","npmDepsHash":"old-deps"}\n'
-            hashes.write_bytes(original)
-            fetcher.return_value.hashes.return_value = {"src": "new-src"}
-            build.side_effect = [
-                NixCommandError("builder unavailable"),
-                NixCommandError("hash mismatch; got: sha256-YWJj"),
-            ]
-            args = (pkg, "morluto", "rea", ".#rea", "npmDepsHash")
-            with self.assertRaises(SystemExit):
-                gs.update_github_source(*args, release=release)
-            self.assertEqual(hashes.read_bytes(), original)
-            gs.update_github_source(*args, release=release)
-            self.assertEqual(
-                json.loads(hashes.read_text()),
-                {"version": "2.0.0", "hash": "new-src", "npmDepsHash": "sha256-YWJj"},
             )
 
 
