@@ -1,76 +1,77 @@
 #!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 nixpkgs#nix-update --command python3
+#! nix shell --inputs-from .# nixpkgs#python3 --command python3
 
 """Update REA and the Frida prebuilds selected by its dependency lockfile.
 
-The standard source updater cannot refresh Frida's separately fetched native
-bindings. Skip unchanged REA releases before invoking nix-update so prefixed
-GitHub tags do not cause repeated npm cache downloads.
+`passthru.updater` (kind github-source) bumps the version, source hash and
+npmDepsHash, but it cannot express frida.json: those pins are release assets
+keyed by the npm version of `frida`, which only the refreshed lockfile knows.
+Run the declarative updater first, then reconcile the pins.
 """
+
+from __future__ import annotations
 
 import json
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any, cast
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 
-from updater import fetch_github_latest_release, should_update
 from updater.hash import hex_to_sri
 from updater.http import fetch_json
-from updater.nix import nix_eval, nix_store_prefetch_file
+from updater.nix import nix_store_prefetch_file
 
 PACKAGE_DIR = Path(__file__).resolve().parent
+REPO_ROOT = PACKAGE_DIR.parents[1]
+REA_ATTR = ".#packages.x86_64-linux.rea"
 ARCHITECTURES = {"x86_64-linux": "x64", "aarch64-linux": "arm64"}
 
 
-def main() -> None:
-    """Refresh REA's source/dependency hashes and matching Frida prebuilds."""
-    current = nix_eval(".#rea.version")
-    tag = fetch_github_latest_release(
-        "morluto", "rea", tag_pattern=r"rea-agents-\d+\.\d+\.\d+"
+def run_declarative_update() -> None:
+    """Bump version, source hash and npmDepsHash through the generated script."""
+    subprocess.run(
+        ["nix", "run", f"{REA_ATTR}.updateScript"],
+        check=True,
+        cwd=REPO_ROOT,
     )
-    latest = tag.removeprefix("rea-agents-")
-    if should_update(current, latest):
-        subprocess.run(
-            [
-                "nix-update",
-                "--flake",
-                "rea",
-                "--version",
-                latest,
-                "--version-regex",
-                r"rea-agents-(.*)",
-            ],
-            check=True,
-        )
-    else:
-        print(f"REA {current} is already up to date")
 
-    # Reconcile pins even after an interrupted update left REA already current.
+
+def locked_frida_version() -> str:
+    """Read the Frida version REA's refreshed package-lock.json selects."""
     source = subprocess.check_output(
-        ["nix", "build", ".#rea.src", "--no-link", "--print-out-paths"],
+        ["nix", "build", f"{REA_ATTR}.src", "--no-link", "--print-out-paths"],
         text=True,
+        cwd=REPO_ROOT,
     ).strip()
-    lock = json.loads((Path(source) / "package-lock.json").read_text())
-    version = lock["packages"]["node_modules/frida"]["version"]
+    lock = cast(
+        "dict[str, Any]",
+        json.loads((Path(source) / "package-lock.json").read_text()),
+    )
+    return cast("str", lock["packages"]["node_modules/frida"]["version"])
+
+
+def reconcile_frida(version: str) -> None:
+    """Point frida.json at the prebuilds matching ``version``."""
     pins_file = PACKAGE_DIR / "frida.json"
-    pins = json.loads(pins_file.read_text())
+    pins = cast("dict[str, Any]", json.loads(pins_file.read_text()))
     if pins["version"] == version:
         return
 
     metadata = fetch_json(f"https://registry.npmjs.org/frida/{version}")
     if not isinstance(metadata, dict):
-        msg = "Expected Frida npm metadata to be an object"
+        msg = "expected Frida npm metadata to be an object"
         raise TypeError(msg)
     napi = max(metadata["binary"]["napi_versions"])
     release = fetch_json(
         f"https://api.github.com/repos/frida/frida/releases/tags/{version}"
     )
     if not isinstance(release, dict):
-        msg = "Expected Frida release metadata to be an object"
+        msg = "expected Frida release metadata to be an object"
         raise TypeError(msg)
     assets = {asset["name"]: asset for asset in release["assets"]}
+
     hashes = {}
     for system, arch in ARCHITECTURES.items():
         name = f"frida-v{version}-napi-v{napi}-linux-{arch}.tar.gz"
@@ -87,6 +88,12 @@ def main() -> None:
         )
         + "\n"
     )
+
+
+def main() -> None:
+    """Refresh REA's hashes, then the Frida pins they imply."""
+    run_declarative_update()
+    reconcile_frida(locked_frida_version())
 
 
 if __name__ == "__main__":

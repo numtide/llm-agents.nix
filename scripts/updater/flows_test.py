@@ -9,12 +9,18 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, ClassVar
+from unittest import mock
 
 from updater import http
+from updater.fetch import Resolved
+from updater.flows import github_source as gs
 from updater.flows import manifest_checksums as mc
 from updater.flows.bun_github import update_bun_github
 from updater.hash import hex_to_sri
+
+if TYPE_CHECKING:
+    from updater.purl import Purl
 
 _MANIFEST = {
     "platforms": {
@@ -84,6 +90,67 @@ class TestBunGithub(unittest.TestCase):
             hashes.write_text('{"version": "1.0.0", "hash": "sha256-x"}\n')
             with self.assertRaises(ValueError):
                 update_bun_github(pkg, "o", "r", dep_hash_key="cargoHash")
+            self.assertEqual(
+                json.loads(hashes.read_text()), {"version": "1.0.0", "hash": "sha256-x"}
+            )
+
+
+class _RecordingFetcher:
+    """Offline stand-in that records the purl and returns fixed results."""
+
+    purls: ClassVar[list[Purl]] = []
+
+    @classmethod
+    def default(cls) -> _RecordingFetcher:
+        return cls()
+
+    def resolve(self, purl: Purl) -> Resolved:
+        self.purls.append(purl)
+        return Resolved(version="6.10.1", ref="rea-agents-6.10.1")
+
+    def hashes(self, purl: Purl, _resolved: Resolved) -> dict[str, str]:
+        self.purls.append(purl)
+        return {"src": "sha256-new"}
+
+
+class TestGithubSource(unittest.TestCase):
+    def setUp(self) -> None:
+        _RecordingFetcher.purls = []
+        patcher = mock.patch.object(gs, "PurlFetcher", _RecordingFetcher)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_prefix_is_injected_as_tag_template(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            pkg = Path(tmp)
+            (pkg / "hashes.json").write_text(
+                json.dumps(
+                    {"version": "6.10.0", "hash": "sha256-old", "npmDepsHash": "x"}
+                )
+            )
+            gs.update_github_source(pkg, "morluto", "rea", ref_prefix="rea-agents-")
+            data = json.loads((pkg / "hashes.json").read_text())
+            self.assertEqual(data, {"version": "6.10.1", "hash": "sha256-new"})
+            self.assertEqual(
+                _RecordingFetcher.purls[0].q("x_tag_template"), "rea-agents-{v}"
+            )
+
+    def test_default_prefix_adds_no_qualifier(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            pkg = Path(tmp)
+            (pkg / "hashes.json").write_text(
+                json.dumps({"version": "1.0.0", "hash": "sha256-old"})
+            )
+            gs.update_github_source(pkg, "o", "r")
+            self.assertIsNone(_RecordingFetcher.purls[0].q("x_tag_template"))
+
+    def test_dep_hash_without_flake_attr_fails_before_writing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            pkg = Path(tmp)
+            hashes = pkg / "hashes.json"
+            hashes.write_text('{"version": "1.0.0", "hash": "sha256-x"}\n')
+            with self.assertRaises(ValueError):
+                gs.update_github_source(pkg, "o", "r", dep_hash_key="npmDepsHash")
             self.assertEqual(
                 json.loads(hashes.read_text()), {"version": "1.0.0", "hash": "sha256-x"}
             )
