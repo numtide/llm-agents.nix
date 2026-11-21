@@ -4,16 +4,23 @@
   buildNpmPackage,
   fetchFromGitHub,
   fetchurl,
-  nodejs_26,
+  nodejs,
   formatelf,
   makeWrapper,
   stdenv,
   procps,
+  python3,
   versionCheckHook,
   versionCheckHomeHook,
+  writeShellApplication,
+  nix,
+  cacert,
 }:
 
 let
+  versionData = builtins.fromJSON (builtins.readFile ./hashes.json);
+  inherit (versionData) version hash npmDepsHash;
+
   frida = lib.importJSON ./frida.json;
   fridaArch =
     {
@@ -26,19 +33,20 @@ let
     hash = frida.hashes.${stdenv.hostPlatform.system};
   };
 in
-buildNpmPackage (finalAttrs: {
+buildNpmPackage {
   pname = "rea";
-  version = "6.8.0";
+  inherit version npmDepsHash;
 
   src = fetchFromGitHub {
     owner = "morluto";
     repo = "rea";
-    tag = "rea-agents-${finalAttrs.version}";
-    hash = "sha256-2ADn3U3lvUoB4tCEpzO0rMfYE4sis+5uBiEazcp0gpI=";
+    tag = "rea-agents-${version}";
+    inherit hash;
   };
 
-  npmDepsHash = "sha256-8aaD7k2oP5G3SNPwVH9+7EqkQhBX16QK7bBfBdWfSsc=";
-  nodejs = nodejs_26;
+  # Track nixpkgs' Node instead of a versioned alias so the package follows the
+  # pin. Upstream's .nvmrc asks for Node 24.x, which `nodejs` currently is.
+  nodejs = nodejs;
   npmDepsFetcherVersion = 2;
   # frida's install script downloads its binding; fetched separately below.
   npmFlags = [ "--ignore-scripts" ];
@@ -50,19 +58,15 @@ buildNpmPackage (finalAttrs: {
   ];
   buildInputs = [ stdenv.cc.cc.lib ];
 
-  # Register the PATH launcher, which outlives this store path, rather than
-  # the store entrypoint. Upstream only does so when both are the same file.
-  postPatch = ''
-    substituteInPlace src/application/ClientRegistrationIdentity.ts \
-      --replace-fail 'if (directEntrypointIdentity(candidate, entrypoint) !== "owned") continue;' ""
-  '';
-
   preBuild = ''
     test "$(node -p 'require("./node_modules/frida/package.json").version')" = "${frida.version}"
     tar -xzf ${fridaBinding} -C node_modules/frida
     # musl prebuilds would fail autoPatchelf
     find node_modules -type d -name '*-musl' -prune -exec rm -rf {} +
     autoPatchelf node_modules
+    # Artifacts are still generated; only the comparison against the upstream
+    # checkout's committed metadata is skipped.
+    sed -i 's|"metadata:check": "node scripts/generate-package-metadata.mjs --check"|"metadata:check": "true"|' package.json
   '';
 
   postInstall = ''
@@ -73,11 +77,17 @@ buildNpmPackage (finalAttrs: {
   '';
 
   doInstallCheck = true;
+
   nativeInstallCheckInputs = [
     versionCheckHook
     versionCheckHomeHook
+    python3
   ];
+
   postInstallCheck = ''
+    # Loading this addon catches unresolved shared libraries and Node ABI drift.
+    node -e 'require(process.argv[1])' \
+      "$out/lib/node_modules/rea-agents/node_modules/@lydell/node-pty"
     node --input-type=module -e '
       const frida = await import(process.argv[1]);
       const device = await frida.getLocalDevice();
@@ -87,14 +97,30 @@ buildNpmPackage (finalAttrs: {
       }
       console.log("Frida local device and process enumeration passed");
     ' "$out/lib/node_modules/rea-agents/node_modules/frida/build/src/frida.js"
+    # The binary starting is not enough: the MCP server must answer the
+    # handshake and advertise its tools.
+    python3 ${./check_mcp.py} "$out/bin/rea"
   '';
 
   passthru.category = "Utilities";
 
+  # Use the checkout's updater, as CI does: both pin files must be writable.
+  passthru.updateScript = writeShellApplication {
+    name = "update-rea";
+    runtimeInputs = [
+      python3
+      nix
+    ];
+    text = ''
+      export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
+      exec python3 packages/rea/update.py
+    '';
+  };
+
   meta = {
     description = "Reverse engineering CLI and MCP server for agents";
     homepage = "https://github.com/morluto/rea";
-    changelog = "https://github.com/morluto/rea/releases/tag/rea-agents-${finalAttrs.version}";
+    changelog = "https://github.com/morluto/rea/releases/tag/rea-agents-${version}";
     license = lib.licenses.mit;
     sourceProvenance = with lib.sourceTypes; [
       fromSource
@@ -107,4 +133,4 @@ buildNpmPackage (finalAttrs: {
       "aarch64-linux"
     ];
   };
-})
+}
