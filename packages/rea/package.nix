@@ -56,16 +56,6 @@ buildNpmPackage {
   ];
   buildInputs = [ stdenv.cc.cc.lib ];
 
-  # Register the PATH launcher, which outlives this store path, rather than
-  # the store entrypoint: the makeWrapper launcher is a script, so upstream's
-  # same-file identity guard rejects it. 6.10 moved the guard behind an
-  # `identify` parameter; pin it for the CLI alias only so the runtime alias
-  # keeps its real identity check.
-  postPatch = ''
-    substituteInPlace src/application/ClientRegistrationIdentity.ts \
-      --replace-fail '        directEntrypointIdentity,' '        () => "owned",'
-  '';
-
   preBuild = ''
     test "$(node -p 'require("./node_modules/frida/package.json").version')" = "${frida.version}"
     tar -xzf ${fridaBinding} -C node_modules/frida
