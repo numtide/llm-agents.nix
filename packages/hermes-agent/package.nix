@@ -6,6 +6,7 @@
   rustPlatform,
   fetchFromGitHub,
   fetchPypi,
+  hindsight-client,
   buildNpmPackage,
   nodejs,
   pkg-config,
@@ -412,6 +413,8 @@ let
       # Skills Hub
       pyjwt
       cryptography
+      # Hindsight memory provider
+      hindsight-client
       # Relay lifecycle + shared metrics
       nemo-relay
     ]
