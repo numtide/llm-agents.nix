@@ -49,6 +49,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
+"lib/cargo-skeleton.py" = ["INP001"] # standalone script run inside a derivation
 ".github/ci/lib.py" = [
   "INP001",
 ] # shared module for standalone CI scripts, not a package
