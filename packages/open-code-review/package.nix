@@ -5,6 +5,8 @@
   fetchFromGitHub,
   git,
   installAgentSkills,
+  installShellFiles,
+  stdenv,
   unpinGoModVersionHook,
   versionCheckHook,
   versionCheckHomeHook,
@@ -36,6 +38,7 @@ buildGoModule.override { go = go_1_26; } {
 
   nativeBuildInputs = [
     installAgentSkills
+    installShellFiles
     # go.mod pins a newer patch release than nixpkgs' go_1_26.
     unpinGoModVersionHook
   ];
@@ -49,6 +52,12 @@ buildGoModule.override { go = go_1_26; } {
     for skill in skills/*/; do
       installSkill "$skill"
     done
+  ''
+  + lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
+    installShellCompletion --cmd ocr \
+      --bash <($out/bin/ocr completion bash) \
+      --fish <($out/bin/ocr completion fish) \
+      --zsh <($out/bin/ocr completion zsh)
   '';
 
   # The cmd tests shell out to git.
