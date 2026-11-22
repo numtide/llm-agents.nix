@@ -6,6 +6,8 @@
   rustPlatform,
   pkg-config,
   lld,
+  flock,
+  writeShellScript,
   aws-lc,
   openssl,
   rust-jemalloc-sys,
@@ -62,6 +64,18 @@ let
         inherit hash;
       };
 
+  # Compiled side by side, the largest crates get rustc OOM-killed on the
+  # aarch64 builders, so let only one of them through at a time.
+  serialRustc = writeShellScript "serial-rustc" ''
+    case " $* " in
+      *" --crate-name codex_core "* | *" --crate-name codex_app_server "* | \
+      *" --crate-name codex_tui "* | *" --crate-name codex_exec "*)
+        exec ${lib.getExe flock} "$NIX_BUILD_TOP/serial-rustc.lock" "$@"
+        ;;
+    esac
+    exec "$@"
+  '';
+
   packageManifest = builtins.toJSON {
     layoutVersion = 1;
     inherit version;
@@ -110,6 +124,7 @@ rustPlatform.buildRustPackage (
 
     env = {
       RUSTY_V8_ARCHIVE = librusty_v8;
+      RUSTC_WRAPPER = serialRustc;
       AWS_LC_SYS_USE_SYSTEM = "1";
       LIBGIT2_NO_VENDOR = "1";
       LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
