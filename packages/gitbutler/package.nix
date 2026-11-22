@@ -49,13 +49,13 @@ in
 
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "gitbutler";
-  version = "0.23.4";
+  version = "0.23.5";
 
   src = fetchFromGitHub {
     owner = "gitbutlerapp";
     repo = "gitbutler";
     tag = "release/${finalAttrs.version}";
-    hash = "sha256-US3maqCPAHAJ2Z45s3yDI3pnC/9LMIpdjgVQyS1rrLU=";
+    hash = "sha256-xqSdMwsAzWNiSQOkCHeq9AMnBrdjBzaddwxKeonawBQ=";
   };
 
   # Upstream enables git2's `unstable-sha256`, so libgit2-sys probes the
@@ -85,14 +85,14 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   '';
 
-  cargoHash = "sha256-9B5fx+lI2aDVC+RYCkrt56dVE77d5MTohtZpJENpgtI=";
+  cargoHash = "sha256-mFpY/OI8ycJ2hzFcFU4VZOuzi6i1rGXROshAyrXs2dI=";
 
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
     inherit pnpm;
     fetcherVersion = 3;
     postPatch = stripNodeRuntime;
-    hash = "sha256-h2bUxqJqyZBmxO71ovty8DOG8DxOQpORkIuqYTf3WGE=";
+    hash = "sha256-StHsa/7OP7kLBbaqnruIjPArXjtO6u20V0GpRBq97kI=";
   };
 
   nativeBuildInputs = [
