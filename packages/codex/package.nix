@@ -21,6 +21,7 @@
   versionCheckHook,
   callPackage,
   mkRustyV8Archive ? callPackage ../../lib/rusty-v8.nix { },
+  buildRustPackageCached,
   versionData ? builtins.fromJSON (builtins.readFile ./hashes.json),
   version ? versionData.version,
   hash ? versionData.hash,
@@ -73,7 +74,7 @@ let
   };
 
 in
-rustPlatform.buildRustPackage (
+buildRustPackageCached (
   {
     pname = "codex";
     inherit version sourceRoot;
