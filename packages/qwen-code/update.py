@@ -1,5 +1,5 @@
 #!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 nixpkgs#nix-update nixpkgs#git --command python3
+#! nix shell --inputs-from .# nixpkgs#python3 nixpkgs#git --command python3
 
 """Update qwen-code to the newest stable CLI tag.
 
