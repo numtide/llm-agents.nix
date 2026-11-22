@@ -54,8 +54,10 @@ buildNpmPackage (finalAttrs: {
     npm_config_build_from_source=true npm_config_nodedir=${finalAttrs.nodejs} \
       npm rebuild node-pty --workspace @getpaseo/server
 
-    # Headless daemon and CLI; browser clients are supplied separately.
     npm run build:server
+    # the browser UI the daemon serves with PASEO_WEB_UI_ENABLED
+    npm run build --workspace=@getpaseo/expo-two-way-audio
+    npm run build:daemon-web-ui
 
     runHook postBuild
   '';
@@ -73,6 +75,7 @@ buildNpmPackage (finalAttrs: {
     done < daemon-files.txt
 
     cp package.json "$out/libexec/paseo/"
+    cp -r packages/server/dist/server/web-ui "$out/libexec/paseo/packages/server/dist/server/"
 
     # Terminal shell hooks execute the retained CLI without a system Node.
     patchShebangs --build "$out/libexec/paseo"
@@ -93,6 +96,10 @@ buildNpmPackage (finalAttrs: {
     versionCheckHook
     versionCheckHomeHook
   ];
+
+  postInstallCheck = ''
+    test -f "$out/libexec/paseo/packages/server/dist/server/web-ui/index.html"
+  '';
 
   passthru.category = "Workflow & Project Management";
 
