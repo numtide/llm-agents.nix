@@ -225,12 +225,14 @@ in
   dontWrapGApps = true;
   # orcad-template/targets holds per-platform daemon builds that Orca uploads to
   # remote hosts and verifies by sha256, so they must stay unpatched and unstripped.
+  # The template also deploys resources/agent-browser-* and verifies it the same way.
   dontStrip = true;
   dontAutoPatchelf = true;
   postFixup = ''
     autoPatchelf \
       $(find "$out/lib/Orca" -mindepth 1 -maxdepth 1 ! -name resources) \
-      $(find "$out/lib/Orca/resources" -mindepth 1 -maxdepth 1 ! -name orcad-template)
+      $(find "$out/lib/Orca/resources" -mindepth 1 -maxdepth 1 \
+        ! -name orcad-template ! -name 'agent-browser-*')
 
     makeWrapper "${lib.getExe computerUsePython}" "$out/libexec/orca-computer-use-python" \
       "''${gappsWrapperArgs[@]}" \
