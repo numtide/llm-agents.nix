@@ -5,6 +5,9 @@
 # meta.changelog, meta.mainProgram, meta.sourceProvenance, and
 # passthru.category.  Internal helpers/aliases opt out via
 # passthru.hideFromDocs (the same flag the README generator uses).
+#
+# The update workflow only discovers packages with a `version`, so one
+# without it silently stops being updated; passthru.skipUpdate opts out.
 {
   pkgs,
   flake,
@@ -26,6 +29,7 @@ let
         ++ lib.optional (!(pkg.meta ? mainProgram)) "meta.mainProgram"
         ++ lib.optional ((pkg.meta.sourceProvenance or [ ]) == [ ]) "meta.sourceProvenance"
         ++ lib.optional (!(pkg.passthru ? category)) "passthru.category"
+        ++ lib.optional (!(pkg ? version) && !(pkg.passthru.skipUpdate or false)) "version"
       );
     in
     lib.optional (missing != [ ]) "${name}: missing ${lib.concatStringsSep ", " missing}";
