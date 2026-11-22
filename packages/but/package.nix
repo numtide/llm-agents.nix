@@ -15,16 +15,16 @@
 
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "but";
-  version = "0.23.4";
+  version = "0.23.5";
 
   src = fetchFromGitHub {
     owner = "gitbutlerapp";
     repo = "gitbutler";
     tag = "release/${finalAttrs.version}";
-    hash = "sha256-US3maqCPAHAJ2Z45s3yDI3pnC/9LMIpdjgVQyS1rrLU=";
+    hash = "sha256-xqSdMwsAzWNiSQOkCHeq9AMnBrdjBzaddwxKeonawBQ=";
   };
 
-  cargoHash = "sha256-9B5fx+lI2aDVC+RYCkrt56dVE77d5MTohtZpJENpgtI=";
+  cargoHash = "sha256-mFpY/OI8ycJ2hzFcFU4VZOuzi6i1rGXROshAyrXs2dI=";
 
   # Upstream enables git2's `unstable-sha256`, so libgit2-sys probes the
   # `libgit2-experimental` pkg-config module, which nixpkgs does not ship;
