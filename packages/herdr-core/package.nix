@@ -14,7 +14,7 @@
 
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "herdr-core";
-  version = "0.1.21";
+  version = "0.1.22";
 
   src = fetchFromGitHub {
     owner = "herdrdev";
@@ -22,10 +22,10 @@ rustPlatform.buildRustPackage (finalAttrs: {
     tag = "v${finalAttrs.version}";
     # vendor/ghostty is a git submodule (ghostty-org/ghostty).
     fetchSubmodules = true;
-    hash = "sha256-sKO8RNlz8lEc0ZUED/VKqIxPmzGxEfMMJjj9V0H0CM4=";
+    hash = "sha256-di4jTvmZrMnXCMBli18HCAAKmC23VaydWL1to87y2Ms=";
   };
 
-  cargoHash = "sha256-KYWc0WORF6BNDhRcihn+tn0UqD1dF2pmR4irdsUcz7E=";
+  cargoHash = "sha256-TeKSnj/87ABBPpiiU52p1XCTzkq0KueGSS4UJzdDbmY=";
 
   zigDeps = zig_0_16.fetchDeps {
     inherit (finalAttrs) pname version;
