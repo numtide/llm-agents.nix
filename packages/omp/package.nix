@@ -13,6 +13,7 @@
   cmake,
   ninja,
   makeWrapper,
+  installShellFiles,
   rcodesign,
   formatelf,
   python3,
@@ -77,6 +78,7 @@ stdenv.mkDerivation {
     cmake
     ninja
     makeWrapper
+    installShellFiles
     zig
   ]
   ++ lib.optionals stdenv.hostPlatform.isLinux [ formatelf ]
@@ -260,6 +262,16 @@ stdenv.mkDerivation {
     HOME=$TMPDIR $out/bin/omp --smoke-test | grep -q "smoke-test: ok"
     BUN_BE_BUN=1 $out/lib/omp/omp -e \
       'if (Bun.version !== "${bun-bin.version}" || typeof Bun.Image !== "function") process.exit(1)'
+  ''
+  # Generated here rather than in postInstall: the binary only runs after
+  # fixup (ELF patching / re-signing).
+  + lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
+    HOME=$TMPDIR installShellCompletion --cmd omp \
+      --bash <(HOME=$TMPDIR $out/bin/omp completions bash) \
+      --fish <(HOME=$TMPDIR $out/bin/omp completions fish) \
+      --zsh <(HOME=$TMPDIR $out/bin/omp completions zsh)
+  ''
+  + ''
     runHook postInstallCheck
   '';
 
