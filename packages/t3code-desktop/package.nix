@@ -10,6 +10,8 @@ symlinkJoin {
   paths = [ t3code.desktop ];
 
   passthru.category = "AI Coding Agents";
+  # Follows t3code, which the updater bumps.
+  passthru.skipUpdate = true;
 
   meta = {
     description = "Desktop control surface for coding agents";

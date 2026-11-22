@@ -44,6 +44,7 @@ let
 in
 pkgs.runCommand "claudebox"
   {
+    version = pkgs.lib.removePrefix "v" (callPackage ./source.nix { }).rev;
     buildInputs = [ pkgs.makeWrapper ];
     passthru.category = "Sandboxing & Isolation";
     meta = with pkgs.lib; {

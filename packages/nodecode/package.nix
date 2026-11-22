@@ -16,7 +16,7 @@ let
     inherit (versionData) hash;
   };
 
-  # Vendored copy of upstream's nix/package.nix, refreshed by update.py.
+  # Upstream ships no Nix packaging; upstream-package.nix is maintained here.
   upstream = import ./upstream-package.nix {
     inherit src;
     pkgs = pkgs // {
@@ -41,6 +41,7 @@ let
 in
 upstream.overrideAttrs (old: {
   name = "nodecode-${version}";
+  inherit version;
 
   passthru = old.passthru // {
     category = "AI Assistants";

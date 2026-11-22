@@ -48,6 +48,7 @@ let
 in
 upstream.overrideAttrs (old: {
   name = "autolith-${version}";
+  inherit version;
 
   passthru = old.passthru // {
     category = "AI Assistants";
