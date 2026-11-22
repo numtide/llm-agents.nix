@@ -4,7 +4,6 @@
   buildNpmPackage,
   fetchFromGitHub,
   fetchurl,
-  nodejs_26,
   formatelf,
   makeWrapper,
   stdenv,
@@ -28,17 +27,16 @@ let
 in
 buildNpmPackage (finalAttrs: {
   pname = "rea";
-  version = "6.8.0";
+  version = "6.10.1";
 
   src = fetchFromGitHub {
     owner = "morluto";
     repo = "rea";
     tag = "rea-agents-${finalAttrs.version}";
-    hash = "sha256-2ADn3U3lvUoB4tCEpzO0rMfYE4sis+5uBiEazcp0gpI=";
+    hash = "sha256-2ulhZ2GXe1xOHKLNuJo9mTivy4OTiWP9VLHEXnpn5YI=";
   };
 
-  npmDepsHash = "sha256-8aaD7k2oP5G3SNPwVH9+7EqkQhBX16QK7bBfBdWfSsc=";
-  nodejs = nodejs_26;
+  npmDepsHash = "sha256-57wz8OWJETNirJqCB1bjBZffTbpPdVUQVphrnrAuyXU=";
   npmDepsFetcherVersion = 2;
   # frida's install script downloads its binding; fetched separately below.
   npmFlags = [ "--ignore-scripts" ];
@@ -54,7 +52,7 @@ buildNpmPackage (finalAttrs: {
   # the store entrypoint. Upstream only does so when both are the same file.
   postPatch = ''
     substituteInPlace src/application/ClientRegistrationIdentity.ts \
-      --replace-fail 'if (directEntrypointIdentity(candidate, entrypoint) !== "owned") continue;' ""
+      --replace-fail 'if (identify(candidate, selected) !== "owned") continue;' ""
   '';
 
   preBuild = ''
