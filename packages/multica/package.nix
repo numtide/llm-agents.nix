@@ -8,19 +8,19 @@
 
 buildGoModule (finalAttrs: {
   pname = "multica";
-  version = "0.10.0";
+  version = "0.11.1";
 
   src = fetchFromGitHub {
     owner = "multica-ai";
     repo = "multica";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-W5yHXSsMuiiIwwADCrAVAp+C0Ww4nCeo/x31baj7rWM=";
+    hash = "sha256-3zefuRMEuee6P6y6dfY4Nj/bIZedBhFVhYZGaHA5SBs=";
   };
 
   sourceRoot = "${finalAttrs.src.name}/server";
   subPackages = [ "cmd/multica" ];
 
-  vendorHash = "sha256-kFDWoj8uRzVyOePCl9tGVarsuYMe8gWHT162AXW7wmU=";
+  vendorHash = "sha256-ivrOEgNrH5Cw1ETXcpxy9CVVJuQohF2zm/9r8ED0bgk=";
 
   ldflags = [ "-X main.version=${finalAttrs.version}" ];
 
