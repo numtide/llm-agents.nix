@@ -15,6 +15,8 @@ assert t3code.meta.mainProgram == "t3";
 assert desktop.meta.mainProgram == "t3code-desktop";
 assert !(desktop ? version);
 assert t3code.passthru ? resourceMonitor;
+assert t3code.passthru ? hyprlandSnapShot;
+assert t3code.passthru ? kdeSnapShot;
 assert t3code.unwrapped ? override;
 assert t3code.pnpmDeps == t3code.unwrapped.pnpmDeps;
 assert t3code.unwrapped.drvPath == t3codeWithoutProviders.unwrapped.drvPath;

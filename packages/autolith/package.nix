@@ -21,6 +21,14 @@ let
     inherit src;
     pkgs = pkgs // {
       inherit sbcl;
+      # cargoSetupHook forbids the vendored libgit2 that fff-c relies on
+      rustPlatform = pkgs.rustPlatform // {
+        buildRustPackage =
+          args:
+          pkgs.rustPlatform.buildRustPackage (
+            args // { buildInputs = args.buildInputs or [ ] ++ [ pkgs.libgit2 ]; }
+          );
+      };
     };
   };
 
@@ -40,6 +48,7 @@ let
 in
 upstream.overrideAttrs (old: {
   name = "autolith-${version}";
+  inherit version;
 
   passthru = old.passthru // {
     category = "AI Assistants";

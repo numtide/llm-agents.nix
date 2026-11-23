@@ -59,6 +59,11 @@ buildNpmPackage {
         '{ requireBuiltin: createRequire(import.meta.url) }'
     done
 
+    # The inspector worker does not inherit the wrapper's --expose-internals.
+    substituteInPlace \
+      $out/lib/node_modules/@deepseek-ai/dsh/node_modules/@deepseek-ai/dsh-experimental-inspector/lib/index.js \
+      --replace-fail 'execArgv: []' 'execArgv: ["--expose-internals"]'
+
     rm $out/bin/dsh
     makeWrapper ${lib.getExe nodejs} $out/bin/dsh \
       --argv0 dsh \

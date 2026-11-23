@@ -11,6 +11,7 @@
   node-gyp,
   pkg-config,
   formatelf,
+  playwright-driver,
   libsecret,
   python3,
   cacert,
@@ -29,14 +30,14 @@
 
 let
   pname = "t3code";
-  version = "0.1.9";
+  version = "0.1.11";
   pnpm = pnpm_11;
 
   src = fetchFromGitHub {
     owner = "pingdotgg";
     repo = "t3code";
     tag = "v${version}";
-    hash = "sha256-3i5o9gs/nYx0vxyn2ukYtLEA21UZZdX0x4ebgxY8bhI=";
+    hash = "sha256-oI8gyTWFgtTmVK+0cVQaEcfO8EzxUUOW5s8JFG/z/U8=";
   };
 
   # The web build's third-party-licenses vite plugin downloads SPDX license
@@ -58,6 +59,27 @@ let
     # inspects the test process's own RSS via procfs, 0 on some builders
     checkFlags = [ "--skip=tests::loads_details_when_an_existing_process_becomes_selected" ];
     cargoHash = "sha256-5cmG2daM1bVOA23gjjoalbx0fEL1hmqV6WZov0sUZp8=";
+  };
+
+  hyprlandSnapShot = rustPlatform.buildRustPackage {
+    pname = "t3code-hyprland-snap-shot";
+    inherit version src;
+
+    sourceRoot = "${src.name}/native/hyprland-snap-shot";
+    cargoHash = "sha256-oki1DAzUJ/8YIFhaJlw2wOukiQMcAaexdJqxDcFXFW4=";
+  };
+
+  kdeSnapShot = rustPlatform.buildRustPackage {
+    pname = "t3code-kde-snap-shot";
+    inherit version src;
+
+    sourceRoot = "${src.name}/native/kde-snap-shot";
+    # spawns dbus-daemon --session, unavailable in the sandbox
+    checkFlags = [
+      "--skip=transport_tests::"
+      "--skip=feedback::tests::"
+    ];
+    cargoHash = "sha256-ZbetrRAvnNLLS51IwR9xLb1NhnpFQB4J1ahn4CthJy0=";
   };
 
   platformKey =
@@ -116,6 +138,7 @@ stdenv.mkDerivation {
   env = {
     T3CODE_RELAY_URL = "https://relay.t3.codes";
     T3CODE_CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsudDMuY29kZXMk";
+    T3CODE_CLERK_JWT_TEMPLATE = "t3-relay";
     T3CODE_CLERK_CLI_OAUTH_CLIENT_ID = "hzxSgY2cH10sDU2r";
   };
 
@@ -128,7 +151,7 @@ stdenv.mkDerivation {
       pnpmWorkspaces
       ;
     fetcherVersion = 4;
-    hash = "sha256-lZv88yvoDuGlcApHktsbR1OiTtffzQ92wu9qYbFxR8s=";
+    hash = "sha256-bq+hxFjUgRk0NYaMkz7rtpyQtQ3ora5J2efi9fiRk9k=";
   };
 
   nativeBuildInputs = [
@@ -173,6 +196,16 @@ stdenv.mkDerivation {
     spdxVer=$(sed -n 's/^const SPDX_LICENSE_LIST_VERSION = "\(.*\)";/\1/p' scripts/lib/third-party-licenses.ts)
     mkdir -p .generated/third-party-licenses/spdx
     ln -s ${spdxLicenses}/json/details ".generated/third-party-licenses/spdx/$spdxVer"
+  ''
+  # T3 downloads Chrome for Testing's headless shell into $T3CODE_HOME on first
+  # use, where it cannot load its libraries. Use the nixpkgs build instead.
+  + lib.optionalString stdenv.hostPlatform.isLinux ''
+    headlessShell=$(echo ${playwright-driver.components.chromium-headless-shell}/chrome-headless-shell-*/chrome-headless-shell)
+    test -x "$headlessShell"
+    substituteInPlace apps/server/src/preview/PreviewBrowser.ts \
+      --replace-fail \
+        'const executable = path.join(installRoot, release.version, executableName);' \
+        "const executable = \"$headlessShell\";"
   '';
 
   preBuild = ''
@@ -233,6 +266,10 @@ stdenv.mkDerivation {
     ${lib.optionalString stdenv.hostPlatform.isLinux ''
       install -Dm755 native/browser-secret/build/${stdenv.hostPlatform.node.arch}/t3-browser-secret \
         "$desktop/libexec/t3code/apps/desktop/prod-resources/browser-secret/t3-browser-secret"
+      install -Dm755 ${hyprlandSnapShot}/bin/t3-hyprland-snap-shot \
+        "$desktop/libexec/t3code/native/hyprland-snap-shot/target/release/t3-hyprland-snap-shot"
+      install -Dm755 ${kdeSnapShot}/bin/t3-kde-snap-shot \
+        "$desktop/libexec/t3code/native/kde-snap-shot/target/release/t3-kde-snap-shot"
     ''}
 
     find "$out/libexec/t3code" "$desktop/libexec/t3code" -xtype l -delete
@@ -291,7 +328,12 @@ stdenv.mkDerivation {
 
   passthru = {
     category = "AI Coding Agents";
-    inherit appName resourceMonitor;
+    inherit
+      appName
+      hyprlandSnapShot
+      kdeSnapShot
+      resourceMonitor
+      ;
   };
 
   meta = {

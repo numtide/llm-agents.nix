@@ -16,20 +16,25 @@
   versionCheckHomeHook,
 }:
 
+let
+  # aws-lc built with prefixed symbols (NixOS/nixpkgs#581545) installs its
+  # headers under include/aws-lc and ships no compat openssl.pc.
+  awsLcPrefixed = !(lib.elem "openssl" (aws-lc.meta.pkgConfigModules or [ ]));
+in
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "lean-ctx";
-  version = "3.12.4";
+  version = "3.12.6";
 
   src = fetchFromGitHub {
     owner = "yvgude";
     repo = "lean-ctx";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-CYhn0peQvpsV58BWlFEEuzG4vjqHMfTVEBhPtrPSyqU=";
+    hash = "sha256-x6ilo6lweJoi8Pkqw7PZ2bPBPomPcDnkM41ZPgmhP/w=";
   };
 
   cargoRoot = "rust";
   buildAndTestSubdir = "rust";
-  cargoHash = "sha256-+nb2s5UMOD4bQ8/QWMI6LBZBCb+Ky8o/wKBH+iKqKQY=";
+  cargoHash = "sha256-e/b6z3Zzo72sYAkfN79w/AiXeD3XKhiTQeD0hxyynqs=";
 
   nativeBuildInputs = [
     cmake
@@ -41,13 +46,22 @@ rustPlatform.buildRustPackage (finalAttrs: {
     rust-jemalloc-sys
     sqlite
     zstd
-  ];
+  ]
+  # Without a compat openssl.pc, aws-lc no longer shadows openssl, so
+  # aws-lc-sys can find it through pkg-config.
+  ++ lib.optionals awsLcPrefixed [ aws-lc ];
 
   # Upstream's fat LTO with codegen-units=1 is a single-threaded link that
   # exceeds the aarch64 builder's 1200s timeout.
   env = {
     CARGO_PROFILE_RELEASE_LTO = "off";
     CARGO_PROFILE_RELEASE_CODEGEN_UNITS = "16";
+    LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
+    OPENSSL_NO_VENDOR = "1";
+    ZSTD_SYS_USE_PKG_CONFIG = "1";
+    JEMALLOC_OVERRIDE = "${lib.getLib rust-jemalloc-sys}/lib/libjemalloc${stdenv.hostPlatform.extensions.sharedLibrary}";
+  }
+  // lib.optionalAttrs (!awsLcPrefixed) {
     # aws-lc's compat openssl.pc would shadow openssl for openssl-sys, so it
     # is not in buildInputs; its own aws-lc.pc has no Cflags to detect it by.
     AWS_LC_SYS_SYSTEM_DIR = symlinkJoin {
@@ -57,10 +71,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
         (lib.getLib aws-lc)
       ];
     };
-    LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
-    OPENSSL_NO_VENDOR = "1";
-    ZSTD_SYS_USE_PKG_CONFIG = "1";
-    JEMALLOC_OVERRIDE = "${lib.getLib rust-jemalloc-sys}/lib/libjemalloc${stdenv.hostPlatform.extensions.sharedLibrary}";
   };
 
   doCheck = false;

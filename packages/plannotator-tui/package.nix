@@ -3,27 +3,33 @@
   fetchFromGitHub,
   rustPlatform,
   pkg-config,
+  git,
   sqlite,
   versionCheckHook,
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "plannotator-tui";
-  version = "0.9.9";
+  version = "0.10.0";
 
   src = fetchFromGitHub {
     owner = "plannotator";
     repo = "plannotator-tui";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-z34MwdUBwjXBaF/gw+aNAMMzwSI2yn0Z8UWu19YTkk0=";
+    hash = "sha256-I5Gc/YdpybsWvgYNELKLSRGszFJBiyg4C/MKAAQ8CPo=";
   };
 
-  cargoHash = "sha256-wcgVVU9zhWhf2nPYvJbddkydiQpBA00gejHu/i9fZaU=";
+  cargoHash = "sha256-umYlecdHYSr1Jzbi/0oI4ULRi5lf9O8kybtb5DeeWxo=";
 
   nativeBuildInputs = [ pkg-config ];
 
   buildInputs = [ sqlite ];
 
+  nativeCheckInputs = [ git ];
+
   env.LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
+
+  # diffs-rs needs libgit2-sys' vendored source and refuses LIBGIT2_NO_VENDOR
+  dontCargoUseSystemLibs = true;
 
   # The darwin cc-wrapper re-quotes non-ASCII arguments as $'\303\274', which
   # breaks linking the fake herdr in a temp dir named with "ü".

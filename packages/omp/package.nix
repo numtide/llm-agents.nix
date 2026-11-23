@@ -13,6 +13,7 @@
   cmake,
   ninja,
   makeWrapper,
+  installShellFiles,
   rcodesign,
   formatelf,
   python3,
@@ -77,6 +78,7 @@ stdenv.mkDerivation {
     cmake
     ninja
     makeWrapper
+    installShellFiles
     zig
   ]
   ++ lib.optionals stdenv.hostPlatform.isLinux [ formatelf ]
@@ -89,7 +91,7 @@ stdenv.mkDerivation {
   ++ lib.optionals stdenv.hostPlatform.isLinux [
     stdenv.cc.cc.lib
     zlib
-    # pi-natives' wayland-pipewire feature links system libpipewire (pkg-config)
+    # omp-natives' wayland capture links system libpipewire (pkg-config)
     pipewire
   ];
 
@@ -152,10 +154,10 @@ stdenv.mkDerivation {
 
   postPatch = ''
     # const VecDeque::is_empty is newer than nixpkgs' rustc.
-    substituteInPlace crates/pi-shell/src/bash/vm/proc.rs \
+    substituteInPlace crates/shell/src/bash/vm/proc.rs \
       --replace-fail 'pub const fn has_work(&self)' 'pub fn has_work(&self)'
     # Only newer rustc lets a safe extern fn item satisfy an Fn bound.
-    substituteInPlace crates/pi-natives/src/desktop/macos/session.rs \
+    substituteInPlace crates/natives/src/desktop/macos/session.rs \
       --replace-fail '&online_displays(), CGDisplayIsAsleep)' '&online_displays(), |id| CGDisplayIsAsleep(id))'
 
     # Placeholder client bundle avoids building the full React dashboard.
@@ -172,8 +174,7 @@ stdenv.mkDerivation {
     ''}
 
     echo "Building Rust native addon..."
-    cargo build --release -p pi-natives \
-      ${lib.optionalString stdenv.hostPlatform.isLinux "--features wayland-pipewire"} \
+    cargo build --release -p omp-natives \
       --target ${rustTarget} --target-dir target
 
     mkdir -p packages/natives/native
@@ -183,7 +184,7 @@ stdenv.mkDerivation {
     napiBin="$(pwd)/node_modules/.bin/napi"
     if [ -x "$napiBin" ]; then
       "$napiBin" build \
-        --manifest-path crates/pi-natives/Cargo.toml \
+        --manifest-path crates/natives/Cargo.toml \
         --package-json-path packages/natives/package.json \
         --platform \
         --no-js \
@@ -261,6 +262,16 @@ stdenv.mkDerivation {
     HOME=$TMPDIR $out/bin/omp --smoke-test | grep -q "smoke-test: ok"
     BUN_BE_BUN=1 $out/lib/omp/omp -e \
       'if (Bun.version !== "${bun-bin.version}" || typeof Bun.Image !== "function") process.exit(1)'
+  ''
+  # Generated here rather than in postInstall: the binary only runs after
+  # fixup (ELF patching / re-signing).
+  + lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
+    HOME=$TMPDIR installShellCompletion --cmd omp \
+      --bash <(HOME=$TMPDIR $out/bin/omp completions bash) \
+      --fish <(HOME=$TMPDIR $out/bin/omp completions fish) \
+      --zsh <(HOME=$TMPDIR $out/bin/omp completions zsh)
+  ''
+  + ''
     runHook postInstallCheck
   '';
 

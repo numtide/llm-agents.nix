@@ -48,14 +48,14 @@ stdenvNoCC.mkDerivation {
 
     makeWrapper ${t3code-unwrapped}/bin/t3 "$out/bin/t3" \
       ${pathPrefixFlag}
-    ln -s ${t3code-unwrapped}/share "$out/share"
+    cp -rs --no-preserve=mode ${t3code-unwrapped}/share "$out/share"
 
     makeWrapper ${t3code-unwrapped.desktop}/bin/t3code-desktop \
       "$desktop/bin/t3code-desktop" \
       ${pathPrefixFlag} \
       ${launcherPathFlag} \
       --inherit-argv0
-    ln -s ${t3code-unwrapped.desktop}/share "$desktop/share"
+    cp -rs --no-preserve=mode ${t3code-unwrapped.desktop}/share "$desktop/share"
 
     ${lib.optionalString stdenvNoCC.hostPlatform.isDarwin ''
       sourceApp=${lib.escapeShellArg "${t3code-unwrapped.desktop}/Applications/${t3code-unwrapped.appName}.app"}
@@ -74,7 +74,13 @@ stdenvNoCC.mkDerivation {
     category = "AI Coding Agents";
     inherit providerPackages;
     # Keep the existing t3code updater targeting the unwrapped build inputs.
-    inherit (t3code-unwrapped) pnpmDeps resourceMonitor src;
+    inherit (t3code-unwrapped)
+      hyprlandSnapShot
+      kdeSnapShot
+      pnpmDeps
+      resourceMonitor
+      src
+      ;
     unwrapped = t3code-unwrapped;
   };
 

@@ -1,0 +1,54 @@
+From 5eb657dfce8a93ca1942bc1ca8136f94ca7b5eee Mon Sep 17 00:00:00 2001
+From: ryoppippi <1560508+ryoppippi@users.noreply.github.com>
+Date: Wed, 18 Nov 2026 15:36:52 +0000
+Subject: [PATCH] tests: serve this machine's target in package_update, not
+ always linux-x64
+
+The fake release service listed only a linux-x64 target and the npm
+fixtures used browse-linux-x64, so on aarch64-linux the binary (which
+picks linux-arm64, update.rs) found no release for itself and four
+tests timed out or saw no version. Pick the target the way update.rs
+does.
+---
+ rust/crates/browse/tests/package_update.rs | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/rust/crates/browse/tests/package_update.rs b/rust/crates/browse/tests/package_update.rs
+index 82306a4..5c16be5 100644
+--- a/rust/crates/browse/tests/package_update.rs
++++ b/rust/crates/browse/tests/package_update.rs
+@@ -18,6 +18,13 @@ use std::time::{Duration, Instant};
+ use sha2::{Digest, Sha256};
+ 
+ const NEXT: &str = "99.0.0";
++#[cfg(target_arch = "aarch64")]
++const TARGET: &str = "linux-arm64";
++#[cfg(not(target_arch = "aarch64"))]
++const TARGET: &str = "linux-x64";
++#[cfg(target_arch = "aarch64")]
++const PLATFORM: &str = "browse-linux-arm64";
++#[cfg(not(target_arch = "aarch64"))]
+ const PLATFORM: &str = "browse-linux-x64";
+ const REGISTRY: &str = "https://registry.example.test";
+ 
+@@ -66,7 +73,7 @@ fn release_service() -> (String, Arc<Mutex<Vec<Request>>>) {
+     release_service_with(None)
+ }
+ 
+-/// [release_service], with `tarball` as the linux-x64 target's file, served at its URL.
++/// [release_service], with `tarball` as this machine's target's file, served at its URL.
+ fn release_service_with(tarball: Option<Vec<u8>>) -> (String, Arc<Mutex<Vec<Request>>>) {
+     let (size, sha256) = match &tarball {
+         Some(bytes) => (bytes.len(), Sha256::digest(bytes).iter().map(|b| format!("{b:02x}")).collect()),
+@@ -100,7 +107,7 @@ fn release_service_with(tarball: Option<Vec<u8>>) -> (String, Arc<Mutex<Vec<Requ
+             }
+             seen.lock().unwrap().push(Request { path, user_agent });
+             let body = format!(
+-                r#"{{"schema":1,"app":"browse","artifact":"cli","channel":"{}","sequence":1,"published_at":"2026-01-01T00:00:00Z","release":{{"version":"{NEXT}","rollout_percent":100,"targets":{{"linux-x64":{{"url":"/release/files/x","size":{size},"sha256":"{sha256}"}}}},"distributions":[{{"kind":"direct"}}]}}}}"#,
++                r#"{{"schema":1,"app":"browse","artifact":"cli","channel":"{}","sequence":1,"published_at":"2026-01-01T00:00:00Z","release":{{"version":"{NEXT}","rollout_percent":100,"targets":{{"{TARGET}":{{"url":"/release/files/x","size":{size},"sha256":"{sha256}"}}}},"distributions":[{{"kind":"direct"}}]}}}}"#,
+                 channel(),
+             );
+             let _ = write!(reader.get_mut(), "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{body}", body.len());
+-- 
+2.56.0
+

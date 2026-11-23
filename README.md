@@ -725,6 +725,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>cindy</strong> - Open-source AI agent desktop client</summary>
+
+- **Source**: source
+- **License**: Apache-2.0
+- **Homepage**: https://cindy.app
+- **Usage**: `nix run github:numtide/llm-agents.nix#cindy -- --help`
+- **Nix**: [packages/cindy/package.nix](packages/cindy/package.nix)
+
+</details>
+<details>
 <summary><strong>grok-bot</strong> - Grok Bot desktop agent — AI teammates that finish the work</summary>
 
 - **Source**: binary
@@ -1997,6 +2007,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>kitesurf</strong> - Terminal client for Kitesurf, an experimental browser engine that runs on Cloudflare Workers</summary>
+
+- **Source**: source
+- **License**: Apache-2.0
+- **Homepage**: https://kitesurf.dev/
+- **Usage**: `nix run github:numtide/llm-agents.nix#kitesurf -- --help`
+- **Nix**: [packages/kitesurf/package.nix](packages/kitesurf/package.nix)
+
+</details>
+<details>
 <summary><strong>mcp-remote</strong> - Connect MCP clients that only support local (stdio) servers to a remote MCP server</summary>
 
 - **Source**: source
@@ -2047,6 +2067,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>opencode-browse</strong> - MCP server that lets agents use a real Chromium browser</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/anomalyco/browse
+- **Usage**: `nix run github:numtide/llm-agents.nix#opencode-browse -- --help`
+- **Nix**: [packages/opencode-browse/package.nix](packages/opencode-browse/package.nix)
+
+</details>
+<details>
 <summary><strong>opencodex</strong> - Universal provider proxy for OpenAI Codex, Claude Code, Claude Desktop & Grok Build</summary>
 
 - **Source**: source
@@ -2074,6 +2104,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 - **Homepage**: https://pdfvision.dev/
 - **Usage**: `nix run github:numtide/llm-agents.nix#pdfvision -- --help`
 - **Nix**: [packages/pdfvision/package.nix](packages/pdfvision/package.nix)
+
+</details>
+<details>
+<summary><strong>rea</strong> - Reverse engineering CLI and MCP server for agents</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/morluto/rea
+- **Usage**: `nix run github:numtide/llm-agents.nix#rea -- --help`
+- **Nix**: [packages/rea/package.nix](packages/rea/package.nix)
 
 </details>
 <details>

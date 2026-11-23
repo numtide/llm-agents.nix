@@ -14,23 +14,28 @@ degrade to loaded=unknown instead of erroring.
 
 Signed-off-by: Jörg Thalheim <joerg@thalheim.io>
 ---
- src/daemon/service.rs         |  9 ++++++---
- src/daemon/service/systemd.rs | 23 ++++++++++++-----------
- 2 files changed, 18 insertions(+), 14 deletions(-)
+ crates/aven-host/src/daemon/service.rs         | 14 +++++++++-----
+ crates/aven-host/src/daemon/service/systemd.rs | 23 ++++++++++++-----------
+ 2 files changed, 21 insertions(+), 16 deletions(-)
 
-diff --git a/src/daemon/service.rs b/src/daemon/service.rs
-index 56853fc..06d6b46 100644
---- a/src/daemon/service.rs
-+++ b/src/daemon/service.rs
-@@ -343,12 +343,15 @@ fn status_with_runner(runner: &impl LaunchctlRunner) -> Result<ServiceStatus> {
+diff --git a/crates/aven-host/src/daemon/service.rs b/crates/aven-host/src/daemon/service.rs
+index f1e0de8..7b6e3f9 100644
+--- a/crates/aven-host/src/daemon/service.rs
++++ b/crates/aven-host/src/daemon/service.rs
+@@ -512,14 +512,18 @@ fn status_with_runner(runner: &impl LaunchctlRunner) -> Result<ServiceStatus> {
              && enclosing_bundle(program).is_none()
-             && paths_resolve_to_same_file(program, &current_executable)
+             && crate::paths::same_file(program, &current_executable)
      });
 -    let runtime = service_runtime(runner, &spec)?;
+-    let turned_off_in_login_items = (runtime.loaded || spec.plist_path.exists())
+-        .then(|| runner.login_item(&spec.plist_path) == LoginItem::TurnedOff);
 +    // Report "unknown" instead of failing when launchctl cannot inspect
 +    // the GUI domain (e.g. sandboxed builds or SSH sessions without a
 +    // per-user launchd domain).
 +    let runtime = service_runtime(runner, &spec).ok();
++    let turned_off_in_login_items = (runtime.is_some_and(|r| r.loaded)
++        || spec.plist_path.exists())
++    .then(|| runner.login_item(&spec.plist_path) == LoginItem::TurnedOff);
      Ok(ServiceStatus {
          platform_supported: true,
          installed: spec.plist_path.exists(),
@@ -41,11 +46,11 @@ index 56853fc..06d6b46 100644
          service_path: spec.plist_path,
          program,
          current_executable,
-diff --git a/src/daemon/service/systemd.rs b/src/daemon/service/systemd.rs
-index bdba1a1..16da8a8 100644
---- a/src/daemon/service/systemd.rs
-+++ b/src/daemon/service/systemd.rs
-@@ -148,22 +148,23 @@ pub(super) fn status_with_runner(
+diff --git a/crates/aven-host/src/daemon/service/systemd.rs b/crates/aven-host/src/daemon/service/systemd.rs
+index d61b234..fe263a6 100644
+--- a/crates/aven-host/src/daemon/service/systemd.rs
++++ b/crates/aven-host/src/daemon/service/systemd.rs
+@@ -142,22 +142,23 @@ pub(super) fn status_with_runner(
          "--property=LoadState",
          "--property=ActiveState",
      ];

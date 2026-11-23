@@ -16,18 +16,18 @@
 
 buildNpmPackage (finalAttrs: {
   pname = "paseo";
-  version = "0.15.4";
+  version = "0.17.3";
 
   src = fetchFromGitHub {
     owner = "getpaseo";
     repo = "paseo";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-zqD9MrqYZ6S3O72b5y+7P0iJgIMf4MRq1zgcqBcyhko=";
+    hash = "sha256-CO3XY6opy1I2kjSj1BPHJ03H5+vCJhrLgxRpO8WQYe8=";
   };
 
   nodejs = nodejs_22;
 
-  npmDepsHash = "sha256-a8IgSFKtCzql2c2hCbhxxXnSzEUHRC6dGnBuQhgN2Jg=";
+  npmDepsHash = "sha256-kvRFJE2Hw4xlEbnQjGFNj7E090W4Smd2jMPMNqxRNkc=";
   npmDepsFetcherVersion = 2;
 
   # Skip dependency install scripts that download binaries outside the sandbox.
@@ -54,8 +54,10 @@ buildNpmPackage (finalAttrs: {
     npm_config_build_from_source=true npm_config_nodedir=${finalAttrs.nodejs} \
       npm rebuild node-pty --workspace @getpaseo/server
 
-    # Headless daemon and CLI; browser clients are supplied separately.
     npm run build:server
+    # the browser UI the daemon serves with PASEO_WEB_UI_ENABLED
+    npm run build --workspace=@getpaseo/expo-two-way-audio
+    npm run build:daemon-web-ui
 
     runHook postBuild
   '';
@@ -73,6 +75,7 @@ buildNpmPackage (finalAttrs: {
     done < daemon-files.txt
 
     cp package.json "$out/libexec/paseo/"
+    cp -r packages/server/dist/server/web-ui "$out/libexec/paseo/packages/server/dist/server/"
 
     # Terminal shell hooks execute the retained CLI without a system Node.
     patchShebangs --build "$out/libexec/paseo"
@@ -93,6 +96,10 @@ buildNpmPackage (finalAttrs: {
     versionCheckHook
     versionCheckHomeHook
   ];
+
+  postInstallCheck = ''
+    test -f "$out/libexec/paseo/packages/server/dist/server/web-ui/index.html"
+  '';
 
   passthru.category = "Workflow & Project Management";
 

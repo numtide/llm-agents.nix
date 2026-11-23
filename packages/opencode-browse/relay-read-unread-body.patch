@@ -1,0 +1,122 @@
+diff --git a/rust/crates/browse-relay/src/serve.rs b/rust/crates/browse-relay/src/serve.rs
+index cc805f2..240289f 100644
+--- a/rust/crates/browse-relay/src/serve.rs
++++ b/rust/crates/browse-relay/src/serve.rs
+@@ -276,26 +276,53 @@ fn json_response(status: StatusCode, value: &Value) -> Response<Full<Bytes>> {
+     response
+ }
+ 
+-fn header<'a>(request: &'a Request<Incoming>, name: &str) -> Option<&'a str> {
++fn header<'a, B>(request: &'a Request<B>, name: &str) -> Option<&'a str> {
+     request.headers().get(name).and_then(|v| v.to_str().ok())
+ }
+ 
++fn request_path<B>(request: &Request<B>) -> String {
++    let path = request.uri().path().trim_end_matches('/');
++    if path.is_empty() { "/".to_string() } else { path.to_string() }
++}
++
++/// The answer while the relay is starting, or to a local request whose Host isn't the relay's.
++fn refusal<B>(relay: &Relay, local: bool, request: &Request<B>) -> Option<Response<Full<Bytes>>> {
++    if !relay.ready.load(Ordering::SeqCst) {
++        return Some(json_response(StatusCode::SERVICE_UNAVAILABLE, &json!({ "error": "browse relay is starting", "code": "relay-starting" })));
++    }
++    if local
++        && let Err(error) = crate::origins::validate_host_header(header(request, "host"), &relay.host, relay.port) {
++            return Some(json_response(StatusCode::FORBIDDEN, &json!({ "error": error })));
++        }
++    None
++}
++
+ async fn route(relay: Arc<Relay>, peer: SocketAddr, request: Request<Incoming>) -> Response<Full<Bytes>> {
+     let local = crate::origins::is_local_peer(&peer);
+-    let path = request.uri().path().trim_end_matches('/').to_string();
+-    let path = if path.is_empty() { "/".to_string() } else { path };
+-    if !local && path != "/extension" {
++    if request_path(&request) == "/extension" {
++        return refusal(&relay, local, &request).unwrap_or_else(|| upgrade_extension(relay, peer, request));
++    }
++    let (parts, body) = request.into_parts();
++    let mut body = Some(body);
++    let response = answer(relay, local, Request::from_parts(parts, ()), &mut body).await;
++    // Read whatever body the answer left unread, however it answered: closing a connection with body bytes still unread
++    // makes our kernel send a reset instead of a clean close, and a macOS client then loses the answer it hasn't read
++    // yet. The bytes are dropped as they arrive, under the same size limit.
++    if let Some(unread) = body {
++        let mut unread = Limited::new(unread, MAX_BODY);
++        while let Some(Ok(_)) = unread.frame().await {}
++    }
++    response
++}
++
++/// Every route but the extension's WebSocket. `body` stays the request's until a route takes it.
++async fn answer(relay: Arc<Relay>, local: bool, request: Request<()>, body: &mut Option<Incoming>) -> Response<Full<Bytes>> {
++    let path = request_path(&request);
++    if !local {
+         return json_response(StatusCode::NOT_FOUND, &json!({}));
+     }
+-    if !relay.ready.load(Ordering::SeqCst) {
+-        return json_response(StatusCode::SERVICE_UNAVAILABLE, &json!({ "error": "browse relay is starting", "code": "relay-starting" }));
+-    }
+-    if local
+-        && let Err(error) = crate::origins::validate_host_header(header(&request, "host"), &relay.host, relay.port) {
+-            return json_response(StatusCode::FORBIDDEN, &json!({ "error": error }));
+-        }
+-    if path == "/extension" {
+-        return upgrade_extension(relay, peer, request);
++    if let Some(refused) = refusal(&relay, local, &request) {
++        return refused;
+     }
+     let probing = header(&request, "x-browse-install") == Some("probe") && relay.st().install_waiting_until.is_some_and(|until| Instant::now() < until);
+     let compatibility = json!({ "extensionProtocol": { "min": MIN_EXTENSION_PROTOCOL_VERSION, "version": EXTENSION_PROTOCOL_VERSION }, "pairing": PAIRING_SCHEME });
+@@ -349,14 +376,14 @@ async fn route(relay: Arc<Relay>, peer: SocketAddr, request: Request<Incoming>)
+     let call_key = header(&request, &browse_core::CALL_HEADER.to_ascii_lowercase()).filter(|k| !k.is_empty() && k.len() <= 128).map(str::to_string);
+     // The TypeScript client's HTTP client (Effect's) sends trace headers on every request; this build's never does.
+     let typescript_client = header(&request, "b3").is_some();
+-    // Read the body whatever the method: closing a connection with body bytes still unread makes our kernel send a
+-    // reset instead of a clean close, and a macOS client then loses the answer it hasn't read yet. Only POST's body is
+-    // used; every other method's is drained and dropped, under the same size limit.
+-    let sent = match Limited::new(request.into_body(), MAX_BODY).collect().await {
+-        Ok(collected) => collected.to_bytes(),
+-        Err(_) => return json_response(StatusCode::PAYLOAD_TOO_LARGE, &json!({ "error": format!("Request body exceeds {MAX_BODY} bytes"), "code": "invalid-request" })),
++    // Only POST's body is used; route reads and drops every other method's.
++    let body = match body.take_if(|_| method == hyper::Method::POST) {
++        Some(sent) => match Limited::new(sent, MAX_BODY).collect().await {
++            Ok(collected) => collected.to_bytes(),
++            Err(_) => return json_response(StatusCode::PAYLOAD_TOO_LARGE, &json!({ "error": format!("Request body exceeds {MAX_BODY} bytes"), "code": "invalid-request" })),
++        },
++        None => Bytes::new(),
+     };
+-    let body = if method == hyper::Method::POST { sent } else { Bytes::new() };
+     let parsed = || -> Result<Value, Box<Response<Full<Bytes>>>> {
+         if body.is_empty() {
+             return Ok(json!({}));
+diff --git a/rust/crates/browse-relay/src/tests.rs b/rust/crates/browse-relay/src/tests.rs
+index 4f0422b..bf7093c 100644
+--- a/rust/crates/browse-relay/src/tests.rs
++++ b/rust/crates/browse-relay/src/tests.rs
+@@ -709,6 +709,24 @@ async fn reads_a_body_announced_on_a_get() {
+     assert!(raw.starts_with("HTTP/1.1 410"), "{raw}");
+ }
+ 
++/// A request the relay turns away before any route reads its body, here one without the token, still has its body read
++/// before the answer.
++#[tokio::test]
++async fn reads_the_body_of_a_request_it_turns_away() {
++    let h = harness().await;
++    let port = h.handle.port();
++    let mut stream = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
++    let head = format!("POST /tools/cancel HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nConnection: close\r\nContent-Type: application/json\r\nContent-Length: 2\r\n\r\n");
++    stream.write_all(head.as_bytes()).await.unwrap();
++    let mut first = [0u8; 64];
++    assert!(tokio::time::timeout(Duration::from_millis(250), stream.read(&mut first)).await.is_err(), "the relay answered before the body it was promised");
++    stream.write_all(b"{}").await.unwrap();
++    let mut raw = Vec::new();
++    stream.read_to_end(&mut raw).await.unwrap();
++    let raw = String::from_utf8_lossy(&raw);
++    assert!(raw.starts_with("HTTP/1.1 401"), "{raw}");
++}
++
+ #[tokio::test]
+ async fn version_reports_every_relay_as_managed() {
+     let paths = Paths::rooted(std::env::temp_dir().join(format!("browse-relay-test-{}", crate::util::random_hex(6))));

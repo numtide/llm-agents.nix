@@ -11,16 +11,16 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "workmux";
-  version = "0.1.282";
+  version = "0.1.284";
 
   src = fetchFromGitHub {
     owner = "raine";
     repo = "workmux";
     tag = "v${version}";
-    hash = "sha256-pcS9uL918u9A8zcWoQrzLVC/pjchq1MzV4h3CA99OdA=";
+    hash = "sha256-UHfMPyxXVB+aSwKiQ6LJnW+giXKaXpDAounPlXlfE6g=";
   };
 
-  cargoHash = "sha256-MywRrZ5UBmmNPYQ+3BD436tImtwti7BA4MpJ7FqxHbw=";
+  cargoHash = "sha256-sDWqtgvjedaqn1trzfmrT5rmL7EUXG9d6XNeDi0p7YY=";
 
   nativeBuildInputs = [
     installAgentSkills

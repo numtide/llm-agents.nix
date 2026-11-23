@@ -14,6 +14,11 @@ inputs."nixpkgs".lib.extend (
     };
 
     maintainers = prev.maintainers // {
+      silicalet = {
+        github = "silicalet";
+        githubId = 188071249;
+        name = "Mr. why";
+      };
       sleroq = {
         github = "sleroq";
         githubId = 52239427;
@@ -363,6 +368,11 @@ inputs."nixpkgs".lib.extend (
         github = "j4n-r";
         githubId = 101867832;
         name = "Jan Rüggeberg";
+      };
+      rucadi = {
+        github = "rucadi";
+        githubId = 6445619;
+        name = "Ruben Cano";
       };
     };
   }

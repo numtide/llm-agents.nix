@@ -13,16 +13,16 @@
 
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "prime-agent";
-  version = "0.10.3";
+  version = "0.10.5";
 
   src = fetchFromGitHub {
     owner = "PrimeIntellect-ai";
     repo = "prime-agent";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-c66TMI0XsWQvc0VNljmPMC1RdbDvTR8SOGTN66aAVvY=";
+    hash = "sha256-sqKB6eIKVdlnHvy2IEMOpuxJQXr4gVnQgKpY3kSA3d8=";
   };
 
-  cargoHash = "sha256-EGVXJfU6F46VOXXySEn0yV8OI4eyXmeynxDfuPQWHmQ=";
+  cargoHash = "sha256-ZkOUjwWpq8xq3CTxuVreNgelscvFTVydJHA4dip+g9E=";
   cargoBuildType = "release";
   cargoBuildFlags = [
     "-p"
@@ -188,6 +188,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
         mcp
         tyro
       ];
+      # a floor on a transitive dependency of mcp that rlm does not import
+      pythonRelaxDeps = [ "opentelemetry-api" ];
       pythonImportsCheck = [ "rlm" ];
     };
 

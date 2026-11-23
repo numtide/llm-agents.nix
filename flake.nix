@@ -105,6 +105,7 @@
               # scripts/updater/run.py); packages opt out of update.py with it.
               mkUpdater = import ./lib/mk-updater.nix { inherit (pkgs) lib; };
               mkCodesignCheck = self.callPackage ./lib/mk-codesign-check.nix { };
+              buildRustPackageCached = self.callPackage ./lib/build-rust-package-cached.nix { };
               # `bun build --compile` copies the running bun binary into the
               # executable it produces, so bun ends up inside our outputs
               # rather than being a build tool we can leave to the consumer.

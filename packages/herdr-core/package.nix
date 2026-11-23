@@ -14,7 +14,7 @@
 
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "herdr-core";
-  version = "0.1.19";
+  version = "0.1.22";
 
   src = fetchFromGitHub {
     owner = "herdrdev";
@@ -22,10 +22,10 @@ rustPlatform.buildRustPackage (finalAttrs: {
     tag = "v${finalAttrs.version}";
     # vendor/ghostty is a git submodule (ghostty-org/ghostty).
     fetchSubmodules = true;
-    hash = "sha256-3J10J81zt3xMTwtaAGNgQAINxje+fil0aKBfgNYhzBo=";
+    hash = "sha256-di4jTvmZrMnXCMBli18HCAAKmC23VaydWL1to87y2Ms=";
   };
 
-  cargoHash = "sha256-SISkev423++rb6kFkVStJwiCT/Wj34jSywfi4ZzWWNI=";
+  cargoHash = "sha256-TeKSnj/87ABBPpiiU52p1XCTzkq0KueGSS4UJzdDbmY=";
 
   zigDeps = zig_0_16.fetchDeps {
     inherit (finalAttrs) pname version;
@@ -50,11 +50,8 @@ rustPlatform.buildRustPackage (finalAttrs: {
   dontUseZigConfigure = true;
   dontUseZigInstall = true;
 
-  # xcbuild's xcodebuild stub makes ghostty enable the unneeded xcframework,
-  # which it cannot create. Tools with absolute paths are absent in the sandbox.
+  # Tools with absolute paths are absent in the sandbox.
   postPatch = lib.optionalString stdenv.hostPlatform.isDarwin ''
-    substituteInPlace crates/ghostty-vt/build.rs \
-      --replace-fail '"-Demit-lib-vt",' '"-Demit-lib-vt", "-Demit-xcframework=false",'
     substituteInPlace vendor/ghostty/pkg/apple-sdk/native_link.zig \
       --replace-fail '"/usr/bin/xcrun"' '"xcrun"'
     substituteInPlace vendor/ghostty/src/build/GhosttyLibVt.zig \

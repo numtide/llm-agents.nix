@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import subprocess
 import tarfile
 import tempfile
@@ -125,6 +126,66 @@ def _supplement_missing_optional_deps(lockfile: Path) -> None:
     print(f"Added lock entries for {len(missing)} missing optional dependencies")
 
 
+def _mispinned_bundled_deps(packages: dict[str, Any]) -> dict[str, dict[str, str]]:
+    """Return exact pins of bundled packages that resolve to another version.
+
+    npm writes such a lockfile but ``npm ci`` rejects it as out of sync.
+    """
+    result: dict[str, dict[str, str]] = {}
+    for path, metadata in packages.items():
+        if not metadata.get("inBundle"):
+            continue
+        for name, requirement in metadata.get("dependencies", {}).items():
+            if not re.fullmatch(r"\d+\.\d+\.\d+(-[\w.]+)?", requirement):
+                continue
+            scope = path
+            while scope and f"{scope}/node_modules/{name}" not in packages:
+                scope = scope.rpartition("/node_modules/")[0]
+            found = packages.get(f"{scope}/node_modules/{name}".lstrip("/"), {})
+            if found.get("version", requirement) != requirement:
+                result.setdefault(path, {})[name] = requirement
+    return result
+
+
+def _supplement_mispinned_bundled_deps(lockfile: Path) -> None:
+    """Nest the pinned version below bundled packages that need it."""
+    lock = json.loads(lockfile.read_text())
+    packages = lock["packages"]
+
+    for path, pins in _mispinned_bundled_deps(packages).items():
+        with tempfile.TemporaryDirectory() as tmpdir:
+            supplement = Path(tmpdir)
+            (supplement / "package.json").write_text(
+                json.dumps(
+                    {
+                        "name": "lock-supplement",
+                        "version": "1.0.0",
+                        "dependencies": pins,
+                    }
+                )
+            )
+            subprocess.run(
+                ["npm", "install", "--package-lock-only", "--ignore-scripts"],
+                cwd=supplement,
+                check=True,
+            )
+            extra = json.loads((supplement / "package-lock.json").read_text())[
+                "packages"
+            ]
+
+        for name in pins:
+            wanted = [
+                name,
+                *extra[f"node_modules/{name}"].get("optionalDependencies", {}),
+            ]
+            for dependency in wanted:
+                key = f"node_modules/{dependency}"
+                packages[f"{path}/{key}"] = extra[key]
+        print(f"Nested {', '.join(pins)} below bundled {path}")
+
+    lockfile.write_text(json.dumps(lock, indent=2) + "\n")
+
+
 def extract_or_generate_lockfile(
     tarball_url: str,
     output_path: Path,
@@ -212,6 +273,7 @@ def extract_or_generate_lockfile(
             output_path.write_text(new_lock.read_text())
             if supplement_optional_deps:
                 _supplement_missing_optional_deps(output_path)
+                _supplement_mispinned_bundled_deps(output_path)
             _add_missing_registry_metadata(output_path)
             print("Generated package-lock.json")
             return True
