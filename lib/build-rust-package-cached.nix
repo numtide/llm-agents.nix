@@ -73,8 +73,11 @@ let
   # cargoSetupHook points cargo at a copy of the vendored crates. Their
   # path ends up in cargo's fingerprints and the build directory is random
   # on darwin, so use the store path, which is the same in every build.
+  # Remap in both builds because cached dependency objects carry source locations.
   useVendorFromStore = ''
     sed -i "s|\"[^\"]*/${cargoDeps.name}/|\"$cargoDeps/|g" "$NIX_BUILD_TOP/.cargo/config.toml"
+    # Keep source locations without retaining the vendor tree at runtime.
+    export NIX_RUSTFLAGS="''${NIX_RUSTFLAGS:+$NIX_RUSTFLAGS }--remap-path-prefix=$cargoDeps/=vendor/"
   '';
 
   common = removeAttrs args [ "cargoHash" ] // {
@@ -124,6 +127,11 @@ in
 rustPlatform.buildRustPackage (
   common
   // {
+    disallowedReferences = (args.disallowedReferences or [ ]) ++ [
+      cargoDeps
+      cargoArtifacts
+    ];
+
     nativeBuildInputs = nativeBuildInputs ++ [
       cargoSkeleton
       zstd
