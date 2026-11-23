@@ -10,13 +10,13 @@
 
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "kitesurf";
-  version = "2026.11.9";
+  version = "2026.11.11";
 
   src = fetchFromGitHub {
     owner = "cloudflare";
     repo = "kitesurf";
     tag = finalAttrs.version;
-    hash = "sha256-GIJuGlLqycvWp8bMmNX/QtE9JVpmwSaNDmY0hyLJvJY=";
+    hash = "sha256-wVnXcbMFnvRL1Y3VPH7jozZG8vz8lmKRkPHQ3BROJ70=";
   };
 
   sourceRoot = "${finalAttrs.src.name}/packages/kitesurf-cli";
