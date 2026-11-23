@@ -1,6 +1,6 @@
 {
-  "version": "0.22.14",
-  "hash": "sha256-7Z2pQ7skrrRJw6QaAP45o2fcxyM5h7Zo2nXdHR6yPr0=",
-  "cargoHash": "sha256-xyAj9G8S6IjQUaPJ9/GkO84IlMf1z1OQmE13FmW3/U4=",
-  "npmDepsHash": "sha256-8CKo+76z440DC92gU6TQTw8Wt/rp4UMLW5NpSuStZqM="
+  "version": "0.22.15",
+  "hash": "sha256-6hJoySxOhYgSj02MIj9yiFgwAKC0skQWDJK/Ohgs0hE=",
+  "cargoHash": "sha256-hfBPucBv+GW1ZsdpGu+5cdBCZoR/CgMhn+vVPRGfVbs=",
+  "npmDepsHash": "sha256-Yt/ZPyt6MTg37+e13wyRAJudKHKIeMl7lRArA85cxrk="
 }
