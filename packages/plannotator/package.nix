@@ -4,7 +4,10 @@
   fetchFromGitHub,
   bun2nixLib,
   bun,
+  jq,
+  patch,
   python3,
+  runCommandLocal,
   versionCheckHook,
   versionCheckHomeHook,
 }:
@@ -12,6 +15,7 @@
 let
   versionData = builtins.fromJSON (builtins.readFile ./hashes.json);
   inherit (versionData) version hash;
+  patchedDependencies = versionData.patchedDependencies or { };
 
   platformMap = {
     x86_64-linux = "bun-linux-x64";
@@ -21,10 +25,6 @@ let
 
   platform = stdenv.hostPlatform.system;
   bunTarget = platformMap.${platform} or (throw "Unsupported system: ${platform}");
-in
-stdenv.mkDerivation {
-  pname = "plannotator";
-  inherit version;
 
   src = fetchFromGitHub {
     owner = "backnotprop";
@@ -33,9 +33,27 @@ stdenv.mkDerivation {
     inherit hash;
   };
 
+  # bun2nix's hook drops patchedDependencies; apply them as overrides (its patchedDependenciesToOverrides helper needs IFD).
+  patchOverrides = lib.mapAttrs (
+    name: patchFile: pkg:
+    runCommandLocal "patched-${lib.strings.sanitizeDerivationName name}"
+      { nativeBuildInputs = [ patch ]; }
+      ''
+        mkdir $out
+        cp -r ${pkg}/. $out
+        chmod -R u+w $out
+        patch -p1 -d $out < ${lib.escapeShellArg "${src}/${patchFile}"}
+      ''
+  ) patchedDependencies;
+in
+stdenv.mkDerivation {
+  pname = "plannotator";
+  inherit version src;
+
   nativeBuildInputs = [
     bun2nixLib.hook
     bun
+    jq
   ];
 
   patches = lib.optionals ((builtins.readFile ./fix-stale-bun-lock.patch) != "") [
@@ -45,12 +63,24 @@ stdenv.mkDerivation {
   # Bun still tries registry manifest lookups for a few workspace deps even
   # with --offline and a populated bun2nix cache. Rewrite the workspace
   # manifests to the lockfile's exact, cache-backed package versions first.
+  #
+  # Fail if patchedDependencies drift from hashes.json, or the patches are dropped silently.
   postPatch = ''
+    expected=${lib.escapeShellArg (builtins.toJSON patchedDependencies)}
+    actual=$(jq -c '.patchedDependencies // {}' package.json)
+    if [ "$(jq -cS . <<<"$expected")" != "$(jq -cS . <<<"$actual")" ]; then
+      echo "package.json patchedDependencies differ from hashes.json:" >&2
+      echo "  expected: $expected" >&2
+      echo "  actual:   $actual" >&2
+      exit 1
+    fi
+
     ${lib.getExe python3} ${./fix-bun-offline-install.py}
   '';
 
   bunDeps = bun2nixLib.fetchBunDeps {
     bunNix = ./bun.nix;
+    overrides = patchOverrides;
   };
 
   bunInstallFlags = "--linker=isolated --offline";
