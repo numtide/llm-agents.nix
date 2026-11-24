@@ -1,9 +1,9 @@
 {
-  "version": "0.9.4",
-  "hash": "sha256-MSE82Boc++mHGjqKQyc9xv11z2sepVjAx9JiGnTQBa4=",
+  "version": "0.10.4",
+  "hash": "sha256-Wx8FCeZQlyX5h4WDwcmevpwCpm4X9kmTZwaQdgJYi0w=",
   "parallelWeb": {
-    "version": "1.4.0",
-    "hash": "sha256-BdV6KtvT4IRunySbdRiF628z3UY0BtNteCa81LR+Dnw="
+    "version": "1.5.0",
+    "hash": "sha256-RatJodrRZ4xbLZNRH6FxaxHUbJh8fkmb7XLksspZKFM="
   },
   "sqlalchemyBigquery": {
     "version": "1.16.0",
