@@ -3,6 +3,7 @@
 
 """Update script for plannotator package."""
 
+import json
 import re
 import subprocess
 import sys
@@ -89,6 +90,17 @@ def refresh_stale_lock_patch(version: str) -> None:
             print("  bun.lock is fresh")
 
 
+def read_patched_dependencies(version: str) -> dict[str, str]:
+    """Return upstream's patchedDependencies, applied as bun2nix overrides."""
+    url = f"https://raw.githubusercontent.com/{OWNER}/{REPO}/v{version}/package.json"
+    req = urllib.request.Request(url)
+    req.add_header("User-Agent", "llm-agents-updater")
+    with urllib.request.urlopen(req, timeout=30) as response:
+        package_json = json.loads(response.read())
+    patched: dict[str, str] = package_json.get("patchedDependencies", {})
+    return patched
+
+
 def main() -> None:
     """Update the plannotator package."""
     data = load_hashes(HASHES_FILE)
@@ -107,14 +119,6 @@ def main() -> None:
     source_hash = github_source_hash(latest)
     print(f"  source hash: {source_hash}")
 
-    save_hashes(
-        HASHES_FILE,
-        {
-            "version": latest,
-            "hash": source_hash,
-        },
-    )
-
     clone_and_generate_bun_nix(
         OWNER,
         REPO,
@@ -124,6 +128,16 @@ def main() -> None:
         ref_prefix="v",
     )
     refresh_stale_lock_patch(latest)
+    patched_dependencies = read_patched_dependencies(latest)
+
+    save_hashes(
+        HASHES_FILE,
+        {
+            "version": latest,
+            "hash": source_hash,
+            "patchedDependencies": patched_dependencies,
+        },
+    )
 
     print(f"Updated plannotator to {latest}")
 

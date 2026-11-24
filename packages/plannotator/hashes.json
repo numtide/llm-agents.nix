@@ -1,4 +1,9 @@
 {
   "version": "0.29.3",
-  "hash": "sha256-5aL4Gcexgxlh2wXvrVb2Dh4vuHDC793z1NNduUdW9aY="
+  "hash": "sha256-5aL4Gcexgxlh2wXvrVb2Dh4vuHDC793z1NNduUdW9aY=",
+  "patchedDependencies": {
+    "@opencode-ai/sdk@1.19.3": "patches/@opencode-ai%2Fsdk@1.19.3.patch",
+    "@pierre/diffs@1.7.0-beta.3": "patches/@pierre%2Fdiffs@1.7.0-beta.3.patch",
+    "@pierre/trees@1.0.0": "patches/@pierre%2Ftrees@1.0.0.patch"
+  }
 }
