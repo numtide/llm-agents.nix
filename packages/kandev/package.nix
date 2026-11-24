@@ -5,6 +5,7 @@
   stdenvNoCC,
   buildGoModule,
   fetchFromGitHub,
+  fetchpatch,
   fetchPnpmDeps,
   pnpmConfigHook,
   pnpm_10,
@@ -54,13 +55,13 @@
 
 let
   pname = "kandev";
-  version = "0.98.0";
+  version = "0.103.0";
 
   src = fetchFromGitHub {
     owner = "kdlbs";
     repo = "kandev";
     tag = "v${version}";
-    hash = "sha256-P5Xg0QhvOJyd7g0pjO7yk602S9xWcbzjxGORjl1r5BI=";
+    hash = "sha256-srQqoBP1Fq17OrIOF4IvaJJvejbfnK0GFfYxhkRDrUI=";
   };
 
   runtimeTools = [
@@ -151,7 +152,7 @@ let
         ;
       inherit pnpm;
       fetcherVersion = 4;
-      hash = "sha256-6MH8sMO0XFh8DE++pREi2b/PfRgF14J0x0qxsVe4nSg=";
+      hash = "sha256-jGb7hm5wxI0rmRmHkRlWoREZyyLrAGc9yIfTdXiZgoc=";
     };
 
     nativeBuildInputs = [
@@ -178,7 +179,7 @@ buildGoModule (_finalAttrs: {
   inherit pname version src;
 
   modRoot = "apps/backend";
-  vendorHash = "sha256-qg9V6VQHs+G1HoY+QerD+x/vPHKjVDC+YMYb31V06uM=";
+  vendorHash = "sha256-LR0qFc/6fSjKcBvbVu+ejVBhCbN7F54cX0Mhj3+eoZo=";
   # Keep the vendor FOD independent of our source patch so nix-update can
   # compute vendorHash even when the patch needs a rebase.
   overrideModAttrs = _: _: {
@@ -199,7 +200,15 @@ buildGoModule (_finalAttrs: {
     "-X main.Version=v${version}"
   ];
 
-  patches = [ ./prefer-native-acp-runtimes.patch ];
+  patches = [
+    # Not yet in a kandev release; drop once upstream ships it.
+    (fetchpatch {
+      url = "https://github.com/kdlbs/kandev/commit/a7230e3f6921d7585d2e02e55f16a4503a53c77f.patch";
+      includes = [ "apps/backend/*" ];
+      hash = "sha256-gieEu3Fl2I0UwWcNacDZrybQLx6bW5D7v2xBf1PA/KA=";
+    })
+    ./prefer-native-acp-runtimes.patch
+  ];
 
   postPatch = ''
     # Install-script tests run sh with a fake curl first on an FHS PATH.
