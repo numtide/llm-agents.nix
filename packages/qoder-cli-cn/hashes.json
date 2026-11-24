@@ -1,17 +1,17 @@
 {
-  "version": "1.1.95",
+  "version": "1.1.96",
   "platforms": {
     "aarch64-darwin": {
-      "url": "https://static.qoder.com.cn/qoder-cli-cn/releases/1.1.95/qoderclicn-darwin-arm64.tar.gz",
-      "hash": "sha256-TTyuvz8yIsyecjAbLkC5KhZbyoA3pJGnDrEpNhokNt8="
+      "url": "https://static.qoder.com.cn/qoder-cli-cn/releases/1.1.96/qoderclicn-darwin-arm64.tar.gz",
+      "hash": "sha256-9N5LVpSsqPOmdoCyHP+Ym6U6aTMQXOuNpa8BV3aUvLg="
     },
     "aarch64-linux": {
-      "url": "https://static.qoder.com.cn/qoder-cli-cn/releases/1.1.95/qoderclicn-linux-arm64.tar.gz",
-      "hash": "sha256-Yf+guOErPyVp9FdenfcYbuNmdLavkuJ4JzC2YfFRmTA="
+      "url": "https://static.qoder.com.cn/qoder-cli-cn/releases/1.1.96/qoderclicn-linux-arm64.tar.gz",
+      "hash": "sha256-N0inVHW6yQIIOlU+y9IImtWbd6l9LofCnqd9Mx8EtaM="
     },
     "x86_64-linux": {
-      "url": "https://static.qoder.com.cn/qoder-cli-cn/releases/1.1.95/qoderclicn-linux-x64.tar.gz",
-      "hash": "sha256-i/vbxFfdJnmfu5l5/ID8RoY2yXQge3hEJfY8YNp6J8U="
+      "url": "https://static.qoder.com.cn/qoder-cli-cn/releases/1.1.96/qoderclicn-linux-x64.tar.gz",
+      "hash": "sha256-W/5xjZv2SzbnLD2GPSc6LXk0+0d5o8uBZiK2WNBORvs="
     }
   }
 }
