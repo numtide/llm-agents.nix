@@ -66,15 +66,33 @@ let
       };
 
   # Compiled side by side, the largest crates get rustc OOM-killed on the
-  # aarch64 builders, so let only one of them through at a time.
+  # aarch64 builders, so let only one of them through at a time. Waiting for
+  # or compiling slow crates (including the final codex binary) can exceed
+  # the 1200s that nixbot lets a build stay silent, so report progress
+  # periodically for any crate that takes longer than 5 minutes.
   serialRustc = writeShellScript "serial-rustc" ''
-    case " $* " in
-      *" --crate-name codex_core "* | *" --crate-name codex_app_server "* | \
-      *" --crate-name codex_tui "* | *" --crate-name codex_exec "*)
-        exec ${lib.getExe flock} "$NIX_BUILD_TOP/serial-rustc.lock" "$@"
+    [[ " $* " =~ " --crate-name "([^ ]+)" " ]] || exec "$@"
+    crate=''${BASH_REMATCH[1]}
+    [[ $crate == ___ ]] && exec "$@"
+    (
+      trap 'kill ''${sleeper:-} 2>/dev/null; exit' TERM
+      while :; do
+        # Keep cargo's pipe free, so that it does not wait for the sleep.
+        sleep 300 >/dev/null 2>&1 &
+        sleeper=$!
+        wait $sleeper
+        echo "serial-rustc: still building $crate" >&2
+      done
+    ) &
+    trap "kill $! 2>/dev/null" EXIT
+    case $crate in
+      codex_core | codex_app_server | codex_tui | codex_exec)
+        ${lib.getExe flock} "$NIX_BUILD_TOP/serial-rustc.lock" "$@"
+        ;;
+      *)
+        "$@"
         ;;
     esac
-    exec "$@"
   '';
 
   packageManifest = builtins.toJSON {
