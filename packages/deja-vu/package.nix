@@ -11,13 +11,13 @@
 
 buildGoModule rec {
   pname = "deja-vu";
-  version = "0.25.0";
+  version = "0.25.1";
 
   src = fetchFromGitHub {
     owner = "vshulcz";
     repo = "deja-vu";
     tag = "v${version}";
-    hash = "sha256-xdACxX40LBsZX0t0Gdhe9GxqacpQmA5o0HjAqsivHgk=";
+    hash = "sha256-w3lMcjoyouMB6d/1GeNDFydwLX+JkUgF2BdVPIksMD0=";
   };
 
   # go.mod has no requirements and there is no go.sum.
