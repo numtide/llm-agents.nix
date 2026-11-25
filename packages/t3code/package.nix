@@ -16,6 +16,7 @@
     grok
     opencode
   ],
+  disableTelemetry ? false,
 }:
 
 let
@@ -23,6 +24,9 @@ let
   pathPrefixFlag = lib.optionalString (
     providerBinPath != ""
   ) "--prefix PATH : ${lib.escapeShellArg providerBinPath}";
+  # Stops T3's product analytics and the T3 Connect relay traces. The desktop
+  # app passes its environment to the server it starts.
+  telemetryFlag = lib.optionalString disableTelemetry "--set T3CODE_TELEMETRY_ENABLED false";
   # Without this the desktop app falls back to process.execPath (bare electron)
   # for `Exec=` in the t3code:// URL handler entry it writes on Linux.
   launcherPathFlag = lib.optionalString stdenvNoCC.hostPlatform.isLinux ''--set-default T3CODE_DESKTOP_LAUNCHER_PATH "$desktop/bin/t3code-desktop"'';
@@ -47,12 +51,14 @@ stdenvNoCC.mkDerivation {
     mkdir -p "$out/bin" "$desktop/bin"
 
     makeWrapper ${t3code-unwrapped}/bin/t3 "$out/bin/t3" \
-      ${pathPrefixFlag}
+      ${pathPrefixFlag} \
+      ${telemetryFlag}
     cp -rs --no-preserve=mode ${t3code-unwrapped}/share "$out/share"
 
     makeWrapper ${t3code-unwrapped.desktop}/bin/t3code-desktop \
       "$desktop/bin/t3code-desktop" \
       ${pathPrefixFlag} \
+      ${telemetryFlag} \
       ${launcherPathFlag} \
       --inherit-argv0
     cp -rs --no-preserve=mode ${t3code-unwrapped.desktop}/share "$desktop/share"

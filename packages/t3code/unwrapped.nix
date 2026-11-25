@@ -28,12 +28,28 @@
   libicns,
   writeDarwinBundle,
   xcbuild,
+  # T3 Connect endpoints compiled into the build. The defaults are the public
+  # production identifiers upstream release builds embed; point them at a
+  # self-hosted relay, or set this to null to build without T3 Connect.
+  # hostedAppUrl is optional and defaults to upstream's https://app.t3.codes.
+  t3Connect ? {
+    relayUrl = "https://relay.t3.codes";
+    clerkPublishableKey = "pk_live_Y2xlcmsudDMuY29kZXMk";
+    clerkJwtTemplate = "t3-relay";
+    clerkCliOAuthClientId = "hzxSgY2cH10sDU2r";
+  },
 }:
 
 let
   pname = "t3code";
   version = "0.1.12";
   pnpm = pnpm_11;
+
+  hostedAppUrl = if t3Connect == null then null else t3Connect.hostedAppUrl or null;
+  # The server reads the hosted app origin at runtime, not from the build.
+  hostedAppUrlFlag = lib.optionalString (
+    hostedAppUrl != null
+  ) "--set-default T3CODE_HOSTED_APP_URL ${lib.escapeShellArg hostedAppUrl}";
 
   src = fetchFromGitHub {
     owner = "pingdotgg";
@@ -136,14 +152,18 @@ stdenv.mkDerivation {
   strictDeps = true;
   __structuredAttrs = true;
 
-  # Public production identifiers, also embedded in upstream release builds.
   # loadRepoEnv supplies the corresponding VITE_* values for the web frontend.
-  env = {
-    T3CODE_RELAY_URL = "https://relay.t3.codes";
-    T3CODE_CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsudDMuY29kZXMk";
-    T3CODE_CLERK_JWT_TEMPLATE = "t3-relay";
-    T3CODE_CLERK_CLI_OAUTH_CLIENT_ID = "hzxSgY2cH10sDU2r";
-  };
+  # T3 treats Connect as unconfigured unless all of them are set.
+  env =
+    lib.optionalAttrs (t3Connect != null) {
+      T3CODE_RELAY_URL = t3Connect.relayUrl;
+      T3CODE_CLERK_PUBLISHABLE_KEY = t3Connect.clerkPublishableKey;
+      T3CODE_CLERK_JWT_TEMPLATE = t3Connect.clerkJwtTemplate;
+      T3CODE_CLERK_CLI_OAUTH_CLIENT_ID = t3Connect.clerkCliOAuthClientId;
+    }
+    // lib.optionalAttrs (hostedAppUrl != null) {
+      VITE_HOSTED_APP_URL = hostedAppUrl;
+    };
 
   pnpmDeps = fetchPnpmDeps {
     inherit
@@ -254,7 +274,8 @@ stdenv.mkDerivation {
 
     mkdir -p "$out/bin"
     makeWrapper ${lib.getExe nodejs_24} "$out/bin/t3" \
-      --add-flags "$out/libexec/t3code/apps/server/dist/bin.mjs"
+      --add-flags "$out/libexec/t3code/apps/server/dist/bin.mjs" \
+      ${hostedAppUrlFlag}
 
     pnpm --filter @t3tools/desktop deploy --prod --offline "$desktop/libexec/t3code/apps/desktop"
     cp -r --no-preserve=mode apps/desktop/dist-electron "$desktop/libexec/t3code/apps/desktop/"
@@ -290,6 +311,7 @@ stdenv.mkDerivation {
     mkdir -p "$desktop/bin"
     makeWrapper ${lib.getExe electron_44} "$desktop/bin/t3code-desktop" \
       --add-flags "$desktop/libexec/t3code/apps/desktop" \
+      ${hostedAppUrlFlag} \
       --inherit-argv0
 
     mkdir -p "$desktop/share/icons/hicolor/scalable/apps"
