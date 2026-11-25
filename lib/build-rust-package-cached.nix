@@ -26,7 +26,6 @@ in
   sourceRoot ? "source",
   cargoPatches ? [ ],
   preBuild ? "",
-  prePatch ? "",
   nativeBuildInputs ? [ ],
   ...
 }@args:
@@ -70,19 +69,24 @@ let
     outputHashMode = "recursive";
   };
 
-  # cargoSetupHook points cargo at a copy of the vendored crates. Their
-  # path ends up in cargo's fingerprints and the build directory is random
-  # on darwin, so use the store path, which is the same in every build.
-  # Remap in both builds because cached dependency objects carry source locations.
-  useVendorFromStore = ''
-    sed -i "s|\"[^\"]*/${cargoDeps.name}/|\"$cargoDeps/|g" "$NIX_BUILD_TOP/.cargo/config.toml"
-    # Keep source locations without retaining the vendor tree at runtime.
-    export NIX_RUSTFLAGS="''${NIX_RUSTFLAGS:+$NIX_RUSTFLAGS }--remap-path-prefix=$cargoDeps/=vendor/"
+  # Remap in both builds because cached dependency objects carry source
+  # locations, and the shipped binaries must not retain the vendor tree.
+  remapVendor = ''
+    export NIX_RUSTFLAGS="''${NIX_RUSTFLAGS:+$NIX_RUSTFLAGS }--remap-path-prefix=${cargoDeps}/=vendor/"
   '';
 
   common = removeAttrs args [ "cargoHash" ] // {
-    inherit cargoDeps sourceRoot;
+    inherit sourceRoot;
     cargoPatches = [ ];
+    # Without cargoVendorDir, cargoSetupHook copies the vendored crates into
+    # the build directory. Their path ends up in cargo's fingerprints and the
+    # build directory is random on darwin, so let the hook resolve this link
+    # to the store path, which is the same in every build.
+    cargoVendorDir = ".cargo-vendor";
+    postUnpack = ''
+      ln -s ${cargoDeps} "$sourceRoot/.cargo-vendor"
+    ''
+    + args.postUnpack or "";
   };
 
   cargoArtifacts = rustPlatform.buildRustPackage (
@@ -93,14 +97,14 @@ let
       src = null;
       unpackPhase = ''
         runHook preUnpack
-        cp -r "$cargoDeps/.skeleton" ${lib.head (lib.splitString "/" sourceRoot)}
+        cp -r ${cargoDeps}/.skeleton ${lib.head (lib.splitString "/" sourceRoot)}
         chmod -R u+w .
         runHook postUnpack
       '';
       patches = [ ];
       prePatch = "";
       postPatch = "";
-      preBuild = useVendorFromStore + preBuild;
+      preBuild = remapVendor + preBuild;
       nativeBuildInputs = nativeBuildInputs ++ [ zstd ];
 
       doCheck = false;
@@ -137,20 +141,17 @@ rustPlatform.buildRustPackage (
       zstd
     ];
 
-    # cargoSetupHook insists on the vendored lock file matching the source's.
-    prePatch = prePatch + ''
-      checkVendoredLock() {
-        if ! cargo-skeleton lock Cargo.lock | diff - "$cargoDepsCopy/Cargo.lock"; then
-          echo "ERROR: cargoHash is out of date" >&2
-          exit 1
-        fi
-        cp Cargo.lock "$cargoDepsCopy/Cargo.lock"
-      }
-      postPatchHooks=(checkVendoredLock "''${postPatchHooks[@]}")
-    '';
+    # cargoVendorDir turns off cargoSetupHook's lock file check.
+    postPatch = ''
+      if ! cargo-skeleton lock Cargo.lock | diff - ${cargoDeps}/Cargo.lock; then
+        echo "ERROR: cargoHash is out of date" >&2
+        exit 1
+      fi
+    ''
+    + args.postPatch or "";
 
     preBuild =
-      useVendorFromStore
+      remapVendor
       + ''
         zstd -d < ${cargoArtifacts}/target.tar.zst | tar -x
       ''
