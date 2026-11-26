@@ -30,14 +30,14 @@
 
 let
   pname = "t3code";
-  version = "0.1.11";
+  version = "0.1.12";
   pnpm = pnpm_11;
 
   src = fetchFromGitHub {
     owner = "pingdotgg";
     repo = "t3code";
     tag = "v${version}";
-    hash = "sha256-oI8gyTWFgtTmVK+0cVQaEcfO8EzxUUOW5s8JFG/z/U8=";
+    hash = "sha256-BeeKQGuTSeOejhzIFzpFLhVjuVRIc7eToWzGrHGNJqc=";
   };
 
   # The web build's third-party-licenses vite plugin downloads SPDX license
@@ -58,7 +58,7 @@ let
     sourceRoot = "${src.name}/native/resource-monitor";
     # inspects the test process's own RSS via procfs, 0 on some builders
     checkFlags = [ "--skip=tests::loads_details_when_an_existing_process_becomes_selected" ];
-    cargoHash = "sha256-5cmG2daM1bVOA23gjjoalbx0fEL1hmqV6WZov0sUZp8=";
+    cargoHash = "sha256-deTy3FFcOwhxZnEbWDXFGVFFoKUex434ADJQtchVzbs=";
   };
 
   hyprlandSnapShot = rustPlatform.buildRustPackage {
@@ -151,7 +151,7 @@ stdenv.mkDerivation {
       pnpmWorkspaces
       ;
     fetcherVersion = 4;
-    hash = "sha256-bq+hxFjUgRk0NYaMkz7rtpyQtQ3ora5J2efi9fiRk9k=";
+    hash = "sha256-8MrqLkOu5wjprmkhZieZT+ZV/3D/azIPiJoFccoVFWQ=";
   };
 
   nativeBuildInputs = [
