@@ -104,6 +104,7 @@ let
       patches = [ ];
       prePatch = "";
       postPatch = "";
+      env = removeAttrs (args.env or { }) [ "RUSTC_WRAPPER" ];
       preBuild = remapVendor + preBuild;
       nativeBuildInputs = nativeBuildInputs ++ [ zstd ];
 
