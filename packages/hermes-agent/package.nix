@@ -20,20 +20,6 @@
 }:
 
 let
-  # TODO: drop once NixOS/nixpkgs#579978 is in our nixpkgs input.
-  ctranslate2 =
-    let
-      test = "test_float32_float16_and_independent_chunks";
-      pkg = python3.pkgs.ctranslate2;
-    in
-    if lib.elem test (pkg.disabledTests or [ ]) then
-      pkg
-    else
-      pkg.overridePythonAttrs (old: {
-        disabledTests = old.disabledTests or [ ] ++ [ test ];
-      });
-  faster-whisper = python3.pkgs.faster-whisper.override { inherit ctranslate2; };
-
   # Hermes' Anthropic adapter passes httpx objects; SDK 1.x requires httpx2.
   # Keep this private dependency aligned with the upstream extra, not nixpkgs.
   anthropic = python3.pkgs.anthropic.overridePythonAttrs (old: {
@@ -103,46 +89,6 @@ let
       description = "Python bindings for the NeMo Relay agent runtime";
       homepage = "https://github.com/NVIDIA/NeMo-Relay";
       license = licenses.asl20;
-      sourceProvenance = with sourceTypes; [ fromSource ];
-      platforms = platforms.unix;
-    };
-  };
-
-  # Native (PyO3) document-to-markdown converter; PyPI ships wheels only.
-  firecrawl-anydoc = python3.pkgs.buildPythonPackage rec {
-    pname = "firecrawl-anydoc";
-    version = "0.2.4";
-    pyproject = true;
-
-    src = fetchFromGitHub {
-      owner = "firecrawl";
-      repo = "anydoc";
-      tag = "v${version}";
-      hash = "sha256-rGv3Bh+zmF9xFUgf8RaSmfyB/gfuQ13iC389i6VZIlM=";
-    };
-
-    cargoDeps = rustPlatform.fetchCargoVendor {
-      inherit src;
-      name = "anydoc-${version}";
-      hash = "sha256-yhW5HSzVrZCms4x36J2NGIn1e5YLIgjuNKXM9EJ9J8c=";
-    };
-
-    buildAndTestSubdir = "python";
-
-    nativeBuildInputs = with rustPlatform; [
-      cargoSetupHook
-      maturinBuildHook
-    ];
-
-    pythonImportsCheck = [
-      "anydoc"
-      "anydoc._anydoc"
-    ];
-
-    meta = with lib; {
-      description = "Convert documents to GitHub-Flavored Markdown";
-      homepage = "https://github.com/firecrawl/anydoc";
-      license = licenses.mit;
       sourceProvenance = with sourceTypes; [ fromSource ];
       platforms = platforms.unix;
     };
@@ -323,14 +269,7 @@ let
     owner = "NousResearch";
     repo = "hermes-agent";
     tag = "v${version}";
-    hash = "sha256-hOXPsbYUF1r0XglIJErGLnM9m2P85ImJiHfcxnxK8os=";
-    # contributors/emails/ holds paths differing only in case; they collapse
-    # on case-insensitive stores (APFS) so the NAR hash diverges between
-    # Linux and darwin. Unused at build/runtime. Upstream:
-    # NousResearch/hermes-agent#88257
-    postFetch = ''
-      rm -rf "$out/contributors"
-    '';
+    hash = "sha256-PzkocTi9jbkuht4cvpmXu/hTIAUNtE/xyivPoncNq8Y=";
   };
 
   # Upstream moved ui-tui/ and web/ into npm workspaces with a single root
