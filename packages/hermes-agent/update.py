@@ -33,7 +33,7 @@ NEMO_RELAY_REPO = "NeMo-Relay"
 STABLE_VERSION_RE = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+")
 # Calendar tags (v2026.M.D) outrank semver, so require a short major.
 AGENT_TAG_RE = r"v\d{1,3}\.\d+\.\d+"
-PACKAGE_NIX = Path(__file__).parent / "package.nix"
+PACKAGE_NIX = Path(__file__).parent / "unwrapped.nix"
 
 
 NEMO_RELAY_REQ_RE = re.compile(r"nemo-relay\s*([<>=!,.\d\s]+)")
@@ -134,6 +134,8 @@ def main() -> None:
                 latest,
                 "--subpackage",
                 "hermes-frontend",
+                "--override-filename",
+                str(PACKAGE_NIX),
             ],
             check=True,
         )
