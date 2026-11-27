@@ -2710,9 +2710,9 @@
     url = "https://registry.npmjs.org/obug/-/obug-2.2.1.tgz";
     hash = "sha512-XrsrhT5sybtKI6wakr2SPOlGZWWYbUXZ7a0jT8/QOeAPau+1X/bSegNe5YR75oJmEZQbKningirmGOEJCIk61Q==";
   };
-  "omowright@0.3.2" = fetchurl {
-    url = "https://registry.npmjs.org/omowright/-/omowright-0.3.2.tgz";
-    hash = "sha512-gRvgt3RRzk27t6UxU3Lax3sRB++V1nzKXL0sfWsbKboV/pfxCrdABf+PvarVDqjGTNm2P/vbH+Nlx/AfTmY6Mg==";
+  "omowright@0.3.4" = fetchurl {
+    url = "https://registry.npmjs.org/omowright/-/omowright-0.3.4.tgz";
+    hash = "sha512-Un2qcPtVbWfYIgaXVHlVAyCl8AEhNEltoGxPAA9HE7X2QYRJVX2Ex+0DGWRsle1qBpNrGT3RL0fTtNXAGRmMkw==";
   };
   "on-finished@2.4.1" = fetchurl {
     url = "https://registry.npmjs.org/on-finished/-/on-finished-2.4.1.tgz";
