@@ -14,6 +14,11 @@ inputs."nixpkgs".lib.extend (
     };
 
     maintainers = prev.maintainers // {
+      pszponder = {
+        github = "pszponder";
+        githubId = 14116413;
+        name = "Piotr Szponder";
+      };
       silicalet = {
         github = "silicalet";
         githubId = 188071249;

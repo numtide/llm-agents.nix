@@ -1574,6 +1574,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>hex</strong> - Local voice dictation for the desktop</summary>
+
+- **Source**: binary
+- **License**: MIT
+- **Homepage**: https://github.com/anomalyco/hex
+- **Usage**: `nix run github:numtide/llm-agents.nix#hex -- --help`
+- **Nix**: [packages/hex/package.nix](packages/hex/package.nix)
+
+</details>
+<details>
 <summary><strong>paseo-desktop</strong> - Voice-controlled desktop development environment for AI coding agents</summary>
 
 - **Source**: source

@@ -1,0 +1,7 @@
+{
+  "version": "3.5.2",
+  "hashes": {
+    "aarch64-linux": "sha256-AqOMv9cBvcA4f+w6wsA4JIgWIfFg4wb2sNduFwwYmMo=",
+    "x86_64-linux": "sha256-eFy1ArtVaGXNptqe7LQaUvUHNOzvPfvemRVfd21/NGI="
+  }
+}
