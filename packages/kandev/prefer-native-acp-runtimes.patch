@@ -12,12 +12,14 @@ Signed-off-by: mulatta <67085791+mulatta@users.noreply.github.com>
  .../internal/agent/agents/kilocode_acp.go     | 12 ++-
  .../agent/agents/native_binary_agents_test.go | 54 ++++++++++++
  .../internal/agent/agents/opencode_acp.go     | 31 ++++++-
+ .../agent/agents/opencode_acp_test.go         | 10 ++-
  .../agent/agents/opencode_host_native_test.go | 82 +++++++++++++++++++
  .../backend/internal/agent/agents/qwen_acp.go | 12 ++-
  .../internal/agent/hostutility/manager.go     | 15 +++-
  .../agent/hostutility/native_binary_test.go   | 43 ++++++++++
  .../internal/agent/registry/provider.go       | 17 +++-
- .../agent/runtime/lifecycle/manager_launch.go | 10 ++-
+ .../agent/runtime/lifecycle/acp_preview.go    |  2 +-
+ .../agent/runtime/lifecycle/manager_launch.go | 15 +++-
  .../runtime/lifecycle/manager_launch_test.go  | 27 +++++-
  .../agent/runtime/lifecycle/utility.go        | 17 ++--
  .../agent/runtime/lifecycle/utility_test.go   | 42 ++++++++++
@@ -25,13 +27,13 @@ Signed-off-by: mulatta <67085791+mulatta@users.noreply.github.com>
  .../settings/controller/controller_test.go    | 12 ++-
  .../agentctl/server/utility/acp_executor.go   |  5 ++
  .../server/utility/probe_allowlist_test.go    | 18 ++++
- 20 files changed, 394 insertions(+), 42 deletions(-)
+ 22 files changed, 411 insertions(+), 42 deletions(-)
  create mode 100644 apps/backend/internal/agent/agents/native_binary_agents_test.go
  create mode 100644 apps/backend/internal/agent/agents/opencode_host_native_test.go
  create mode 100644 apps/backend/internal/agent/hostutility/native_binary_test.go
 
 diff --git a/apps/backend/internal/agent/agents/copilot_acp.go b/apps/backend/internal/agent/agents/copilot_acp.go
-index 4566ebd37..8beeefa23 100644
+index 2f28f187..e79b148c 100644
 --- a/apps/backend/internal/agent/agents/copilot_acp.go
 +++ b/apps/backend/internal/agent/agents/copilot_acp.go
 @@ -21,8 +21,8 @@ const copilotACPPackage = "@github/copilot"
@@ -56,7 +58,7 @@ index 4566ebd37..8beeefa23 100644
  }
  
 diff --git a/apps/backend/internal/agent/agents/copilot_acp_test.go b/apps/backend/internal/agent/agents/copilot_acp_test.go
-index f0af20289..650c7c01f 100644
+index f0af2028..650c7c01 100644
 --- a/apps/backend/internal/agent/agents/copilot_acp_test.go
 +++ b/apps/backend/internal/agent/agents/copilot_acp_test.go
 @@ -80,10 +80,9 @@ func TestCopilotACP_UsesManagedPackageOnEveryNPMCommandSurface(t *testing.T) {
@@ -83,7 +85,7 @@ index f0af20289..650c7c01f 100644
  		t.Fatalf("native argv mismatch\n  got:  %#v\n  want: %#v", native, wantNative)
  	}
 diff --git a/apps/backend/internal/agent/agents/droid_acp.go b/apps/backend/internal/agent/agents/droid_acp.go
-index 3423d8305..ab99413d7 100644
+index 3423d830..ab99413d 100644
 --- a/apps/backend/internal/agent/agents/droid_acp.go
 +++ b/apps/backend/internal/agent/agents/droid_acp.go
 @@ -18,9 +18,10 @@ var droidACPLogoDark []byte
@@ -114,7 +116,7 @@ index 3423d8305..ab99413d7 100644
  }
  
 diff --git a/apps/backend/internal/agent/agents/gemini.go b/apps/backend/internal/agent/agents/gemini.go
-index f46a29f4a..43ae75e18 100644
+index f46a29f4..43ae75e1 100644
 --- a/apps/backend/internal/agent/agents/gemini.go
 +++ b/apps/backend/internal/agent/agents/gemini.go
 @@ -22,6 +22,7 @@ var (
@@ -139,7 +141,7 @@ index f46a29f4a..43ae75e18 100644
  }
  
 diff --git a/apps/backend/internal/agent/agents/kilocode_acp.go b/apps/backend/internal/agent/agents/kilocode_acp.go
-index 8ce9f99bc..20431750a 100644
+index 8ce9f99b..20431750 100644
 --- a/apps/backend/internal/agent/agents/kilocode_acp.go
 +++ b/apps/backend/internal/agent/agents/kilocode_acp.go
 @@ -18,9 +18,10 @@ var kilocodeACPLogoDark []byte
@@ -171,7 +173,7 @@ index 8ce9f99bc..20431750a 100644
  
 diff --git a/apps/backend/internal/agent/agents/native_binary_agents_test.go b/apps/backend/internal/agent/agents/native_binary_agents_test.go
 new file mode 100644
-index 000000000..2eb855455
+index 00000000..2eb85545
 --- /dev/null
 +++ b/apps/backend/internal/agent/agents/native_binary_agents_test.go
 @@ -0,0 +1,54 @@
@@ -230,7 +232,7 @@ index 000000000..2eb855455
 +	}
 +}
 diff --git a/apps/backend/internal/agent/agents/opencode_acp.go b/apps/backend/internal/agent/agents/opencode_acp.go
-index 576f167b4..0302bcb84 100644
+index e1be812e..aab465f2 100644
 --- a/apps/backend/internal/agent/agents/opencode_acp.go
 +++ b/apps/backend/internal/agent/agents/opencode_acp.go
 @@ -92,12 +92,39 @@ func (a *OpenCodeACP) ResolveSelectedRuntimeWithReader(
@@ -275,9 +277,30 @@ index 576f167b4..0302bcb84 100644
  }
  
  func NewOpenCodeACP() *OpenCodeACP {
+diff --git a/apps/backend/internal/agent/agents/opencode_acp_test.go b/apps/backend/internal/agent/agents/opencode_acp_test.go
+index fcd3cb09..0be7bbb1 100644
+--- a/apps/backend/internal/agent/agents/opencode_acp_test.go
++++ b/apps/backend/internal/agent/agents/opencode_acp_test.go
+@@ -354,7 +354,15 @@ func TestOpenCodeACPManagedIsInstalledSurvivesPinBump(t *testing.T) {
+ 			agent, spec := newOpenCodeManagedTestAgent(t, tt.family, tt.selectedVersion)
+ 			addMixedOpenCodeNpxEntries(t, npxDir, spec, tt)
+ 			configureOpenCodeTestNpm(t, cacheRoot, tt.nativeVersion)
+-			assertOpenCodeAvailability(t, agent, true, "managed OpenCode runtime")
++			want := "managed OpenCode runtime"
++			if tt.nativeVersion != "" {
++				// A supported opencode on PATH overrides the stored selection.
++				var err error
++				if want, err = exec.LookPath("opencode"); err != nil {
++					t.Fatalf("find fake native OpenCode: %v", err)
++				}
++			}
++			assertOpenCodeAvailability(t, agent, true, want)
+ 		})
+ 	}
+ }
 diff --git a/apps/backend/internal/agent/agents/opencode_host_native_test.go b/apps/backend/internal/agent/agents/opencode_host_native_test.go
 new file mode 100644
-index 000000000..de74b4fe9
+index 00000000..de74b4fe
 --- /dev/null
 +++ b/apps/backend/internal/agent/agents/opencode_host_native_test.go
 @@ -0,0 +1,82 @@
@@ -364,7 +387,7 @@ index 000000000..de74b4fe9
 +	}
 +}
 diff --git a/apps/backend/internal/agent/agents/qwen_acp.go b/apps/backend/internal/agent/agents/qwen_acp.go
-index f55aa4728..b98f9adbf 100644
+index f55aa472..b98f9adb 100644
 --- a/apps/backend/internal/agent/agents/qwen_acp.go
 +++ b/apps/backend/internal/agent/agents/qwen_acp.go
 @@ -18,9 +18,10 @@ var qwenACPLogoDark []byte
@@ -395,7 +418,7 @@ index f55aa4728..b98f9adbf 100644
  }
  
 diff --git a/apps/backend/internal/agent/hostutility/manager.go b/apps/backend/internal/agent/hostutility/manager.go
-index cde2e6bb7..b783c09de 100644
+index be9ac02b..8ed16d59 100644
 --- a/apps/backend/internal/agent/hostutility/manager.go
 +++ b/apps/backend/internal/agent/hostutility/manager.go
 @@ -7,6 +7,7 @@ import (
@@ -414,8 +437,8 @@ index cde2e6bb7..b783c09de 100644
  	"github.com/kandev/kandev/internal/auth/authn"
  	"github.com/kandev/kandev/internal/common/acpprovider"
  	"github.com/kandev/kandev/internal/common/logger"
-@@ -1352,7 +1354,7 @@ func (m *Manager) resolveInferenceCommand(
- 		return resolver.ResolveLocalRuntime(ctx)
+@@ -1379,7 +1381,7 @@ func (m *Manager) resolveInferenceCommand(
+ 		return selection.Command, selection.Env, err
  	}
  	ag, ok := ia.(agents.Agent)
 -	if !ok || m.managedRuntimeSelections == nil {
@@ -423,7 +446,7 @@ index cde2e6bb7..b783c09de 100644
  		return command, nil, nil
  	}
  	openCode, isOpenCode := ag.(*agents.OpenCodeACP)
-@@ -1361,6 +1363,17 @@ func (m *Manager) resolveInferenceCommand(
+@@ -1388,6 +1390,17 @@ func (m *Manager) resolveInferenceCommand(
  		resolved, err := m.resolveOpenCodeInferenceCommand(ctx, openCode, reader)
  		return resolved, nil, err
  	}
@@ -443,7 +466,7 @@ index cde2e6bb7..b783c09de 100644
  		return command, nil, nil
 diff --git a/apps/backend/internal/agent/hostutility/native_binary_test.go b/apps/backend/internal/agent/hostutility/native_binary_test.go
 new file mode 100644
-index 000000000..47d2a25f8
+index 00000000..47d2a25f
 --- /dev/null
 +++ b/apps/backend/internal/agent/hostutility/native_binary_test.go
 @@ -0,0 +1,43 @@
@@ -491,7 +514,7 @@ index 000000000..47d2a25f8
 +	}
 +}
 diff --git a/apps/backend/internal/agent/registry/provider.go b/apps/backend/internal/agent/registry/provider.go
-index c4db5421d..8b6ca8cfa 100644
+index ee363e02..3bbcf36e 100644
 --- a/apps/backend/internal/agent/registry/provider.go
 +++ b/apps/backend/internal/agent/registry/provider.go
 @@ -3,6 +3,7 @@ package registry
@@ -502,7 +525,7 @@ index c4db5421d..8b6ca8cfa 100644
  	"path/filepath"
  	"runtime"
  	"strings"
-@@ -161,12 +162,22 @@ func (r *Registry) resolveProviderCommand(
+@@ -187,12 +188,22 @@ func (r *Registry) resolveProviderCommand(
  	if !ok || !ag.Enabled() {
  		return nil, nil, false
  	}
@@ -528,29 +551,53 @@ index c4db5421d..8b6ca8cfa 100644
  		ManagedRuntimeVersion: managedRuntimeVersion,
  	}
  	if openCode, isOpenCode := ag.(*agents.OpenCodeACP); isOpenCode {
+diff --git a/apps/backend/internal/agent/runtime/lifecycle/acp_preview.go b/apps/backend/internal/agent/runtime/lifecycle/acp_preview.go
+index 41839166..263e4cce 100644
+--- a/apps/backend/internal/agent/runtime/lifecycle/acp_preview.go
++++ b/apps/backend/internal/agent/runtime/lifecycle/acp_preview.go
+@@ -51,7 +51,7 @@ func (m *Manager) buildPromotedAgentCommand(
+ ) (agentCommands, bool, error) {
+ 	runtime := execution.RuntimeName
+ 	preferNative := m.preferNativeBinary(agentConfig, runtime, execution.MetadataSnapshot())
+-	options, err := m.resolveManagedRuntimeCommandOptions(ctx, runtime, agentConfig)
++	options, err := m.resolveLaunchRuntimeOptions(ctx, runtime, agentConfig, preferNative)
+ 	if err != nil {
+ 		return agentCommands{}, false, err
+ 	}
 diff --git a/apps/backend/internal/agent/runtime/lifecycle/manager_launch.go b/apps/backend/internal/agent/runtime/lifecycle/manager_launch.go
-index 76154e887..47aadfc93 100644
+index 12bb3f42..62d07630 100644
 --- a/apps/backend/internal/agent/runtime/lifecycle/manager_launch.go
 +++ b/apps/backend/internal/agent/runtime/lifecycle/manager_launch.go
-@@ -749,9 +749,13 @@ func (m *Manager) buildAgentCommandWithContext(
- 		model = req.ModelOverride
+@@ -733,13 +733,26 @@ func (m *Manager) buildAgentCommandWithContext(
+ 	runtime agentruntime.Runtime,
+ 	preferNative bool,
+ ) (agentCommands, error) {
+-	options, err := m.resolveManagedRuntimeCommandOptions(ctx, runtime, agentConfig)
++	options, err := m.resolveLaunchRuntimeOptions(ctx, runtime, agentConfig, preferNative)
+ 	if err != nil {
+ 		return agentCommands{}, err
  	}
- 	cliFlagTokens = appendRouteOverrideFlags(cliFlagTokens, req)
--	managedRuntimeOptions, err := m.resolveManagedRuntimeCommandOptions(ctx, runtime, agentConfig)
--	if err != nil {
--		return agentCommands{}, err
-+	var managedRuntimeOptions agents.CommandOptions
+ 	return m.buildAgentCommandWithRuntimeOptions(ctx, req, profileInfo, agentConfig, runtime, preferNative, options)
+ }
+ 
++func (m *Manager) resolveLaunchRuntimeOptions(
++	ctx context.Context,
++	runtime agentruntime.Runtime,
++	agentConfig agents.Agent,
++	preferNative bool,
++) (agents.CommandOptions, error) {
 +	// OpenCode's runtime selection chooses between native and managed itself.
-+	if !preferNative || agentConfig.ID() == agents.OpenCodeACPAgentID {
-+		managedRuntimeOptions, err = m.resolveManagedRuntimeCommandOptions(ctx, runtime, agentConfig)
-+		if err != nil {
-+			return agentCommands{}, err
-+		}
- 	}
- 	// Only pass SessionID (for --resume flag) if the agent supports recovery.
- 	// Agents with CanRecover=false (e.g. Auggie) use history context injection instead.
++	if preferNative && agentConfig.ID() != agents.OpenCodeACPAgentID {
++		return agents.CommandOptions{}, nil
++	}
++	return m.resolveManagedRuntimeCommandOptions(ctx, runtime, agentConfig)
++}
++
+ func (m *Manager) buildAgentCommandWithRuntimeOptions(
+ 	ctx context.Context,
+ 	req *LaunchRequest,
 diff --git a/apps/backend/internal/agent/runtime/lifecycle/manager_launch_test.go b/apps/backend/internal/agent/runtime/lifecycle/manager_launch_test.go
-index 7f53195ea..1ea9e8314 100644
+index 7f53195e..1ea9e831 100644
 --- a/apps/backend/internal/agent/runtime/lifecycle/manager_launch_test.go
 +++ b/apps/backend/internal/agent/runtime/lifecycle/manager_launch_test.go
 @@ -158,6 +158,9 @@ func TestBuildAgentCommand_UsesManagedNPMRuntimes(t *testing.T) {
@@ -608,7 +655,7 @@ index 7f53195ea..1ea9e8314 100644
  			cmds, err := mgr.buildAgentCommandWithContext(context.Background(), &LaunchRequest{}, nil, tt.agent, agentruntime.RuntimeStandalone, true)
  			require.NoError(t, err)
 diff --git a/apps/backend/internal/agent/runtime/lifecycle/utility.go b/apps/backend/internal/agent/runtime/lifecycle/utility.go
-index 01a57d027..58b6ee7b9 100644
+index 87d33b0a..3878d8ca 100644
 --- a/apps/backend/internal/agent/runtime/lifecycle/utility.go
 +++ b/apps/backend/internal/agent/runtime/lifecycle/utility.go
 @@ -20,15 +20,22 @@ func (m *Manager) resolveSessionInferenceCommand(ctx context.Context, ia agents.
@@ -640,7 +687,7 @@ index 01a57d027..58b6ee7b9 100644
  		opts.PreferNativeBinary = false
  	}
 diff --git a/apps/backend/internal/agent/runtime/lifecycle/utility_test.go b/apps/backend/internal/agent/runtime/lifecycle/utility_test.go
-index e324d7526..e87e8b1f5 100644
+index 067e7255..604aca1a 100644
 --- a/apps/backend/internal/agent/runtime/lifecycle/utility_test.go
 +++ b/apps/backend/internal/agent/runtime/lifecycle/utility_test.go
 @@ -7,6 +7,9 @@ import (
@@ -661,7 +708,7 @@ index e324d7526..e87e8b1f5 100644
  	"github.com/kandev/kandev/internal/secrets"
  )
  
-@@ -512,3 +516,41 @@ func TestManagerListInferenceAgentsOnlyReturnsInstalledOnes(t *testing.T) {
+@@ -522,3 +526,41 @@ func TestManagerListInferenceAgentsOnlyReturnsInstalledOnes(t *testing.T) {
  		t.Fatalf("ListInferenceAgentsWithContext returned %d agents, want %d", len(withCtx), len(got))
  	}
  }
@@ -704,10 +751,10 @@ index e324d7526..e87e8b1f5 100644
 +	}
 +}
 diff --git a/apps/backend/internal/agent/settings/controller/agent_config.go b/apps/backend/internal/agent/settings/controller/agent_config.go
-index 7333be7c8..2c34003ac 100644
+index 318faf95..df78ef9b 100644
 --- a/apps/backend/internal/agent/settings/controller/agent_config.go
 +++ b/apps/backend/internal/agent/settings/controller/agent_config.go
-@@ -250,9 +250,10 @@ func (c *Controller) PreviewAgentCommand(ctx context.Context, agentName string,
+@@ -255,9 +255,10 @@ func (c *Controller) PreviewAgentCommand(ctx context.Context, agentName string,
  			BaseCommand:      copilotBase,
  		})
  	} else {
@@ -719,7 +766,7 @@ index 7333be7c8..2c34003ac 100644
  			managedRuntimeVersion, err = c.activeRuntimeVersion(
  				ctx,
  				agentName,
-@@ -266,7 +267,7 @@ func (c *Controller) PreviewAgentCommand(ctx context.Context, agentName string,
+@@ -271,7 +272,7 @@ func (c *Controller) PreviewAgentCommand(ctx context.Context, agentName string,
  			Model:                 req.Model,
  			PermissionValues:      req.PermissionSettings,
  			CLIFlagTokens:         cliFlagTokens,
@@ -727,9 +774,9 @@ index 7333be7c8..2c34003ac 100644
 +			PreferNativeBinary:    preferNative,
  			ManagedRuntimeVersion: managedRuntimeVersion,
  		})
- 		if len(cliFlagTokens) > 0 {
+ 		if localRuntime, ok := agentConfig.(agents.LocalRuntimeAgent); ok {
 diff --git a/apps/backend/internal/agent/settings/controller/controller_test.go b/apps/backend/internal/agent/settings/controller/controller_test.go
-index 6177dc508..eaff82ab6 100644
+index 6177dc50..eaff82ab 100644
 --- a/apps/backend/internal/agent/settings/controller/controller_test.go
 +++ b/apps/backend/internal/agent/settings/controller/controller_test.go
 @@ -661,15 +661,14 @@ func TestDetectAgents_E2EMockPropagatesSupportsMCP(t *testing.T) {
@@ -763,10 +810,10 @@ index 6177dc508..eaff82ab6 100644
  		t.Errorf("preview with copilot on PATH = %v, want %v", got, want)
  	}
 diff --git a/apps/backend/internal/agentctl/server/utility/acp_executor.go b/apps/backend/internal/agentctl/server/utility/acp_executor.go
-index 43bff1201..8a0f32f76 100644
+index be64229c..f3c5385a 100644
 --- a/apps/backend/internal/agentctl/server/utility/acp_executor.go
 +++ b/apps/backend/internal/agentctl/server/utility/acp_executor.go
-@@ -1632,11 +1632,15 @@ var allowedProbeCommands = map[string]string{
+@@ -1643,11 +1643,15 @@ var allowedProbeCommands = map[string]string{
  	"agy_acp_server.par": "agy_acp_server.par",
  	"agy_acp_server.exe": "agy_acp_server.exe",
  	"auggie":             "auggie",
@@ -782,7 +829,7 @@ index 43bff1201..8a0f32f76 100644
  	"kimi":               "kimi",
  	"mcode":              "mcode",
  	"kiro-cli-chat":      "kiro-cli-chat",
-@@ -1645,6 +1649,7 @@ var allowedProbeCommands = map[string]string{
+@@ -1656,6 +1660,7 @@ var allowedProbeCommands = map[string]string{
  	"omp":                "omp",
  	openCodeCommand:      openCodeCommand,
  	"qodercli":           "qodercli",
@@ -791,7 +838,7 @@ index 43bff1201..8a0f32f76 100644
  }
  
 diff --git a/apps/backend/internal/agentctl/server/utility/probe_allowlist_test.go b/apps/backend/internal/agentctl/server/utility/probe_allowlist_test.go
-index c6d2ef0ed..ecb5d4995 100644
+index c6d2ef0e..ecb5d499 100644
 --- a/apps/backend/internal/agentctl/server/utility/probe_allowlist_test.go
 +++ b/apps/backend/internal/agentctl/server/utility/probe_allowlist_test.go
 @@ -40,3 +40,21 @@ func TestProbeAllowlist_CoversEveryEnabledInferenceAgent(t *testing.T) {
