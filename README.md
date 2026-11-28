@@ -1753,7 +1753,7 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 - **Source**: source
 - **License**: MIT
-- **Homepage**: https://github.com/jahala/tilth
+- **Homepage**: https://crates.io/crates/tilth
 - **Usage**: `nix run github:numtide/llm-agents.nix#tilth -- --help`
 - **Nix**: [packages/tilth/package.nix](packages/tilth/package.nix)
 
