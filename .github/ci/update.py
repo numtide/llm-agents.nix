@@ -70,6 +70,8 @@ def sandbox_wrap(cmd: list[str], name: str) -> list[str]:
         *("--dir", "/tmp/home"),  # noqa: S108
         *("--setenv", "HOME", "/tmp/home"),  # noqa: S108
         *("--setenv", "TMPDIR", "/tmp"),  # noqa: S108
+        # /run/user/<uid> is read-only in here; dotnet's fetch-deps needs it.
+        *("--unsetenv", "XDG_RUNTIME_DIR"),
         *("--bind", "/nix", "/nix"),
         *("--bind", pkg_dir, pkg_dir),
         *("--chdir", str(Path.cwd())),
