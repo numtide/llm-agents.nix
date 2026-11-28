@@ -1,0 +1,3 @@
+--use-github-releases
+--version-regex
+^ironclaw-v([0-9]+\.[0-9]+\.[0-9]+)$
