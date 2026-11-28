@@ -13,6 +13,7 @@
   formatelf,
   playwright-driver,
   libsecret,
+  libxkbcommon,
   python3,
   cacert,
   electron_44,
@@ -22,6 +23,7 @@
   rustPlatform,
   versionCheckHook,
   versionCheckHomeHook,
+  vulkan-loader,
   cctools,
   libicns,
   writeDarwinBundle,
@@ -177,10 +179,13 @@ stdenv.mkDerivation {
     xcbuild
   ];
 
-  # build:desktop compiles native/browser-secret against libsecret on linux
   buildInputs = lib.optionals stdenv.hostPlatform.isLinux [
+    # build:desktop compiles native/browser-secret against it
     libsecret
+    # for autoPatchelf of prebuilt native modules
+    libxkbcommon # xa11y
     stdenv.cc.cc.lib
+    vulkan-loader # transcribe-cpp GPU backend
   ];
 
   # We run electron on an unpacked tree, so app.isPackaged is false and the
@@ -308,10 +313,17 @@ stdenv.mkDerivation {
     runHook postInstall
   '';
 
-  # Electron, unlike node, does not already have libstdc++ loaded for the
-  # prebuilt pty.node (#10125).
+  # Electron, unlike node, does not already have libstdc++ loaded for
+  # prebuilt native modules (#10125). Limited to .node/.so because the trees
+  # also hold static-pie executables; musl prebuilds would fail autoPatchelf.
   postFixup = lib.optionalString stdenv.hostPlatform.isLinux ''
-    autoPatchelf "$out/libexec/t3code/apps/server/node_modules/node-pty/prebuilds/${platformKey}"
+    find "$out/libexec/t3code" "$desktop/libexec/t3code" -type f -name '*.node' \
+      \( -name '*musl*' -o -path '*/musl_*/*' \) -delete
+    mapfile -d "" nativeLibs < <(
+      find "$out/libexec/t3code" "$desktop/libexec/t3code" -type f \
+        \( -name '*.node' -o -name '*.so' -o -name '*.so.*' \) -print0
+    )
+    autoPatchelf -- "''${nativeLibs[@]}"
   '';
 
   postInstall = ''
