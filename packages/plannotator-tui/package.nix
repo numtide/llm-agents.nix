@@ -9,16 +9,16 @@
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "plannotator-tui";
-  version = "0.10.0";
+  version = "0.12.1";
 
   src = fetchFromGitHub {
     owner = "plannotator";
     repo = "plannotator-tui";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-I5Gc/YdpybsWvgYNELKLSRGszFJBiyg4C/MKAAQ8CPo=";
+    hash = "sha256-zmsK85oS07IQUEV5avjSmdZO2ZmqOQMF/CmchyRHV1M=";
   };
 
-  cargoHash = "sha256-umYlecdHYSr1Jzbi/0oI4ULRi5lf9O8kybtb5DeeWxo=";
+  cargoHash = "sha256-mN/um6aG283uG4Ve/rWnHZ2kktfWWWlXYUr/A0N774c=";
 
   nativeBuildInputs = [ pkg-config ];
 
