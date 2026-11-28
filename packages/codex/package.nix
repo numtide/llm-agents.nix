@@ -10,16 +10,12 @@
   writeShellScript,
   aws-lc,
   openssl,
-  rust-jemalloc-sys,
-  libgit2,
   oniguruma,
   rust-bindgen,
   sqlite,
-  zlib,
   zstd,
   bubblewrap,
   ripgrep,
-  libcap,
   versionCheckHook,
   callPackage,
   mkRustyV8Archive ? callPackage ../../lib/rusty-v8.nix { },
@@ -66,15 +62,33 @@ let
       };
 
   # Compiled side by side, the largest crates get rustc OOM-killed on the
-  # aarch64 builders, so let only one of them through at a time.
+  # aarch64 builders, so let only one of them through at a time. Waiting for
+  # or compiling slow crates (including the final codex binary) can exceed
+  # the 1200s that nixbot lets a build stay silent, so report progress
+  # periodically for any crate that takes longer than 5 minutes.
   serialRustc = writeShellScript "serial-rustc" ''
-    case " $* " in
-      *" --crate-name codex_core "* | *" --crate-name codex_app_server "* | \
-      *" --crate-name codex_tui "* | *" --crate-name codex_exec "*)
-        exec ${lib.getExe flock} "$NIX_BUILD_TOP/serial-rustc.lock" "$@"
+    [[ " $* " =~ " --crate-name "([^ ]+)" " ]] || exec "$@"
+    crate=''${BASH_REMATCH[1]}
+    [[ $crate == ___ ]] && exec "$@"
+    (
+      trap 'kill ''${sleeper:-} 2>/dev/null; exit' TERM
+      while :; do
+        # Keep cargo's pipe free, so that it does not wait for the sleep.
+        sleep 300 >/dev/null 2>&1 &
+        sleeper=$!
+        wait $sleeper
+        echo "serial-rustc: still building $crate" >&2
+      done
+    ) &
+    trap "kill $! 2>/dev/null" EXIT
+    case $crate in
+      codex_core | codex_app_server | codex_tui | codex_exec)
+        ${lib.getExe flock} "$NIX_BUILD_TOP/serial-rustc.lock" "$@"
+        ;;
+      *)
+        "$@"
         ;;
     esac
-    exec "$@"
   '';
 
   packageManifest = builtins.toJSON {
@@ -114,25 +128,18 @@ buildRustPackageCached (
     buildInputs = [
       aws-lc
       openssl
-      rust-jemalloc-sys
-      libgit2
       oniguruma
       sqlite
-      zlib
       zstd
-    ]
-    ++ lib.optionals stdenv.hostPlatform.isLinux [ libcap ];
+    ];
 
     env = {
       RUSTY_V8_ARCHIVE = librusty_v8;
       RUSTC_WRAPPER = serialRustc;
       AWS_LC_SYS_USE_SYSTEM = "1";
-      LIBGIT2_NO_VENDOR = "1";
       LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
-      LIBZ_SYS_STATIC = "0";
       RUSTONIG_SYSTEM_LIBONIG = "1";
       ZSTD_SYS_USE_PKG_CONFIG = "1";
-      JEMALLOC_OVERRIDE = "${lib.getLib rust-jemalloc-sys}/lib/libjemalloc${stdenv.hostPlatform.extensions.sharedLibrary}";
     }
     // lib.optionalAttrs (librusty_v8 ? srcBinding) {
       # rusty_v8 >= 150 include!s this instead of running bindgen.
