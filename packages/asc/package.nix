@@ -12,16 +12,16 @@
 
 buildGoModule.override { go = go-bin; } rec {
   pname = "asc";
-  version = "7.7.0";
+  version = "7.8.0";
 
   src = fetchFromGitHub {
     owner = "rorkai";
     repo = "App-Store-Connect-CLI";
     tag = version;
-    hash = "sha256-AicE8fIc1IPOUCk9UqlxFdfKJq1D/NhdrBu06uzgEG8=";
+    hash = "sha256-q9kAlt0+77ERM223WfwhSwSKCrCU21RergDE/ShOSNI=";
   };
 
-  vendorHash = "sha256-hYPott+qhNmr7yCprxs0UxGUWhI+8FCd6ZEWb5Wsm8Y=";
+  vendorHash = "sha256-OS0oygHuYa6n9vRkvo9IP6IuXHyZske+yH3nUA5ee48=";
 
   subPackages = [ "." ];
 
