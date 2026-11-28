@@ -3,8 +3,6 @@
   flake,
   buildNpmPackage,
   hindsight,
-  inter,
-  jetbrains-mono,
   jq,
   makeWrapper,
   nodejs,
@@ -14,12 +12,9 @@ buildNpmPackage {
   inherit (hindsight) version src;
 
   npmDepsFetcherVersion = 2;
-  npmDepsHash = "sha256-Rr4Ux7mRo0zkcnMwN3DdSg967sYhZSsy7tKwSpqZC1A=";
+  npmDepsHash = "sha256-kOtITPLMt6RT/CAktOFuoA09RdUfLAOAa1jBXahSHKc=";
 
   nativeBuildInputs = [ makeWrapper ];
-
-  # next/font/google downloads the fonts at build time.
-  patches = [ ./local-fonts.patch ];
 
   postPatch = ''
     # npm omitted these for two nested packages, so they cannot be prefetched.
@@ -35,11 +30,6 @@ buildNpmPackage {
       }
     ' package-lock.json > package-lock.json.tmp
     mv package-lock.json.tmp package-lock.json
-
-    fonts='hindsight-control-plane/src/app/[locale]/fonts'
-    install -Dm644 ${inter}/share/fonts/truetype/InterVariable.ttf -t "$fonts"
-    install -Dm644 '${jetbrains-mono}/share/fonts/truetype/JetBrainsMono[wght].ttf' \
-      "$fonts/JetBrainsMono-Variable.ttf"
 
     substituteInPlace hindsight-control-plane/bin/cli.js \
       --replace-fail "spawn('node'," "spawn('${lib.getExe nodejs}',"

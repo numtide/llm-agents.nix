@@ -19,18 +19,18 @@ let
 
   toktok-rs = python3Packages.buildPythonPackage rec {
     pname = "toktok-rs";
-    version = "0.3.0";
+    version = "0.5.0";
     pyproject = true;
 
     src = fetchPypi {
       pname = "toktok_rs";
       inherit version;
-      hash = "sha256-qQEGxQgC+UuIVBa2Z73i2yPwd49+pgKgQL1usBWom5w=";
+      hash = "sha256-lvevhksTKdZBsMrqTfAPSWRLOBGAdwvDxcIYxDzTZCw=";
     };
 
     cargoDeps = rustPlatform.fetchCargoVendor {
       inherit pname version src;
-      hash = "sha256-2MXam95XcTOqBgaVZep/ewmqhV/vq3kMLBGj/4PogSc=";
+      hash = "sha256-wvOk93en7b456k9OIFxu/1XAwh2QT68xtRRYwk2jjwQ=";
     };
 
     nativeBuildInputs = with rustPlatform; [
@@ -81,13 +81,13 @@ let
 in
 python3Packages.buildPythonApplication rec {
   pname = "hindsight";
-  version = "1.1.0";
+  version = "1.3.0";
 
   src = fetchFromGitHub {
     owner = "vectorize-io";
     repo = "hindsight";
     tag = "v${version}";
-    hash = "sha256-0+BuUhlf3mljlo9F9cVLcnOORZhMlK1mFY7Cqem6oYs=";
+    hash = "sha256-a02cE7GOXHuu57XBRFl9Oq5KIW0+/9dm8wo9EmY3pVw=";
   };
 
   sourceRoot = "${src.name}/hindsight-api-slim";
@@ -175,6 +175,7 @@ python3Packages.buildPythonApplication rec {
 
   # nixpkgs lags slightly behind these floors.
   pythonRelaxDeps = [
+    "asyncpg"
     "boto3"
     "greenlet"
     "json-repair"
