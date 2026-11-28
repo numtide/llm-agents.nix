@@ -9,16 +9,16 @@
 buildNpmPackage rec {
   npmDepsFetcherVersion = 2;
   pname = "codegraph";
-  version = "1.6.4";
+  version = "1.6.5";
 
   src = fetchFromGitHub {
     owner = "colbymchenry";
     repo = "codegraph";
     tag = "v${version}";
-    hash = "sha256-V0Q/tivtO64vYkFOeWFXu1gGZCIAAtiT1Htz5xNkFns=";
+    hash = "sha256-/T1j45AImOwsKVqQFjLoO+EV18omjvNIvF2Jdk0wWT8=";
   };
 
-  npmDepsHash = "sha256-RzsL5Z5/ozfJe51l/zNbUjfypwM5aOPm7w10refZ6OU=";
+  npmDepsHash = "sha256-pBsCpN/OfR8W7UwKgCzpWGRZ7xCSsGs37iPnmwVHwcw=";
   makeCacheWritable = true;
 
   # The ui workspace is only needed at build time (emitted to dist/viewer) and
