@@ -6,14 +6,13 @@
 }:
 
 let
-  versionData = lib.importJSON ./hashes.json;
-  inherit (versionData) version;
+  version = "0.1.17";
 
   src = fetchFromGitHub {
     owner = "nodecode-ai";
     repo = "nodecode";
-    rev = "c6418bc";
-    inherit (versionData) hash;
+    tag = "v${version}";
+    hash = "sha256-HQoMUZns7DDiOHSx1MHN0664/Xet8oa4KpNYDFDEwKQ=";
   };
 
   # Upstream ships no Nix packaging; upstream-package.nix is maintained here.
@@ -41,7 +40,8 @@ let
 in
 upstream.overrideAttrs (old: {
   name = "nodecode-${version}";
-  inherit version;
+  # nix-update reads the version and source from the final derivation.
+  inherit version src;
 
   passthru = old.passthru // {
     category = "AI Assistants";
