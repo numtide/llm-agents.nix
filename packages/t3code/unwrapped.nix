@@ -111,6 +111,7 @@ let
     exec = "t3code-desktop %U";
     icon = "t3code";
     categories = [ "Development" ];
+    mimeTypes = [ "x-scheme-handler/t3code" ];
     # On Wayland the app_id comes from app.setDesktopName(), which upstream
     # hardcodes to com.t3tools.T3Code.desktop. X11 uses `--class t3code`, which
     # shells still match to this entry by its t3code.desktop file name.
