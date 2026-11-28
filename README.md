@@ -752,6 +752,7 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 - **Homepage**: https://hermes-agent.nousresearch.com/
 - **Usage**: `nix run github:numtide/llm-agents.nix#hermes-agent -- --help`
 - **Nix**: [packages/hermes-agent/package.nix](packages/hermes-agent/package.nix)
+- **Documentation**: See [packages/hermes-agent/README.md](packages/hermes-agent/README.md) for detailed usage
 
 </details>
 <details>

@@ -1,0 +1,698 @@
+{
+  lib,
+  stdenv,
+  flake,
+  python3,
+  rustPlatform,
+  fetchFromGitHub,
+  fetchPypi,
+  buildNpmPackage,
+  nodejs,
+  pkg-config,
+  aws-lc,
+  olm,
+  zstd,
+  versionCheckHook,
+  writeText,
+  versionCheckHomeHook,
+}:
+
+let
+  # Hermes' Anthropic adapter passes httpx objects; SDK 1.x requires httpx2.
+  # Keep this private dependency aligned with the upstream extra, not nixpkgs.
+  anthropic = python3.pkgs.anthropic.overridePythonAttrs (old: {
+    version = "0.125.0";
+    src = fetchFromGitHub {
+      owner = "anthropics";
+      repo = "anthropic-sdk-python";
+      tag = "v0.125.0";
+      hash = "sha256-bNB8tVjFegfRARy8BNLHvBjkpO8YC3Z+DPirADrwyl4=";
+    };
+    dependencies =
+      builtins.filter (dependency: dependency.pname or "" != "httpx2") old.dependencies
+      ++ [
+        python3.pkgs.httpx
+        python3.pkgs.distro
+      ];
+  });
+
+  # Native (PyO3) runtime for hermes' Relay lifecycle and shared metrics.
+  # PyPI ships wheels only, so build from source with maturin.
+  # Version is kept in range of hermes' pyproject constraint by update.py.
+  nemo-relay = python3.pkgs.buildPythonPackage rec {
+    pname = "nemo-relay";
+    version = "0.11.1";
+    pyproject = true;
+
+    src = fetchFromGitHub {
+      owner = "NVIDIA";
+      repo = "NeMo-Relay";
+      tag = version;
+      hash = "sha256-BwoeCwHbvVNtx4fkR1uIRh95T63UBMbvrJtiE6+/BWY=";
+    };
+
+    cargoDeps = rustPlatform.fetchCargoVendor {
+      inherit src;
+      name = "nemo-relay-${version}";
+      hash = "sha256-xjImAQmLLOzSuO0LMRnoIZ5SoYMv7WBFSkJxgL+AOX4=";
+    };
+
+    nativeBuildInputs =
+      with rustPlatform;
+      [
+        cargoSetupHook
+        maturinBuildHook
+      ]
+      # Tags lag the workspace Cargo.toml version that pyproject derives from.
+      ++ [
+        python3.pkgs.pyprojectVersionPatchHook
+        pkg-config
+      ];
+
+    buildInputs = [
+      aws-lc
+      zstd
+    ];
+    env = {
+      AWS_LC_SYS_USE_SYSTEM = "1";
+      ZSTD_SYS_USE_PKG_CONFIG = "1";
+    };
+
+    pythonImportsCheck = [
+      "nemo_relay"
+      "nemo_relay._native"
+    ];
+
+    meta = with lib; {
+      description = "Python bindings for the NeMo Relay agent runtime";
+      homepage = "https://github.com/NVIDIA/NeMo-Relay";
+      license = licenses.asl20;
+      sourceProvenance = with sourceTypes; [ fromSource ];
+      platforms = platforms.unix;
+    };
+  };
+
+  cdp-use = python3.pkgs.buildPythonPackage rec {
+    pname = "cdp-use";
+    version = "1.4.5";
+    pyproject = true;
+
+    src = fetchPypi {
+      pname = "cdp_use";
+      inherit version;
+      hash = "sha256-DaOjLfRjNqA/9aIrxrxELNfS8tUKEY/UhW8p039tJqA=";
+    };
+
+    build-system = [ python3.pkgs.hatchling ];
+
+    dependencies = with python3.pkgs; [
+      httpx
+      typing-extensions
+      websockets
+    ];
+
+    pythonImportsCheck = [ "cdp_use" ];
+
+    meta = with lib; {
+      description = "Type-safe Python client for the Chrome DevTools Protocol";
+      homepage = "https://github.com/browser-use/cdp-use";
+      license = licenses.mit;
+      sourceProvenance = with sourceTypes; [ fromSource ];
+      platforms = platforms.all;
+    };
+  };
+
+  fetch-use = python3.pkgs.buildPythonPackage rec {
+    pname = "fetch-use";
+    version = "0.4.0";
+    pyproject = true;
+
+    src = fetchPypi {
+      pname = "fetch_use";
+      inherit version;
+      hash = "sha256-lRGYfUkH7G2sUB4h1mlG0QCY9mtdIbwqukGJzYG6GJo=";
+    };
+
+    build-system = [ python3.pkgs.hatchling ];
+
+    pythonImportsCheck = [ "fetch_use" ];
+
+    meta = with lib; {
+      description = "Python client for the Browser Use fetch API";
+      homepage = "https://github.com/browser-use/fetch-use";
+      license = licenses.mit;
+      sourceProvenance = with sourceTypes; [ fromSource ];
+      platforms = platforms.all;
+    };
+  };
+
+  browser-harness = python3.pkgs.buildPythonPackage rec {
+    pname = "browser-harness";
+    version = "0.1.13";
+    pyproject = true;
+
+    src = fetchPypi {
+      pname = "browser_harness";
+      inherit version;
+      hash = "sha256-KE3FR6BCwwn+r9mp9KdLKoZRt5Y+o6xssvLWSIn2qPM=";
+    };
+
+    build-system = [ python3.pkgs.setuptools ];
+
+    # Upstream pins setuptools==84.0.0 in build-system.requires.
+    pypaBuildFlags = [ "--skip-dependency-check" ];
+
+    dependencies = [
+      cdp-use
+      fetch-use
+      python3.pkgs.pillow
+      python3.pkgs.websockets
+    ];
+
+    pythonRelaxDeps = [
+      "pillow"
+      "websockets"
+    ];
+
+    pythonImportsCheck = [ "browser_harness" ];
+
+    meta = with lib; {
+      description = "Harness that lets agents drive a browser over CDP";
+      homepage = "https://github.com/browser-use/browser-harness";
+      license = licenses.mit;
+      sourceProvenance = with sourceTypes; [ fromSource ];
+      platforms = platforms.all;
+    };
+  };
+
+  fal-client = python3.pkgs.buildPythonPackage rec {
+    pname = "fal-client";
+    version = "0.13.1";
+    pyproject = true;
+
+    src = fetchPypi {
+      pname = "fal_client";
+      inherit version;
+      hash = "sha256-nhwH0KYbRSqP+0jBmd5fJUPXVG8SMPYxI3BEMSfF6Tc=";
+    };
+
+    build-system = with python3.pkgs; [
+      setuptools
+      setuptools-scm
+    ];
+
+    dependencies = with python3.pkgs; [
+      httpx
+      httpx-sse
+      msgpack
+      websockets
+    ];
+
+    pythonImportsCheck = [ "fal_client" ];
+
+    meta = with lib; {
+      description = "Python client for fal.ai";
+      homepage = "https://github.com/fal-ai/fal";
+      license = licenses.asl20;
+      sourceProvenance = with sourceTypes; [ fromSource ];
+      platforms = platforms.all;
+    };
+  };
+
+  parallel-web = python3.pkgs.buildPythonPackage rec {
+    pname = "parallel-web";
+    version = "0.4.2";
+    pyproject = true;
+
+    src = fetchPypi {
+      pname = "parallel_web";
+      inherit version;
+      hash = "sha256-WZtajzh9w1x9yMgeNy6t9pWKQKys6li/Fw38ZjwAPac=";
+    };
+
+    build-system = with python3.pkgs; [
+      hatchling
+      hatch-fancy-pypi-readme
+    ];
+
+    # Upstream pins hatchling==1.26.3 in build-system.requires; pythonRelaxDeps
+    # only touches runtime metadata, so skip the build-time pin check.
+    pypaBuildFlags = [ "--skip-dependency-check" ];
+
+    dependencies = with python3.pkgs; [
+      anyio
+      distro
+      httpx
+      pydantic
+      sniffio
+      typing-extensions
+    ];
+
+    pythonImportsCheck = [ "parallel" ];
+
+    meta = with lib; {
+      description = "Python SDK for Parallel Web API";
+      homepage = "https://github.com/parallel-web/parallel-sdk-python";
+      license = licenses.asl20;
+      sourceProvenance = with sourceTypes; [ fromSource ];
+      platforms = platforms.all;
+    };
+  };
+
+  version = "0.23.0";
+  # The commit of the tag. Hermes ignores an install stamp without one.
+  rev = "2bd378ed1b8d6bf2192cb26e0a55ff3091e6bd19";
+
+  src = fetchFromGitHub {
+    owner = "NousResearch";
+    repo = "hermes-agent";
+    tag = "v${version}";
+    hash = "sha256-PzkocTi9jbkuht4cvpmXu/hTIAUNtE/xyivPoncNq8Y=";
+  };
+
+  # Upstream moved ui-tui/ and web/ into npm workspaces with a single root
+  # package-lock.json, so both frontends must be built from the repo root.
+  # `hermes --tui` runs the compiled Ink/React bundle via HERMES_TUI_DIR
+  # (hermes_cli/main.py:_make_tui_argv fast-path, #4364) and
+  # `hermes dashboard` serves the Vite app via HERMES_WEB_DIST.
+  hermes-frontend = buildNpmPackage {
+    pname = "hermes-frontend";
+    inherit version src;
+    npmDepsHash = "sha256-rHYnr0DOs8cigEGAK0PU74WnbJsFWpCWF0lhx64jTNo=";
+
+    # The apps/desktop workspace pulls in electron; skip its binary download
+    # and all install scripts — the esbuild/vite builds below don't need them.
+    # Upstream's .npmrc sets engine-strict=true and package.json rejects the
+    # npm range shipped with nixpkgs' nodejs to work around a min-release-age
+    # bug, which is irrelevant for the offline install here.
+    npmFlags = [
+      "--ignore-scripts"
+      "--engine-strict=false"
+    ];
+    env.ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
+
+    buildPhase = ''
+      runHook preBuild
+      npm run build --workspace ui-tui
+      node scripts/build/web.mjs --source "$PWD" --icons "$PWD" --out "$TMPDIR/web-dist"
+      runHook postBuild
+    '';
+
+    # dist/entry.js is a self-contained esbuild bundle; package.json is kept
+    # so node resolves it as an ES module.
+    installPhase = ''
+      runHook preInstall
+      mkdir -p $out/lib/hermes-tui $out/share/hermes-web
+      cp -r ui-tui/dist ui-tui/package.json $out/lib/hermes-tui/
+      cp -r "$TMPDIR/web-dist"/. $out/share/hermes-web/
+      runHook postInstall
+    '';
+  };
+
+  coreDeps = with python3.pkgs; [
+    openai
+    certifi
+    truststore
+    python-dotenv
+    fire
+    httpx
+    rich
+    tenacity
+    tomli-w
+    ruamel-yaml
+    requests
+    jinja2
+    firecrawl-anydoc
+    pydantic
+    prompt-toolkit
+    croniter
+    snowballstemmer
+    packaging
+    markdown
+    pyjwt
+    urllib3
+    cryptography
+    psutil
+    websockets
+    browser-harness
+    pathspec
+    fastapi
+    uvicorn
+    httptools
+    watchfiles
+    python-multipart
+    ptyprocess
+    pillow
+    pillow-heif
+    nemo-relay
+  ];
+
+  # libolm is marked insecure in nixpkgs but mautrix[encryption] needs it for
+  # Matrix E2EE.
+  clearedOlm = olm.overrideAttrs (old: {
+    meta = old.meta // {
+      knownVulnerabilities = [ ];
+    };
+  });
+
+  # pyramid dropped its pkg_resources shim on python 3.14, so slack-bolt's
+  # pyramid adapter tests fail at collection with ModuleNotFoundError.
+  # The async assistant scenario tests wait on real timers and time out on
+  # loaded builders.
+  # pkg-resources-backport tests need jaraco-path, broken on darwin
+  slack-bolt' =
+    (python3.pkgs.slack-bolt.override {
+      pkg-resources-backport = python3.pkgs.pkg-resources-backport.overridePythonAttrs {
+        doCheck = !stdenv.hostPlatform.isDarwin;
+      };
+    }).overridePythonAttrs
+      (old: {
+        disabledTestPaths = (old.disabledTestPaths or [ ]) ++ [
+          "tests/adapter_tests/pyramid/"
+          "tests/scenario_tests_async/test_events_assistant.py"
+          "tests/scenario_tests_async/test_events_assistant_without_middleware.py"
+        ];
+      });
+
+  # Upstream pins agent-client-protocol==0.9.0; nixpkgs' 0.11.x regenerated the
+  # ACP schema and dropped ModelInfo/SetSessionModelResponse/SessionModelState,
+  # which acp_adapter still imports, so hermes-acp fails at startup (#7650).
+  agent-client-protocol' = python3.pkgs.agent-client-protocol.overridePythonAttrs (old: {
+    version = "0.9.0";
+    src = old.src.override {
+      tag = "0.9.0";
+      hash = "sha256-8Xf2S85yNsP/HhpCw9UqdoDdeDHdggvYcnvJbilAVuU=";
+    };
+    # 0.9.0 predates the tests/http suite that nixpkgs' expression disables.
+    disabledTestPaths = [ ];
+    disabledTests = (old.disabledTests or [ ]) ++ [
+      # subprocess spawn exceeds the 2s timeout in the sandbox
+      "test_run_agent_stdio_buffer_limit"
+    ];
+  });
+
+  optional-dependencies = with python3.pkgs; {
+    anthropic = [ anthropic ];
+    mistral = [ mistralai ];
+    bedrock = [ boto3 ];
+    mcp = [ mcp ];
+    acp = [ agent-client-protocol' ];
+    exa = [ exa-py ];
+    firecrawl = [ firecrawl-py ];
+    parallel-web = [ parallel-web ];
+    ddgs = [ ddgs ];
+    fal = [ fal-client ];
+    edge-tts = [ edge-tts ];
+    tts-premium = [ elevenlabs ];
+    voice = [
+      sounddevice
+      numpy
+    ]
+    # faster-whisper -> av SIGKILLs during import on darwin.
+    ++ lib.optionals stdenv.hostPlatform.isLinux [ faster-whisper ];
+    messaging = [
+      python-telegram-bot
+      discordpy
+      aiohttp
+      brotlicffi
+      slack-bolt'
+      slack-sdk
+      qrcode
+    ];
+    # nixpkgs mautrix lacks the encryption extra, so add its crypto deps explicitly.
+    matrix = lib.optionals stdenv.hostPlatform.isLinux [
+      mautrix
+      (python-olm.override { olm = clearedOlm; })
+      unpaddedbase64
+      pycryptodome
+      base58
+      aiosqlite
+      asyncpg
+      aiohttp-socks
+      aiohttp
+    ];
+    modal = [ modal ];
+    # Upstream folded these into its core dependencies.
+    cron = [ ];
+    pty = [ ];
+    web = [ ];
+    vision = [ ];
+    nemo-relay = [ ];
+    doc-extract = [ ];
+  };
+
+  # The TUI spawns `$HERMES_PYTHON -m tui_gateway.entry`; sys.executable is the
+  # bare interpreter, so give it an env with the runtime deps. The dashboard
+  # PTY path copies wrapper env into a nested Node subprocess, which then
+  # resolves the gateway import root from HERMES_PYTHON_SRC_ROOT.
+  pythonEnv = python3.withPackages (_: coreDeps);
+
+  # Hermes' dependency manager (PM) installs and launches managed tools such as
+  # npx/uvx MCP servers. It runs in its own environment, which a Nix install
+  # names through `pmRuntime` in the install stamp (upstream nix/pm-runtime.nix).
+  pmRuntime = python3.buildEnv.override {
+    extraLibs = with python3.pkgs; [
+      packaging
+      tomli-w
+      ruamel-yaml
+      truststore
+    ];
+    postBuild = ''
+      printf '%s\n' '${
+        builtins.toJSON {
+          python = python3.interpreter;
+          inherit (python3) sitePackages;
+        }
+      }' > "$out/pm-runtime.json"
+    '';
+  };
+
+  installStamp = writeText "install-stamp.json" (
+    builtins.toJSON {
+      schemaVersion = 2;
+      commit = rev;
+      baseVersion = version;
+      displayVersion = version;
+      distance = 0;
+      dirty = false;
+      source = "nix";
+      distribution = "nix";
+      updateMechanism = "external";
+      pmRuntime = toString pmRuntime;
+      # Desktop: use an external Hermes instead of a bundled one.
+      payload = "bootstrap";
+    }
+  );
+
+  wrapperArgs =
+    { out, env }:
+    [
+      "--set"
+      "HERMES_TUI_DIR"
+      "${hermes-frontend}/lib/hermes-tui"
+      "--set"
+      "HERMES_WEB_DIST"
+      "${hermes-frontend}/share/hermes-web"
+      "--set"
+      "HERMES_PYTHON"
+      "${env}/bin/python3"
+      "--set"
+      "HERMES_PYTHON_SRC_ROOT"
+      "${out}/${python3.sitePackages}"
+      "--set"
+      "HERMES_NODE"
+      "${nodejs}/bin/node"
+      # Runtime data is copied to $out/share/hermes in postInstall; point Hermes at it.
+      "--set"
+      "HERMES_BUNDLED_SKILLS"
+      "${out}/share/hermes/skills"
+      "--set"
+      "HERMES_OPTIONAL_SKILLS"
+      "${out}/share/hermes/optional-skills"
+      "--set"
+      "HERMES_BUNDLED_PLUGINS"
+      "${out}/share/hermes/plugins"
+      "--set"
+      "HERMES_BUNDLED_LOCALES"
+      "${out}/share/hermes/locales"
+      # Disable runtime pip installs; absent extras disable cleanly.
+      "--set"
+      "HERMES_DISABLE_LAZY_INSTALLS"
+      "1"
+      # node+npm on PATH short-circuits _ensure_tui_node()'s download bootstrap.
+      "--prefix"
+      "PATH"
+      ":"
+      "${nodejs}/bin"
+    ];
+
+in
+python3.pkgs.buildPythonApplication {
+  pname = "hermes-agent-unwrapped";
+  inherit version src;
+  pyproject = true;
+
+  build-system = with python3.pkgs; [
+    setuptools
+  ];
+
+  # Upstream pins an exact setuptools in build-system.requires.
+  pypaBuildFlags = [ "--skip-dependency-check" ];
+
+  # These re-exec sys.executable, which is the bare interpreter without Hermes'
+  # dependencies under Nix. Use the wrapper-provided env.
+  postPatch = ''
+    # Fail an update rather than silently keeping an SDK that upstream replaced.
+    ${python3.interpreter} -c 'import tomllib; p = tomllib.load(open("pyproject.toml", "rb")); expected = "anthropic==${anthropic.version}"; actual = p["project"]["optional-dependencies"]["anthropic"]; assert actual == [expected], f"Anthropic pin changed: {actual}; review the private SDK override"'
+    substituteInPlace tools/browser_use_cli.py \
+      --replace-fail 'return [sys.executable, "-m", "browser_harness.run"]' \
+        'return [os.environ.get("HERMES_PYTHON", sys.executable), "-m", "browser_harness.run"]'
+    substituteInPlace hermes_cli/doctor_platform.py \
+      --replace-fail '[sys.executable, "-c", "import hermes_cli.web_server"]' \
+        '[os.environ.get("HERMES_PYTHON", sys.executable), "-c", "import hermes_cli.web_server"]'
+    substituteInPlace hermes_cli/gateway_runtime_start.py \
+      --replace-fail 'command = [sys.executable, "-m", "hermes_cli.main"' \
+        'command = [os.environ.get("HERMES_PYTHON", sys.executable), "-m", "hermes_cli.main"'
+    # `hermes gateway install` writes this interpreter into the service unit.
+    # A Python that PM installed into ~/.hermes/tools lacks Hermes' dependencies.
+    substituteInPlace hermes_cli/gateway.py \
+      --replace-fail 'return str(resolve_store_python(PROJECT_ROOT) or sys.executable)' \
+        'return os.environ.get("HERMES_PYTHON") or str(resolve_store_python(PROJECT_ROOT) or sys.executable)'
+  '';
+
+  # setup.py refuses to build wheels/sdists unless it knows this is a Nix
+  # (uv2nix-style) build; upstream gates it behind this env var.
+  env.HERMES_NIX_BUILD = "1";
+
+  dependencies = coreDeps;
+  inherit optional-dependencies;
+
+  makeWrapperArgs = wrapperArgs {
+    out = placeholder "out";
+    env = pythonEnv;
+  };
+
+  # Upstream keeps runtime data outside site-packages and locates it through
+  # wrapper environment variables. Preserve that layout because setuptools
+  # intentionally omits plugin manifests from the wheel since 2026.8.3.
+  postInstall = ''
+    mkdir -p $out/share/hermes
+    cp -r ${src}/skills $out/share/hermes/skills
+    cp -r ${src}/optional-skills $out/share/hermes/optional-skills
+    cp -r ${src}/plugins $out/share/hermes/plugins
+    cp -r ${src}/locales $out/share/hermes/locales
+    # The sources only carry a 0.0.0 placeholder version.
+    cp ${installStamp} $out/${python3.sitePackages}/install-stamp.json
+  '';
+
+  pythonRelaxDeps = [
+    "certifi"
+    "cryptography"
+    "firecrawl-py"
+    "openai"
+    "packaging"
+    "pathspec"
+    "pydantic"
+    "pyjwt"
+    "python-dotenv"
+    "requests"
+    "ruamel.yaml"
+    "tenacity"
+    "truststore"
+    "urllib3"
+    "websockets"
+    # nixpkgs moved past upstream's == pins
+    "croniter"
+    "exa-py"
+    "markdown"
+    "pillow"
+    "prompt_toolkit"
+    "rich"
+  ];
+
+  # Only used by upstream's icon generator, which is not installed.
+  pythonRemoveDeps = [ "resvg-py" ];
+
+  pythonImportsCheck = [
+    "hermes_cli"
+    "hermes_cli.dashboard_auth"
+    "hermes_cli.proxy"
+    "croniter"
+    # relay_runtime imports this lazily and silently degrades to a noop
+    # runtime when missing, so assert it imports.
+    "nemo_relay"
+    "browser_harness"
+  ];
+
+  doInstallCheck = true;
+  nativeInstallCheckInputs = [
+    versionCheckHook
+    versionCheckHomeHook
+  ];
+  versionCheckProgramArg = [ "--version" ];
+
+  # #4364: wrapper must wire up the TUI and a deps-capable gateway python.
+  postInstallCheck = ''
+    grep -q HERMES_TUI_DIR $out/bin/hermes
+    grep -q HERMES_WEB_DIST $out/bin/hermes
+    grep -q HERMES_PYTHON $out/bin/hermes
+    grep -q HERMES_PYTHON_SRC_ROOT $out/bin/hermes
+    grep -q HERMES_BUNDLED_SKILLS $out/bin/hermes
+    grep -q HERMES_OPTIONAL_SKILLS $out/bin/hermes
+    grep -q HERMES_BUNDLED_PLUGINS $out/bin/hermes
+    grep -q HERMES_BUNDLED_LOCALES $out/bin/hermes
+    test -f $out/share/hermes/locales/en.yaml
+    test -f ${hermes-frontend}/lib/hermes-tui/dist/entry.js
+    test -f ${hermes-frontend}/share/hermes-web/index.html
+    test -d $out/share/hermes/skills
+    test -d $out/share/hermes/optional-skills
+    test -n "$(find $out/share/hermes/plugins -name plugin.yaml -print -quit)"
+    ${pythonEnv}/bin/python3 -c 'import dotenv, tenacity, openai'
+    # Slash workers run HERMES_PYTHON with PYTHONPATH=HERMES_PYTHON_SRC_ROOT.
+    PYTHONPATH="$out/${python3.sitePackages}" \
+      ${pythonEnv}/bin/python3 -c 'import tui_gateway.slash_worker, ruamel.yaml'
+    # #7725: DaemonThreadPoolExecutor mirrors CPython ThreadPoolExecutor
+    # internals; assert submit() actually executes work on this Python.
+    PYTHONPATH="$out/${python3.sitePackages}" \
+      ${pythonEnv}/bin/python3 -c 'from tools.daemon_pool import DaemonThreadPoolExecutor; assert DaemonThreadPoolExecutor(max_workers=1).submit(lambda: 42).result(timeout=30) == 42'
+    # PM launches its scripts in the packaged runtime named by the install stamp.
+    # Run outside the source tree, so `pm` imports from $out beside the stamp.
+    pushd "$(mktemp -d)" >/dev/null
+    echo 'import packaging, tomli_w, truststore; from ruamel.yaml import YAML' > pm-check.py
+    PYTHONPATH="$out/${python3.sitePackages}" \
+      ${pythonEnv}/bin/python3 -c 'import pathlib, subprocess; from pm.runtime import runtime_command; subprocess.run(runtime_command(pathlib.Path("pm-check.py").resolve(), bootstrap=False), check=True)'
+    popd >/dev/null
+    grep -q HERMES_DISABLE_LAZY_INSTALLS $out/bin/hermes
+  '';
+
+  passthru = {
+    category = "AI Assistants";
+    inherit
+      hermes-frontend
+      nemo-relay
+      installStamp
+      pmRuntime
+      ;
+
+    inherit wrapperArgs;
+    python = python3;
+  };
+
+  meta = with lib; {
+    description = "Self-improving AI agent by Nous Research — creates skills from experience and runs anywhere";
+    homepage = "https://hermes-agent.nousresearch.com/";
+    changelog = "https://github.com/NousResearch/hermes-agent/releases/tag/v${version}";
+    license = licenses.mit;
+    sourceProvenance = with sourceTypes; [ fromSource ];
+    platforms = [
+      "x86_64-linux"
+      "aarch64-linux"
+      "aarch64-darwin"
+    ];
+    maintainers = with flake.lib.maintainers; [
+      aliez-ren
+      mulatta
+    ];
+    mainProgram = "hermes";
+  };
+}
