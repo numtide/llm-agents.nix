@@ -271,13 +271,13 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
-<summary><strong>gitclaw</strong> - Universal git-native multimodal AI agent (formerly gitagent)</summary>
+<summary><strong>gitagent</strong> - Universal git-native multimodal AI agent</summary>
 
 - **Source**: source
 - **License**: MIT
 - **Homepage**: https://github.com/open-gitagent/gitagent
-- **Usage**: `nix run github:numtide/llm-agents.nix#gitclaw -- --help`
-- **Nix**: [packages/gitclaw/package.nix](packages/gitclaw/package.nix)
+- **Usage**: `nix run github:numtide/llm-agents.nix#gitagent -- --help`
+- **Nix**: [packages/gitagent/package.nix](packages/gitagent/package.nix)
 
 </details>
 <details>
