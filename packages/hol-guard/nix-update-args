@@ -1,0 +1,3 @@
+# The wheel URL is not one nix-update recognises as PyPI.
+--url
+mirror://pypi/h/hol_guard/

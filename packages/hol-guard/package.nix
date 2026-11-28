@@ -8,20 +8,17 @@
 
 python3.pkgs.buildPythonApplication rec {
   pname = "hol-guard";
-  version = "3.38.0";
-  pyproject = true;
+  version = "3.61.0";
+  format = "wheel";
 
+  # PyPI stopped shipping an sdist with 3.41.0; use the pure-Python wheel.
   src = fetchPypi {
     pname = "hol_guard";
-    inherit version;
-    hash = "sha256-pCKJWDK/frLNav8ITVI9Lv03Bs5LmpG+MVdpTFUnTQg=";
+    inherit version format;
+    dist = "py3";
+    python = "py3";
+    hash = "sha256-hW9iyXoSowv/1px8dvEbW9x1FsWLceKVNbunZHVbz7U=";
   };
-
-  postPatch = ''
-    substituteInPlace pyproject.toml --replace-fail '"hatchling<1.31"' '"hatchling"'
-  '';
-
-  build-system = [ python3.pkgs.hatchling ];
 
   dependencies = with python3.pkgs; [
     cryptography
@@ -35,7 +32,9 @@ python3.pkgs.buildPythonApplication rec {
     regex
     requests
     rich
+    sigstore
     tomlkit
+    typing-extensions
   ];
 
   pythonRelaxDeps = true;
