@@ -9,14 +9,14 @@
 
 python3.pkgs.buildPythonApplication (finalAttrs: {
   pname = "apm";
-  version = "0.38.1";
+  version = "0.39.1";
   pyproject = true;
 
   src = fetchFromGitHub {
     owner = "microsoft";
     repo = "apm";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-2yWBQ2S6OAvCgeeBnGakwpxO0ZeswwnhqhwYdsEiEHc=";
+    hash = "sha256-UYyt2Akj/xnynkD0E/3bzPrghHlSD8vdu/xJ4+q8uUE=";
   };
 
   build-system = with python3.pkgs; [
