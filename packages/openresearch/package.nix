@@ -54,16 +54,16 @@ let
 in
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "openresearch";
-  version = "0.2.27";
+  version = "0.2.30";
 
   src = fetchFromGitHub {
     owner = "alphaXiv";
     repo = "OpenResearch";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-wCpUNe0qy8dlHI5WxTz2ujaK/qjWsTNbZELb9Gv2Kw0=";
+    hash = "sha256-dTJVL4XJ4MaJipCuBmIX5u4jaFkjTbEL2XW7Q66f5Is=";
   };
 
-  cargoHash = "sha256-E65WBB37WQeaqKfe/xUUnAshCpahQtgFqybO6sqGyRQ=";
+  cargoHash = "sha256-s7Cz5yXc7aG6a5KDyfVadrp7+7ov6YdXxr3LAbhfKnk=";
 
   nativeBuildInputs = [
     makeWrapper
