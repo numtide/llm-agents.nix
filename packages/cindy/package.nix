@@ -5,7 +5,7 @@
   fetchFromGitHub,
   fetchPnpmDeps,
   pnpmConfigHook,
-  pnpm_10,
+  pnpm_11,
   nodejs_22,
   electron_43,
   ripgrep,
@@ -72,7 +72,7 @@ let
 
   pname = "cindy";
   electron = electron_43;
-  pnpm = pnpm_10;
+  pnpm = pnpm_11;
   arch = if stdenv.hostPlatform.isx86_64 then "x64" else "arm64";
 
   src = fetchFromGitHub {
@@ -153,7 +153,7 @@ let
       src
       pnpm
       ;
-    fetcherVersion = 3;
+    fetcherVersion = 4;
     hash = pnpmDepsHash;
   };
 
@@ -187,6 +187,8 @@ stdenv.mkDerivation {
     APP_VERSION = version;
     ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
     npm_config_build_from_source = "true";
+    # pnpm 11 otherwise reinstalls node_modules before running a script.
+    pnpm_config_verify_deps_before_run = "false";
   };
 
   postPatch = ''
