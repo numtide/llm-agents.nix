@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   flake,
   stdenv,
@@ -80,6 +81,8 @@ stdenv.mkDerivation {
   ];
 
   passthru.category = "AI Coding Agents";
+
+  passthru.updater = mkUpdater { kind = "script"; };
 
   meta = {
     description = "Autonomous coding agent CLI";

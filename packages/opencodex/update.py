@@ -1,6 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 --command python3
-
 """Update opencodex: npm tarball + bun.lock from the matching git tag."""
 
 import sys

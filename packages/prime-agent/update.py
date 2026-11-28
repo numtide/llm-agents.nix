@@ -1,6 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 --command python3
-
 """Update Prime Agent, its Python components, and Cargo dependencies."""
 
 from __future__ import annotations

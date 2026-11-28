@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   flake,
   stdenv,
@@ -199,6 +200,14 @@ stdenv.mkDerivation {
   '';
 
   passthru.category = "AI Assistants";
+
+  passthru.updater = mkUpdater {
+
+    kind = "script";
+
+    tools = [ bun ];
+
+  };
 
   meta = with lib; {
     description = "Desktop and WebUI cowork app that turns AI agents into a local assistant and server";

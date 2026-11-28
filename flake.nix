@@ -102,7 +102,7 @@
                 inherit fetchurlTemplate;
               };
               # Validate a declarative passthru.updater config (see
-              # scripts/updater/run.py); packages opt out of update.py with it.
+              # scripts/updater/run.py and lib/mk-update-script.nix).
               mkUpdater = import ./lib/mk-updater.nix { inherit (pkgs) lib; };
               mkCodesignCheck = self.callPackage ./lib/mk-codesign-check.nix { };
               buildRustPackageCached = self.callPackage ./lib/build-rust-package-cached.nix { };
@@ -148,15 +148,20 @@
           # so one `nix run .#<pkg>.updateScript` drives every declarative updater.
           withUpdateScript =
             name: pkg:
-            if pkg ? updater then
-              pkg.overrideAttrs (old: {
-                passthru = (old.passthru or { }) // {
-                  updateScript = mkUpdateScript {
-                    inherit name;
-                    config = pkg.updater;
-                  };
+            # Without the config CI would silently fall back to nix-update.
+            if
+              builtins.pathExists (./packages + "/${name}/update.py") != ((pkg.updater.kind or null) == "script")
+            then
+              throw "${name}: update.py requires passthru.updater = mkUpdater { kind = \"script\"; } and vice versa"
+            else if pkg ? updater then
+              # Not overrideAttrs: wrappers like hermes-agent refuse it.
+              pkg
+              // {
+                updateScript = mkUpdateScript {
+                  inherit name;
+                  config = pkg.updater;
                 };
-              })
+              }
             else
               pkg;
 

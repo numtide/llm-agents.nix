@@ -1,5 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#gnupg nixpkgs#python3 --command python3
 """Update ChatGPT from OpenAI's signed Debian repository and Sparkle appcast."""
 
 import hashlib

@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   stdenv,
   fetchurl,
@@ -37,6 +38,7 @@ stdenv.mkDerivation {
 
   passthru = {
     hideFromDocs = true;
+    updater = mkUpdater { kind = "script"; };
   };
 
   meta = {

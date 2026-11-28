@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   flake,
   python3,
@@ -157,6 +158,8 @@ python3.pkgs.buildPythonApplication rec {
   versionCheckProgramArg = [ "--version" ];
 
   passthru.category = "Utilities";
+
+  passthru.updater = mkUpdater { kind = "script"; };
 
   meta = with lib; {
     description = "AI-powered web search, extraction, and research CLI from Parallel";

@@ -1,6 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 nixpkgs#bun nixpkgs#git --command python3
-
 """Update script for omp (oh-my-pi) package.
 
 Custom updater needed because omp uses both bun2nix (bun.nix must be

@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   fetchFromGitHub,
   rustPlatform,
@@ -98,6 +99,8 @@ rustPlatform.buildRustPackage rec {
   nativeInstallCheckInputs = [ versionCheckHook ];
 
   passthru.category = "AI Coding Agents";
+
+  passthru.updater = mkUpdater { kind = "script"; };
 
   meta = with lib; {
     description = "CLI for Goose - a local, extensible, open source AI agent that automates engineering tasks";

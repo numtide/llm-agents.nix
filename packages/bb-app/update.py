@@ -1,5 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 nixpkgs#nodejs --command python3
 # Copyright (c) 2026 Numtide
 
 """Update script for the bb-app package."""

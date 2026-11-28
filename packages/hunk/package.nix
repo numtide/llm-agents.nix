@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   flake,
   stdenv,
@@ -76,6 +77,14 @@ stdenv.mkDerivation {
   ];
 
   passthru.category = "Code Review";
+
+  passthru.updater = mkUpdater {
+
+    kind = "script";
+
+    tools = [ bun ];
+
+  };
 
   meta = with lib; {
     description = "Terminal diff viewer for agentic changesets";

@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   flake,
   stdenv,
@@ -118,6 +119,10 @@ rustPlatform.buildRustPackage {
   passthru = {
     inherit icm-web;
     category = "Memory & Code Intelligence";
+    updater = mkUpdater {
+      kind = "script";
+      tools = [ bun ];
+    };
   };
 
   meta = with lib; {

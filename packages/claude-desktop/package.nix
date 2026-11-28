@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   fetchurl,
   lib,
   flake,
@@ -151,6 +152,7 @@ let
 
   passthru = {
     category = "AI Coding Agents";
+    updater = mkUpdater { kind = "script"; };
     tests.codesign = mkCodesignCheck {
       name = pname;
       inherit teamId;

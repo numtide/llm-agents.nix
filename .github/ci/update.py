@@ -154,20 +154,15 @@ def load_nix_update_args(name: str) -> list[str]:
 
 
 def run_package_updater(name: str) -> None:
-    """Run one package's updater: update script, updateScript, or nix-update."""
+    """Run one package's updater: its updateScript, or nix-update."""
     log.info("Updating package %s...", name)
 
-    update_script = Path(f"packages/{name}/update.py")
-    if update_script.exists():
-        log.info("Running update script for %s...", name)
-        run_update_command(
-            sandbox_wrap([str(update_script)], name),
-            f"Update script failed for package {name}",
-        )
-    elif has_declarative_updater(name):
+    if has_declarative_updater(name):
         log.info("Running updateScript for %s...", name)
         run_update_command(
-            ["nix", "run", f".#packages.x86_64-linux.{name}.updateScript"],
+            sandbox_wrap(
+                ["nix", "run", f".#packages.x86_64-linux.{name}.updateScript"], name
+            ),
             f"updateScript failed for package {name}",
         )
     else:

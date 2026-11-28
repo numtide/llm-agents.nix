@@ -1,6 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 --command python3
-
 """Update autolith and re-vendor its upstream nix/package.nix."""
 
 import json

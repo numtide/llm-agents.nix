@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   flake,
   stdenv,
@@ -79,6 +80,8 @@ stdenv.mkDerivation {
   ];
 
   passthru.category = "AI Coding Agents";
+
+  passthru.updater = mkUpdater { kind = "script"; };
 
   meta = with lib; {
     description = "Factory AI's Droid - AI-powered development agent for your terminal";

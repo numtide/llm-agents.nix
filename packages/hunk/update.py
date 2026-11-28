@@ -1,6 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 nixpkgs#bun nixpkgs#git --command python3
-
 """Update script for hunk package.
 
 Custom updater needed because hunk uses bun2nix: after each version

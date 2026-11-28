@@ -1,6 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 nixpkgs#git --command python3
-
 """Update qwen-code to the newest stable CLI tag.
 
 The repository also publishes SDK, desktop and nightly releases, so neither

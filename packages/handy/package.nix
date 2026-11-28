@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   stdenv,
   fetchurl,
@@ -161,6 +162,8 @@ stdenv.mkDerivation {
   codesignTeamId = teamId;
 
   passthru.category = "Voice & Transcription";
+
+  passthru.updater = mkUpdater { kind = "script"; };
   passthru.tests.codesign = mkCodesignCheck {
     name = pname;
     inherit teamId;

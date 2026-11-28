@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   stdenv,
   fetchFromGitHub,
@@ -210,6 +211,7 @@ buildRustPackageCached (
 
     passthru = {
       category = "AI Coding Agents";
+      updater = mkUpdater { kind = "script"; };
       inherit mkRustyV8Archive;
       inherit librusty_v8;
     };

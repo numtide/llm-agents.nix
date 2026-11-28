@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   pkgs,
   flake,
   wrapBuddy,
@@ -73,6 +74,8 @@ let
       '';
 
       passthru.category = "AI Coding Agents";
+
+      passthru.updater = mkUpdater { kind = "script"; };
       passthru.tests.codesign = mkCodesignCheck {
         name = "eca";
         inherit teamId;
@@ -160,6 +163,8 @@ else
     '';
 
     passthru.category = "AI Coding Agents";
+
+    passthru.updater = mkUpdater { kind = "script"; };
 
     meta = with pkgs.lib; {
       description = "Editor Code Assistant (ECA) - AI pair programming capabilities agnostic of editor";

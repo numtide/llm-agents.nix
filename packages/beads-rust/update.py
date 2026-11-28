@@ -1,6 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 --command python3
-
 """Update script for beads-rust package.
 
 Upstream's tagged Cargo.lock is generated with the dev-local

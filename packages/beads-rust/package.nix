@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   flake,
   rustPlatform,
@@ -65,6 +66,8 @@ rustPlatform.buildRustPackage {
   nativeInstallCheckInputs = [ versionCheckHook ];
 
   passthru.category = "Workflow & Project Management";
+
+  passthru.updater = mkUpdater { kind = "script"; };
 
   meta = with lib; {
     description = "Fast Rust port of beads - a local-first issue tracker for git repositories";

@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   flake,
   stdenv,
@@ -140,6 +141,7 @@ buildNpmPackage {
 
   passthru = {
     category = "AI Coding Agents";
+    updater = mkUpdater { kind = "script"; };
     native = {
       inherit exploreHarness sparkShell;
     };

@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   stdenv,
   bun2nixLib,
@@ -108,6 +109,14 @@ stdenv.mkDerivation {
   '';
 
   passthru.category = "Workflow & Project Management";
+
+  passthru.updater = mkUpdater {
+
+    kind = "script";
+
+    tools = [ bun ];
+
+  };
 
   meta = with lib; {
     description = "Mobile web UI to monitor and reply to your Herdr agent herd over Tailscale";

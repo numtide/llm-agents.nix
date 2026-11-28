@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   stdenv,
   fetchFromGitHub,
@@ -276,6 +277,14 @@ stdenv.mkDerivation {
   '';
 
   passthru.category = "AI Coding Agents";
+
+  passthru.updater = mkUpdater {
+
+    kind = "script";
+
+    tools = [ bun ];
+
+  };
 
   meta = with lib; {
     description = "A terminal-based coding agent with multi-model support";

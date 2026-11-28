@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   stdenv,
   platformSource,
@@ -55,6 +56,8 @@ stdenv.mkDerivation {
   versionCheckProgramArg = "--version";
 
   passthru.category = "AI Coding Agents";
+
+  passthru.updater = mkUpdater { kind = "script"; };
 
   meta = with lib; {
     description = "The world's strongest free coding agent";

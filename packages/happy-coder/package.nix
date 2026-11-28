@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   stdenv,
   fetchFromGitHub,
@@ -118,6 +119,8 @@ stdenv.mkDerivation (finalAttrs: {
   ];
 
   passthru.category = "Utilities";
+
+  passthru.updater = mkUpdater { kind = "script"; };
 
   meta = {
     description = "Mobile and Web client for Codex and Claude Code, with realtime voice and encryption";

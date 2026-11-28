@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   stdenv,
   buildNpmPackage,
@@ -105,6 +106,8 @@ buildNpmPackage (finalAttrs: {
   nativeInstallCheckInputs = [ versionCheckHook ];
 
   passthru.category = "AI Coding Agents";
+
+  passthru.updater = mkUpdater { kind = "script"; };
 
   meta = {
     description = "Command-line AI workflow tool for Qwen3-Coder models";
