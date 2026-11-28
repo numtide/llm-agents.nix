@@ -59,7 +59,12 @@ def _latest_git_tag(url: str) -> str:
     if not isinstance(tags, list):
         msg = f"expected a list of tags from {url}"
         raise TypeError(msg)
-    versions = [str(tag["name"]).removeprefix("v") for tag in tags]
+    # Repos also carry non-release tags such as swamp's bench/<sha>.
+    versions = [
+        name.removeprefix("v")
+        for name in (str(tag["name"]) for tag in tags)
+        if name.removeprefix("v")[:1].isdigit()
+    ]
     if not versions:
         msg = f"no tags found at {url}"
         raise ValueError(msg)

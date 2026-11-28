@@ -185,6 +185,17 @@ class TestRun(unittest.TestCase):
         finally:
             http.fetch_json = original
 
+    def test_git_tags_ignores_non_version_tags(self) -> None:
+        def fake(_url: str) -> list[Any]:
+            return [{"name": "bench/cb772ac6d"}, {"name": "v1.2.0"}]
+
+        original = http.fetch_json
+        http.fetch_json = fake  # type: ignore[assignment]
+        try:
+            self.assertEqual(_latest_git_tag("https://x/tags"), "1.2.0")
+        finally:
+            http.fetch_json = original
+
     def test_manifest(self) -> None:
         flows = recorders()
         run(
