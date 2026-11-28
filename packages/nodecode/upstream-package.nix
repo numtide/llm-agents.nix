@@ -19,6 +19,9 @@ let
     clack-handler-hunchentoot
     websocket-driver
     ironclad
+    chipz
+    salza2
+    cl-jpeg
   ];
 
   # Build nodecode system using ASDF
