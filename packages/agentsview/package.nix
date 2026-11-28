@@ -3,7 +3,8 @@
   lib,
   stdenv,
   flake,
-  buildGo127Module,
+  buildGoModule,
+  go-bin,
   buildNpmPackage,
   cacert,
   fetchFromGitHub,
@@ -86,7 +87,8 @@ let
   # reuses the sidecar. The wrapper checks the pins against this release.
   cjk = callPackage ./cjk.nix { pins = versionData.cjk; };
 
-  unwrapped = buildGo127Module {
+  # A dependency requires go >= 1.27.4; nixpkgs ships 1.27.3 so far.
+  unwrapped = (buildGoModule.override { go = go-bin; }) {
     pname = "agentsview";
     inherit version src vendorHash;
 
