@@ -1,14 +1,16 @@
 {
   lib,
   flake,
-  buildGo127Module,
+  buildGoModule,
+  go-bin,
   fetchFromGitHub,
   makeWrapper,
   tmux,
   versionCheckHook,
 }:
 
-buildGo127Module rec {
+# go.mod requires go >= 1.27.4; nixpkgs ships 1.27.3 so far.
+(buildGoModule.override { go = go-bin; }) rec {
   pname = "agent-manager";
   version = "0.48.1";
 

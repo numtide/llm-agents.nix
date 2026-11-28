@@ -2,7 +2,8 @@
   mkUpdater,
   lib,
   flake,
-  buildGo127Module,
+  buildGoModule,
+  go-bin,
   fetchFromGitHub,
   fetchPnpmDeps,
   makeWrapper,
@@ -23,7 +24,8 @@ let
     pnpmDepsHash
     ;
 in
-buildGo127Module (finalAttrs: {
+# go.mod requires go >= 1.27.4; nixpkgs ships 1.27.3 so far.
+(buildGoModule.override { go = go-bin; }) (finalAttrs: {
   pname = "sub2api";
   inherit version;
 
