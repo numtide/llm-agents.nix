@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   pkgs,
   callPackage,
   # Make claude-code overridable
@@ -47,6 +48,7 @@ pkgs.runCommand "claudebox"
     version = pkgs.lib.removePrefix "v" (callPackage ./source.nix { }).rev;
     buildInputs = [ pkgs.makeWrapper ];
     passthru.category = "Sandboxing & Isolation";
+    passthru.updater = mkUpdater { kind = "script"; };
     meta = with pkgs.lib; {
       mainProgram = "claudebox";
       description = "Sandboxed environment for Claude Code";

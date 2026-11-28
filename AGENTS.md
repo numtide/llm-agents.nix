@@ -67,7 +67,11 @@ Packages without upstream releases set `passthru.skipUpdate = true`.
 
 Only fall back to a custom `update.py` script when no declarative kind fits
 (special hash calculation, unusual upstream APIs). Custom updaters should use
-the `scripts/updater/` library.
+the `scripts/updater/` library and need
+`passthru.updater = mkUpdater { kind = "script"; tools = [ bun ]; }` (`tools`:
+optional extras beyond python, nix, git).
+
+Run any `passthru.updater` with `nix run .#<package>.updateScript`.
 
 ### Package Metadata Requirements
 

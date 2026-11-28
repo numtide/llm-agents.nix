@@ -1,6 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 --command python3
-
 """Update script for the Cline CLI package."""
 
 import sys

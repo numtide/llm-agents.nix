@@ -1,6 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 nixpkgs#bun nixpkgs#git --command python3
-
 """Update script for oh-my-opencode package.
 
 Custom updater needed because oh-my-opencode uses bun2nix (bun.nix must be

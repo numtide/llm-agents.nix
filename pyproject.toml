@@ -42,14 +42,13 @@ ignore = [
   "S607",
   "S310",
   "T201",   # print statements are acceptable in update scripts
-  "EXE003", # nix shebang is valid
-  "EXE005", # nix multi-line shebang is valid
   "COM812", # conflicts with formatter
   "CPY",    # no copyright header requirement
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "lib/cargo-skeleton.py" = ["INP001"] # standalone script run inside a derivation
+"packages/*/update.py" = ["INP001"] # standalone scripts run by updateScript
 ".github/ci/lib.py" = [
   "INP001",
 ] # shared module for standalone CI scripts, not a package

@@ -1,5 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 --command python3
 """Update claude-desktop from Anthropic's APT index and darwin release feed.
 
 Anthropic publish Claude Desktop as prebuilt Debian packages through an APT

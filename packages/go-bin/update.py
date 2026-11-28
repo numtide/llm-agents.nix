@@ -1,6 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 --command python3
-
 """Update script for go-bin package.
 
 Fetches the latest stable Go release from the official download API and

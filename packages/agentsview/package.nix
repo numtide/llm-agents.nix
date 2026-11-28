@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   stdenv,
   flake,
@@ -214,6 +215,7 @@ symlinkJoin {
       withCjk
       ;
     category = "Usage Analytics";
+    updater = mkUpdater { kind = "script"; };
   };
   inherit (unwrapped) meta;
 }

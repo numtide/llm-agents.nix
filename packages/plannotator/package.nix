@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   stdenv,
   fetchFromGitHub,
@@ -103,6 +104,14 @@ stdenv.mkDerivation {
   versionCheckProgramArg = [ "--version" ];
 
   passthru.category = "Code Review";
+
+  passthru.updater = mkUpdater {
+
+    kind = "script";
+
+    tools = [ bun ];
+
+  };
 
   meta = with lib; {
     description = "Interactive plan and code review tool for AI coding agents";

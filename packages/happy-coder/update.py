@@ -1,6 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 --command python3
-
 """Update script for happy-coder.
 
 Upstream is the slopus/happy pnpm-workspaces monorepo, which does not tag

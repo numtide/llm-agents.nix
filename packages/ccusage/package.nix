@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   fetchFromGitHub,
   fetchurl,
@@ -81,6 +82,8 @@ rustPlatform.buildRustPackage rec {
   ];
 
   passthru.category = "Usage Analytics";
+
+  passthru.updater = mkUpdater { kind = "script"; };
 
   meta = with lib; {
     description = "Analyze coding agent CLI token usage and costs from local data";

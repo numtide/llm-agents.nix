@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   flake,
   stdenv,
@@ -163,6 +164,14 @@ stdenv.mkDerivation {
   '';
 
   passthru.category = "AI Coding Agents";
+
+  passthru.updater = mkUpdater {
+
+    kind = "script";
+
+    tools = [ bun ];
+
+  };
 
   meta = with lib; {
     description = "The Best AI Agent Harness - Multi-Model Orchestration for OpenCode";

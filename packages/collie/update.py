@@ -1,6 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 nixpkgs#bun nixpkgs#git --command python3
-
 """Update script for collie.
 
 Custom updater because collie carries TWO bun lockfiles — the root bridge

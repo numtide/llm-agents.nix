@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   fetchFromGitHub,
   flake,
@@ -148,6 +149,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   passthru = {
     category = "AI Coding Agents";
+    updater = mkUpdater { kind = "script"; };
 
     # Keep Python and resource assembly out of the Rust build inputs.
     unwrapped = rustPlatform.buildRustPackage {

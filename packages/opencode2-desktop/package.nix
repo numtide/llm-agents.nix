@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   flake,
   platformSource,
@@ -189,6 +190,8 @@ stdenvNoCC.mkDerivation {
   codesignTeamId = teamId;
 
   passthru.category = "AI Coding Agents";
+
+  passthru.updater = mkUpdater { kind = "script"; };
   passthru.tests.codesign = mkCodesignCheck {
     name = "opencode2-desktop";
     inherit teamId;

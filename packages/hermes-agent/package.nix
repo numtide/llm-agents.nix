@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   stdenv,
   callPackage,
@@ -108,6 +109,7 @@ let
             ;
           inherit (unwrapped) src;
           pythonEnv = env;
+          updater = mkUpdater { kind = "script"; };
           withPythonPackages =
             f:
             mkHermes {

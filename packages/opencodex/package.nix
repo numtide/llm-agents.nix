@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   flake,
   stdenvNoCC,
@@ -72,6 +73,8 @@ stdenvNoCC.mkDerivation {
   ];
 
   passthru.category = "Utilities";
+
+  passthru.updater = mkUpdater { kind = "script"; };
 
   meta = {
     description = "Universal provider proxy for OpenAI Codex, Claude Code, Claude Desktop & Grok Build";

@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   flake,
   buildNpmPackage,
@@ -88,6 +89,8 @@ buildNpmPackage (finalAttrs: {
   '';
 
   passthru.category = "Utilities";
+
+  passthru.updater = mkUpdater { kind = "script"; };
 
   meta = {
     description = "Reverse engineering CLI and MCP server for agents";

@@ -1,6 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 --command python3
-
 """Update Hermes Agent and its vendored nemo-relay.
 
 The vendored nemo-relay build is bumped to the newest upstream tag that

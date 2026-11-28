@@ -1,6 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 --command python3
-
 """Update the sub2api source and dependency hashes."""
 
 import sys

@@ -21,6 +21,9 @@ let
       "manifestUrl"
       "platformMap"
     ];
+    # Runs packages/<name>/update.py; optional `tools` are extra packages on
+    # its PATH.
+    "script" = [ ];
     "manifest-checksums" = [
       "versionSource"
       "manifestUrl"

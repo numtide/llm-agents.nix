@@ -1,4 +1,6 @@
 {
+  mkUpdater,
+  nodejs,
   buildNpmPackage,
   fetchurl,
   flake,
@@ -109,6 +111,14 @@ buildNpmPackage {
   '';
 
   passthru.category = "AI Coding Agents";
+
+  passthru.updater = mkUpdater {
+
+    kind = "script";
+
+    tools = [ nodejs ];
+
+  };
 
   meta = {
     description = "Agentic IDE for orchestrating coding agents";

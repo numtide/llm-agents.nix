@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   flake,
   stdenv,
@@ -122,6 +123,8 @@ stdenv.mkDerivation {
   '';
 
   passthru.category = "AI Coding Agents";
+
+  passthru.updater = mkUpdater { kind = "script"; };
 
   meta = with lib; {
     description = "Junie, JetBrains AI coding agent CLI";

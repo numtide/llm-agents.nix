@@ -1,6 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 --command python3
-
 """Update script for goose-cli package.
 
 Bumps the goose version, source hash and cargoHash in hashes.json and keeps

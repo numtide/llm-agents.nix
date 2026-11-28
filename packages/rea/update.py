@@ -1,6 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 --command python3
-
 """Update REA and the Frida prebuilds selected by its dependency lockfile.
 
 The standard source updater cannot refresh Frida's separately fetched native

@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   flake,
   buildGo127Module,
@@ -112,6 +113,8 @@ buildGo127Module (finalAttrs: {
   versionCheckProgramArg = [ "--version" ];
 
   passthru.category = "Utilities";
+
+  passthru.updater = mkUpdater { kind = "script"; };
 
   meta = {
     description = "AI API gateway platform for distributing and managing AI subscription API quotas";

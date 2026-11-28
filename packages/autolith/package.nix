@@ -1,4 +1,5 @@
 {
+  mkUpdater,
   lib,
   pkgs,
   flake,
@@ -52,6 +53,7 @@ upstream.overrideAttrs (old: {
 
   passthru = old.passthru // {
     category = "AI Assistants";
+    updater = mkUpdater { kind = "script"; };
   };
 
   meta = old.meta // {

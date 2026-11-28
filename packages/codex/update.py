@@ -1,6 +1,3 @@
-#!/usr/bin/env nix
-#! nix shell --inputs-from .# nixpkgs#python3 --command python3
-
 """Update script for codex package.
 
 This script updates both the codex version and the librusty_v8 hashes.

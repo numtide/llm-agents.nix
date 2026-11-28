@@ -1,4 +1,6 @@
 {
+  mkUpdater,
+  gnupg,
   lib,
   stdenv,
   callPackage,
@@ -70,6 +72,10 @@ stdenvNoCC.mkDerivation {
 
   passthru = {
     category = "AI Coding Agents";
+    updater = mkUpdater {
+      kind = "script";
+      tools = [ gnupg ];
+    };
     unwrapped = chatgpt-unwrapped;
     inherit patchRuntime;
   };
