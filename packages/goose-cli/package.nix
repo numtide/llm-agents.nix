@@ -1,5 +1,4 @@
 {
-  mkUpdater,
   lib,
   fetchFromGitHub,
   rustPlatform,
@@ -14,26 +13,21 @@
   dbus,
   versionCheckHook,
   cacert,
-  callPackage,
-  librusty_v8 ? callPackage ./librusty_v8.nix {
-    inherit (callPackage ./fetchers.nix { }) fetchLibrustyV8;
-  },
 }:
 
-let
-  versionData = builtins.fromJSON (builtins.readFile ./hashes.json);
-in
 rustPlatform.buildRustPackage rec {
   pname = "goose-cli";
-  inherit (versionData) version cargoHash;
+  version = "1.61.1";
 
   src = fetchFromGitHub {
     # Upstream moved from block/goose to aaif-goose/goose.
     owner = "aaif-goose";
     repo = "goose";
     tag = "v${version}";
-    inherit (versionData) hash;
+    hash = "sha256-Sxfq4fw/HiCCVWwomAeB9UW5wtYFGUFF1hp0x8cdKYY=";
   };
+
+  cargoHash = "sha256-Ss6SBPMpQw3wnhHb8bbWm530UsbrGRAzLlKd3jAKMmg=";
 
   nativeBuildInputs = [
     pkg-config
@@ -61,9 +55,6 @@ rustPlatform.buildRustPackage rec {
   nativeCheckInputs = [ cacert ];
 
   env = {
-    # The v8 package will try to download a `librusty_v8.a` release at build time to our read-only filesystem
-    # To avoid this we pre-download the file and export it via RUSTY_V8_ARCHIVE
-    RUSTY_V8_ARCHIVE = librusty_v8;
     AWS_LC_SYS_USE_SYSTEM = "1";
     LIBSQLITE3_SYS_USE_PKG_CONFIG = "1";
     RUSTONIG_SYSTEM_LIBONIG = "1";
@@ -99,8 +90,6 @@ rustPlatform.buildRustPackage rec {
   nativeInstallCheckInputs = [ versionCheckHook ];
 
   passthru.category = "AI Coding Agents";
-
-  passthru.updater = mkUpdater { kind = "script"; };
 
   meta = with lib; {
     description = "CLI for Goose - a local, extensible, open source AI agent that automates engineering tasks";
