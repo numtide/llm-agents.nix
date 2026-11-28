@@ -12,16 +12,16 @@
 # go.mod requires go >= 1.27.4; nixpkgs ships 1.27.3 so far.
 (buildGoModule.override { go = go-bin; }) rec {
   pname = "agent-manager";
-  version = "0.48.1";
+  version = "0.50.0";
 
   src = fetchFromGitHub {
     owner = "YoanWai";
     repo = "agent-manager";
     tag = "v${version}";
-    hash = "sha256-c4HYPzd8OhxGAx/gXNdrEZUc6c5tevCQIDpiOLfQcZE=";
+    hash = "sha256-qku1XRy0v4Rs9u2bw5LGbrJKtxYDp/8c7cjcAmeZEoM=";
   };
 
-  vendorHash = "sha256-90wZZEXjRqzZzyCGsu6/2cs6STDIFb031L1TbM1zekw=";
+  vendorHash = "sha256-mDZQjHs2HLW2fJS6QEU9JvGCUWuTULUfR9W2xB20T6k=";
 
   subPackages = [ "." ];
 
