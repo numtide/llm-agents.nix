@@ -691,6 +691,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 - **Nix**: [packages/zcode/package.nix](packages/zcode/package.nix)
 
 </details>
+<details>
+<summary><strong>zerostack</strong> - Minimalistic coding agent optimized for memory footprint and performance</summary>
+
+- **Source**: source
+- **License**: GPL-3.0-only
+- **Homepage**: https://github.com/gi-dellav/zerostack
+- **Usage**: `nix run github:numtide/llm-agents.nix#zerostack -- --help`
+- **Nix**: [packages/zerostack/package.nix](packages/zerostack/package.nix)
+
+</details>
 
 ### AI Assistants
 
