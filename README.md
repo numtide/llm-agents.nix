@@ -1928,6 +1928,16 @@ Nix packages for AI coding agents and development tools. Automatically updated d
 
 </details>
 <details>
+<summary><strong>computer-use-linux</strong> - Native Linux desktop control for AI agents over MCP and CLI (AT-SPI, Wayland/X11 input, screenshots)</summary>
+
+- **Source**: source
+- **License**: MIT
+- **Homepage**: https://github.com/agent-sh/computer-use-linux
+- **Usage**: `nix run github:numtide/llm-agents.nix#computer-use-linux -- --help`
+- **Nix**: [packages/computer-use-linux/package.nix](packages/computer-use-linux/package.nix)
+
+</details>
+<details>
 <summary><strong>copilot-language-server</strong> - GitHub Copilot Language Server - AI pair programmer LSP</summary>
 
 - **Source**: bytecode
