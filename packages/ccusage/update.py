@@ -34,6 +34,7 @@ OWNER = "ccusage"
 REPO = "ccusage"
 
 PRICING_FILE = "model_prices_and_context_window.json"
+LOCKED_URL_REV_RE = re.compile(rf"/BerriAI/litellm/([0-9a-f]{{40}})/{PRICING_FILE}$")
 
 # `litellmRev = "<40 hex>";`
 LITELLM_REV_RE = re.compile(r'(litellmRev = ")[0-9a-f]{40}(")')
@@ -55,15 +56,18 @@ def resolve_litellm_rev(version: str) -> str:
         The 40-character litellm commit rev from the tag's flake.lock.
 
     Raises:
-        ValueError: If the tag's flake.lock has no nodes.litellm.locked.rev.
+        ValueError: If the tag's flake.lock has no litellm rev.
 
     """
     url = f"https://raw.githubusercontent.com/{OWNER}/{REPO}/v{version}/flake.lock"
     lock = json.loads(fetch_text(url))
 
-    rev = lock.get("nodes", {}).get("litellm", {}).get("locked", {}).get("rev")
+    locked = lock.get("nodes", {}).get("litellm", {}).get("locked", {})
+    # Since 20.1 the input is a file URL with the rev in its path.
+    match = LOCKED_URL_REV_RE.search(locked.get("url", ""))
+    rev = locked.get("rev") or (match and match.group(1))
     if not rev:
-        msg = f"v{version} flake.lock is missing nodes.litellm.locked.rev"
+        msg = f"v{version} flake.lock has no litellm rev"
         raise ValueError(msg)
     return str(rev)
 
